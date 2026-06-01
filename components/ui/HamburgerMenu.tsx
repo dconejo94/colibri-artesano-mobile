@@ -14,17 +14,27 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
 import { s, vs, ms } from "@/utils/scale";
 
 const DRAWER_WIDTH = s(264);
 
-// placeholder links — onPress wired when screens are built
-const NAV_LINKS = [
-  "Productos",
-  "Marcas Aliadas",
-  "Contacto",
-  "Blog y novedades",
-  "Eventos",
+type MenuEntry = {
+  icon: React.ComponentProps<typeof MaterialIcons>["name"];
+  label: string;
+  route?: string;
+};
+
+const MENU_ITEMS: MenuEntry[] = [
+  { icon: "person", label: "Mi Cuenta" },
+  { icon: "shopping-cart", label: "Carrito" },
+  { icon: "favorite", label: "Favoritos" },
+  { icon: "storefront", label: "Mi Tienda", route: "/store" },
+  { icon: "category", label: "Productos", route: "/products" },
+  { icon: "handshake", label: "Marcas Aliadas" },
+  { icon: "mail", label: "Contacto" },
+  { icon: "article", label: "Blog y novedades" },
+  { icon: "event", label: "Eventos" },
 ];
 
 type Props = {
@@ -34,6 +44,7 @@ type Props = {
 
 export default function HamburgerMenu({ isOpen, onClose }: Props) {
   const isDark = useColorScheme() === "dark";
+  const router = useRouter();
 
   // internal visibility controls modal — separate from isOpen so we can
   // animate out before hiding the modal
@@ -56,6 +67,13 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
     transform: [{ translateX: translateX.value }],
   }));
 
+  const handlePress = (entry: MenuEntry) => {
+    onClose();
+    if (entry.route) {
+      router.push(entry.route as never);
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -70,30 +88,17 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           animatedStyle,
         ]}>
 
-          {/* top action icons */}
-          <View style={styles.iconsRow}>
-            <TouchableOpacity onPress={() => {}}>
-              <MaterialIcons name="person" size={ms(45)} color="#6B9E98" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <MaterialIcons name="shopping-cart" size={ms(45)} color="#6B9E98" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <MaterialIcons name="star" size={ms(45)} color="#6B9E98" />
-            </TouchableOpacity>
-          </View>
-
-          {/* search bar placeholder — SearchBar component (#18) wired here later */}
-          <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
-            <MaterialIcons name="search" size={ms(20)} color={isDark ? "#fff" : "#888"} />
-          </View>
-
           {/* navigation links */}
           <View style={styles.links}>
-            {NAV_LINKS.map((link) => (
-              <TouchableOpacity key={link} style={styles.linkItem} onPress={() => {}}>
+            {MENU_ITEMS.map((entry) => (
+              <TouchableOpacity
+                key={entry.label}
+                style={styles.linkItem}
+                onPress={() => handlePress(entry)}
+              >
+                <MaterialIcons name={entry.icon} size={ms(22)} color="#6B9E98" />
                 <Text style={[styles.linkText, isDark ? styles.textDark : styles.textLight]}>
-                  {link}
+                  {entry.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -102,7 +107,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           {/* footer branding */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, isDark ? styles.textDark : styles.textLight]}>
-              © 2025 El Colibrí Artesano Costa Rica.{"\n"}Todos los derechos reservados.
+              © 2025 El Colibri Artesano Costa Rica.{"\n"}Todos los derechos reservados.
             </Text>
           </View>
         </Animated.View>
@@ -137,31 +142,13 @@ const styles = StyleSheet.create({
   drawerDark: {
     backgroundColor: "rgba(0,0,0,0.88)",
   },
-  iconsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: s(24),
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: ms(20),
-    borderWidth: 1,
-    paddingHorizontal: s(12),
-    paddingVertical: vs(8),
-  },
-  searchBarLight: {
-    borderColor: "#ccc",
-    backgroundColor: "#f5f5f5",
-  },
-  searchBarDark: {
-    borderColor: "#444",
-    backgroundColor: "#111",
-  },
   links: {
     gap: vs(4),
   },
   linkItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: s(10),
     paddingVertical: vs(12),
   },
   linkText: {
