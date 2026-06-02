@@ -12,6 +12,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 type Props = {
   item: Product;
@@ -28,6 +29,11 @@ export function ProductCard({ item, width, onPress }: Props) {
       activeOpacity={0.88}
       onPress={onPress}
     >
+      {/* Estrella favorito */}
+      <View style={styles.favBtn}>
+        <MaterialIcons name="star" size={ms(18)} color="#F5C842" />
+      </View>
+
       <Image
         source={getProductImage(item.image_url)}
         style={styles.image}
