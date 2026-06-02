@@ -4,7 +4,8 @@ import { ThemedView } from "@/components/themed-view";
 import HamburgerMenu from "@/components/ui/HamburgerMenu";
 import Header from "@/components/ui/Header";
 import { Colors } from "@/constants/theme";
-import { getProducts, Product } from "@/services/products";
+import { getProducts } from "@/api/products";
+import { Product } from "@/types/store";
 import { ms, s, vs } from "@/utils/scale";
 import { useCallback, useEffect, useState } from "react";
 import {

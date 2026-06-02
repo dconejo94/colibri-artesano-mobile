@@ -71,7 +71,7 @@ export default function AddProductScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
-      <SubHeader title="Agregar producto" backLabel="Cancelar" onBack={() => router.back()} />
+      <SubHeader title="Agregar producto" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
         <View style={[shared.card, isDark && shared.cardDark]}>

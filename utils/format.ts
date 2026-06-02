@@ -1,6 +1,8 @@
 // Formats a numeric amount into Costa Rican colones for display.
-export function formatPrice(amount: number): string {
-  return `\u20A1 ${amount.toLocaleString("es-CR", { minimumFractionDigits: 0 })}`;
+export function formatPrice(amount: number | string): string {
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return `\u20A1 0`;
+  return `\u20A1 ${num.toLocaleString("es-CR", { minimumFractionDigits: 0 })}`;
 }
 
 const STATUS_LABELS: Record<string, string> = {

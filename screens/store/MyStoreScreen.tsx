@@ -176,56 +176,6 @@ export default function MyStoreScreen() {
             </View>
           </View>
 
-          <View style={local.previewSection}>
-            <View style={local.previewHeader}>
-              <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Pedidos recientes</Text>
-              <TouchableOpacity onPress={() => router.push({ pathname: "/store/orders" as never, params: { storeId: store?.id } })}>
-                <Text style={local.viewAll}>Ver todos</Text>
-              </TouchableOpacity>
-            </View>
-            {orders.length === 0 ? (
-              <Text style={[shared.emptyText, isDark && shared.textMuted]}>No hay pedidos aun.</Text>
-            ) : (
-              orders.slice(0, 3).map((order) => (
-                <View key={order.id} style={[local.listRow, isDark ? local.listRowDark : local.listRowLight]}>
-                  <View style={local.rowInfo}>
-                    <Text style={[local.rowTitle, isDark && shared.textDark]} numberOfLines={1}>Pedido #{order.id.slice(0, 8)}</Text>
-                    <Text style={[local.rowSub, isDark && shared.textMuted]}>{order.items.length} {order.items.length === 1 ? "articulo" : "articulos"}</Text>
-                  </View>
-                  <View style={[local.statusBadge, { backgroundColor: statusColor(order.seller_status) }]}>
-                    <Text style={local.statusText}>{translateStatus(order.seller_status)}</Text>
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-
-          <View style={local.previewSection}>
-            <View style={local.previewHeader}>
-              <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Productos recientes</Text>
-              <TouchableOpacity onPress={() => router.push({ pathname: "/store/products" as never, params: { storeId: store?.id } })}>
-                <Text style={local.viewAll}>Ver todos</Text>
-              </TouchableOpacity>
-            </View>
-            {products.length === 0 ? (
-              <Text style={[shared.emptyText, isDark && shared.textMuted]}>Aun no tienes productos.</Text>
-            ) : (
-              products.slice(0, 3).map((product) => (
-                <TouchableOpacity
-                  key={product.id}
-                  style={[local.listRow, isDark ? local.listRowDark : local.listRowLight]}
-                  onPress={() => router.push({ pathname: "/store/products/[id]" as never, params: { id: product.id, storeId: store?.id } })}
-                  activeOpacity={0.7}
-                >
-                  <View style={local.rowInfo}>
-                    <Text style={[local.rowTitle, isDark && shared.textDark]} numberOfLines={1}>{product.name}</Text>
-                    <Text style={[local.rowSub, isDark && shared.textMuted]}>{formatPrice(product.base_price)}</Text>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={ms(20)} color={isDark ? "#9BA1A6" : "#687076"} />
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
         </ScrollView>
       )}
       <HamburgerMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />

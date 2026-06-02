@@ -2,8 +2,9 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import Button from "@/components/ui/Button";
 import { Colors } from "@/constants/theme";
-import { getProductById, Product } from "@/services/products";
-import { getProductImage } from "@/utils/productImages";
+import { getProduct } from "@/api/products";
+import { Product } from "@/types/store";
+import { formatPrice } from "@/utils/format";
 import { ms, s, vs } from "@/utils/scale";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -32,7 +33,7 @@ export default function ProductDetailScreen() {
   useEffect(() => {
     if (!id) return;
 
-    getProductById(Number(id))
+    getProduct(id)
       .then(setProduct)
       .catch(() => setError("No se pudo cargar el producto."))
       .finally(() => setLoading(false));
@@ -66,6 +67,10 @@ export default function ProductDetailScreen() {
     );
   }
 
+  const primaryImage = product?.images?.find((img) => img.is_primary)?.image_url 
+    ?? product?.images?.[0]?.image_url 
+    ?? "https://via.placeholder.com/400";
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
       <NavBar isDark={isDark} onBack={() => router.back()} />
@@ -77,16 +82,16 @@ export default function ProductDetailScreen() {
           </ThemedText>
 
           <Image
-            source={getProductImage(product.image_url)}
+            source={{ uri: primaryImage }}
             style={styles.mainImage}
             resizeMode="cover"
           />
         </View>
 
         <View style={[styles.infoCard, { backgroundColor: colors.contentBg }]}>
-          {product.price != null && (
+          {product.base_price != null && (
             <ThemedText type="defaultSemiBold" style={styles.price}>
-              ₡{product.price.toLocaleString("es-CR")}
+              {formatPrice(product.base_price)}
             </ThemedText>
           )}
 
