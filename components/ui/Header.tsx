@@ -1,14 +1,15 @@
 // UI primitives from React Native
 // MaterialIcons for the hamburger menu icon
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
 import {
-  View,
   Image,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
   useColorScheme,
+  View,
 } from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 type Props = {
   onMenuPress?: () => void;
@@ -18,6 +19,7 @@ export default function Header({ onMenuPress }: Props) {
   // reads the phone's system light/dark setting
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const router = useRouter();
 
   return (
     // no top padding here — the SafeAreaView edges={["top"]} wrapping this component handles the status bar offset
@@ -33,7 +35,7 @@ export default function Header({ onMenuPress }: Props) {
       </TouchableOpacity>
 
       {/* centered logo: bird image + app name stacked vertically */}
-      <View style={styles.brand}>
+      <TouchableOpacity  style={styles.brand} onPress={() => router.push("/")} activeOpacity={0.7}>
         <Image
           source={require("@/assets/images/logo.png")}
           style={styles.logo}
@@ -47,7 +49,7 @@ export default function Header({ onMenuPress }: Props) {
             -Artesano-
           </Text>
         </View>
-      </View>
+      </TouchableOpacity >
 
       {/* matches hamburger width so the brand stays visually centered */}
       <View style={styles.spacer} />

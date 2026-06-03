@@ -1,30 +1,31 @@
-import { useState, useEffect } from "react";
+import { ms, s, vs } from "@/utils/scale";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Modal,
-  View,
-  Text,
   Pressable,
-  TouchableOpacity,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   useColorScheme,
+  View,
 } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { s, vs, ms } from "@/utils/scale";
 
 const DRAWER_WIDTH = s(264);
 
 // placeholder links — onPress wired when screens are built
-const NAV_LINKS = [
-  "Productos",
-  "Marcas Aliadas",
-  "Contacto",
-  "Blog y novedades",
-  "Eventos",
+const NAV_LINKS: { label: string; route: string | null }[] = [
+  { label: "Productos",       route: "/products" },
+  { label: "Marcas Aliadas",  route: null },
+  { label: "Contacto",        route: null },
+  { label: "Blog y novedades",route: null },
+  { label: "Eventos",         route: null },
 ];
 
 type Props = {
@@ -34,6 +35,7 @@ type Props = {
 
 export default function HamburgerMenu({ isOpen, onClose }: Props) {
   const isDark = useColorScheme() === "dark";
+  const router = useRouter();
 
   // internal visibility controls modal — separate from isOpen so we can
   // animate out before hiding the modal
@@ -46,7 +48,6 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
       translateX.value = withTiming(0, { duration: 300 });
     } else {
       translateX.value = withTiming(-DRAWER_WIDTH, { duration: 300 });
-      // hide modal after animation completes
       const timer = setTimeout(() => setVisible(false), 300);
       return () => clearTimeout(timer);
     }
@@ -56,6 +57,12 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
     transform: [{ translateX: translateX.value }],
   }));
 
+  const handleNavPress = (route: string | null) => {
+    if (!route) return;
+    onClose();
+    setTimeout(() => router.push(route as any), 320);
+  };
+
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -63,14 +70,13 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
         {/* semi-transparent backdrop — closes menu on tap */}
         <Pressable style={styles.backdrop} onPress={onClose} />
 
-        {/* drawer panel slides in from left */}
         <Animated.View style={[
           styles.drawer,
           isDark ? styles.drawerDark : styles.drawerLight,
           animatedStyle,
         ]}>
 
-          {/* top action icons */}
+          {/* drawer panel slides in from left */}
           <View style={styles.iconsRow}>
             <TouchableOpacity onPress={() => {}}>
               <MaterialIcons name="person" size={ms(45)} color="#6B9E98" />
@@ -90,10 +96,19 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
 
           {/* navigation links */}
           <View style={styles.links}>
-            {NAV_LINKS.map((link) => (
-              <TouchableOpacity key={link} style={styles.linkItem} onPress={() => {}}>
-                <Text style={[styles.linkText, isDark ? styles.textDark : styles.textLight]}>
-                  {link}
+            {NAV_LINKS.map(({ label, route }) => (
+              <TouchableOpacity
+                key={label}
+                style={styles.linkItem}
+                onPress={() => handleNavPress(route)}
+                activeOpacity={route ? 0.6 : 1}
+              >
+                <Text style={[
+                  styles.linkText,
+                  isDark ? styles.textDark : styles.textLight,
+                  !route && styles.linkDisabled,
+                ]}>
+                  {label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -105,6 +120,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
               © 2025 El Colibrí Artesano Costa Rica.{"\n"}Todos los derechos reservados.
             </Text>
           </View>
+
         </Animated.View>
       </View>
     </Modal>
@@ -167,6 +183,9 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: ms(20),
     fontWeight: "500",
+  },
+  linkDisabled: {
+    opacity: 0.35,
   },
   textLight: {
     color: "#000",
