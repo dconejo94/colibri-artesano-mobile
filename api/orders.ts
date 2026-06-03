@@ -25,7 +25,6 @@ export async function updateOrderStatus(
   return data;
 }
 
-// -- Buyer Endpoints --------------------------------------------------------
 
 export async function createOrder(body: {
   buyer_id: string;

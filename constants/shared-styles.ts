@@ -4,11 +4,10 @@ import { s, vs, ms } from "@/utils/scale";
 // Shared styles consumed by all store management screens.
 // Screen-specific styles remain local to each screen file.
 const shared = StyleSheet.create({
-  // -- Screen wrapper -------------------------------------------------------
   wrapper: { flex: 1, backgroundColor: "#fff" },
   wrapperDark: { backgroundColor: "#000" },
 
-  // -- Sub-screen header (back button + title + spacer) ---------------------
+
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -21,10 +20,10 @@ const shared = StyleSheet.create({
   headerTitle: { fontSize: ms(16), fontWeight: "700", color: "#000" },
   headerSpacer: { width: s(80) },
 
-  // -- Centered container (loading / empty states) --------------------------
+
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: vs(12) },
 
-  // -- Card containers ------------------------------------------------------
+
   card: {
     backgroundColor: "#f5f5f5",
     borderRadius: ms(16),
@@ -33,7 +32,7 @@ const shared = StyleSheet.create({
   },
   cardDark: { backgroundColor: "#1a1a1a" },
 
-  // -- Section (used inside scroll views) -----------------------------------
+
   section: {
     backgroundColor: "#f5f5f5",
     borderRadius: ms(16),
@@ -48,7 +47,7 @@ const shared = StyleSheet.create({
   },
   sectionTitle: { fontSize: ms(15), fontWeight: "700", color: "#000" },
 
-  // -- Category chip picker -------------------------------------------------
+
   catSection: { gap: vs(8) },
   catLabel: { fontSize: ms(14), fontWeight: "600", color: "#000" },
   catEmpty: { fontSize: ms(13), color: "#687076", fontStyle: "italic" },
@@ -65,13 +64,13 @@ const shared = StyleSheet.create({
   catChipText: { fontSize: ms(13), color: "#000" },
   catChipTextSelected: { color: "#6B9E98", fontWeight: "600" },
 
-  // -- Feedback indicators --------------------------------------------------
+
   errorText: { fontSize: ms(13), color: "#EF4444" },
   successRow: { flexDirection: "row", alignItems: "center", gap: s(6) },
   successText: { fontSize: ms(13), color: "#10B981", fontWeight: "600" },
   emptyText: { fontSize: ms(13), color: "#687076", fontStyle: "italic" },
 
-  // -- Text color helpers ---------------------------------------------------
+
   textDark: { color: "#fff" },
   textMuted: { color: "#9BA1A6" },
 });

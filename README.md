@@ -1,50 +1,65 @@
-# Welcome to your Expo app 👋
+# Colibrí Artesano — Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Welcome to the mobile frontend for **Colibrí Artesano**, an e-commerce platform bridging local artisans and buyers. This application is designed to allow artisans to easily manage their stores, products, inventory variants, and order fulfillment right from their phones.
 
-## Get started
+This project is built using **React Native**, **Expo**, and **TypeScript**.
 
-1. Install dependencies
+---
 
-   ```bash
-   bun install
-   ```
+## Prerequisites
 
-2. Start the app
+- [Bun](https://bun.sh/) (JavaScript runtime and package manager)
+- [Expo Go](https://expo.dev/client) app installed on your physical device, OR
+- Android Studio Emulator / iOS Simulator installed on your machine.
 
-   ```bash
-   bun start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Getting Started
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### 1. Install Dependencies
+Clone the repository and install the dependencies using Bun:
 ```bash
-bun run reset-project
+bun install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Environment Configuration
+The application needs to communicate with the Colibrí Artesano backend (FastAPI). 
+If you are running the backend locally via Docker, the app uses smart defaults to connect to it automatically:
+- **Android Emulator**: Defaults to `http://10.0.2.2:8000`
+- **iOS Simulator**: Defaults to `http://localhost:8000`
 
-## Learn more
+**Testing on a Physical Device:**
+If you want to run the app on your physical phone via Expo Go, you **must** connect to the same Wi-Fi network as your computer and create a `.env` file in the root of the project:
+```env
+EXPO_PUBLIC_API_URL=http://<YOUR_COMPUTER_LOCAL_IP>:8000
+```
+*(Example: `EXPO_PUBLIC_API_URL=http://192.168.1.50:8000`)*
 
-To learn more about developing your project with Expo, look at the following resources:
+### 3. Start the Application
+Run the Expo bundler:
+```bash
+bun start --clear
+```
+- Press `a` to open in the Android Emulator.
+- Press `i` to open in the iOS Simulator.
+- Scan the QR code with the **Expo Go** app to run it on your physical device.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## Architecture & File Structure
 
-Join our community of developers creating universal apps.
+The project strictly follows a decoupled architectural pattern:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **`/app`**: Contains the Expo Router file-based navigation (e.g., `_layout.tsx`, `index.tsx`).
+- **`/screens`**: Contains the full UI views for the application, completely separated from the routing logic.
+- **`/api`**: Centralized Axios client and domain-specific endpoints (`products.ts`, `stores.ts`, `orders.ts`). All backend HTTP requests live here.
+- **`/components`**: Reusable UI blocks like buttons, inputs, category pickers, and the hamburger menu.
+- **`/types`**: Shared TypeScript interfaces that strictly match the backend PostgreSQL/Pydantic schemas.
+- **`/constants`**: Shared stylesheets (`shared-styles.ts`), theme tokens, and hardcoded development constants.
+
+---
+
+## Best Practices Implemented
+- **Safe State Updates:** Implemented spread-operator merging `(...prev, ...updated)` across all store screens to safely persist nested relationships even if the backend HTTP `PUT` responses omit them.
+- **Strict HTTP Method Parity:** Strictly respects the backend OpenAPI specifications (`PUT` vs `PATCH`).
+- **Granular Variant Management:** Includes an accessible inline stepper UI to manage nested product variants smoothly.

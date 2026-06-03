@@ -6,7 +6,6 @@ import type {
   PaginatedResponse,
 } from "@/types/store";
 
-// -- Products ---------------------------------------------------------------
 
 export async function getProducts(
   page = 1,
@@ -71,7 +70,6 @@ export async function updateProduct(
   return data;
 }
 
-// -- Images -----------------------------------------------------------------
 
 export async function addProductImage(
   productId: string,
@@ -91,7 +89,6 @@ export async function deleteProductImage(
   await client.delete(`/api/v1/products/${productId}/images/${imageId}`);
 }
 
-// -- Variants ---------------------------------------------------------------
 
 export async function addProductVariant(
   productId: string,
