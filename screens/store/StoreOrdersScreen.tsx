@@ -56,7 +56,7 @@ export default function StoreOrdersScreen() {
     setUpdatingId(order.id);
     try {
       const updated = await updateOrderStatus(storeId, order.id, next);
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? updated : o)));
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
     } catch { /* silent */ } finally {
       setUpdatingId(null);
     }
@@ -67,7 +67,7 @@ export default function StoreOrdersScreen() {
     setUpdatingId(order.id);
     try {
       const updated = await updateOrderStatus(storeId, order.id, "cancelled");
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? updated : o)));
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
     } catch { /* silent */ } finally {
       setUpdatingId(null);
     }
@@ -132,7 +132,7 @@ export default function StoreOrdersScreen() {
       ) : orders.length === 0 ? (
         <View style={shared.centered}>
           <MaterialIcons name="receipt-long" size={ms(64)} color={isDark ? "#4E7C74" : "#82A8AC"} />
-          <Text style={[local.emptyTitle, isDark && shared.textDark]}>No hay pedidos aun</Text>
+          <Text style={[local.emptyTitle, isDark && shared.textDark]}>No hay pedidos aún</Text>
         </View>
       ) : (
         <FlatList

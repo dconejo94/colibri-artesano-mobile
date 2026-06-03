@@ -30,6 +30,6 @@ export async function updateStore(
   storeId: string,
   body: { name?: string; description?: string }
 ): Promise<Store> {
-  const { data } = await client.patch<Store>(`/api/v1/stores/${storeId}`, body);
+  const { data } = await client.put<Store>(`/api/v1/stores/${storeId}`, body);
   return data;
 }

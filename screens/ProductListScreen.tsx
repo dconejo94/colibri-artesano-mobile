@@ -1,12 +1,17 @@
 import { ProductCard } from "@/components/products/ProductCard";
+import { ProductBottomSheet } from "@/components/products/ProductBottomSheet";
+
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+
 import HamburgerMenu from "@/components/ui/HamburgerMenu";
 import Header from "@/components/ui/Header";
 import { Colors } from "@/constants/theme";
-import { getProducts } from "@/api/products";
-import { Product } from "@/types/store";
+
 import { ms, s, vs } from "@/utils/scale";
+import { getProducts } from "@/api/products";
+import type { Product } from "@/types/store";
+
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -32,6 +37,7 @@ export default function ProductListScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -46,15 +52,10 @@ export default function ProductListScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+  useEffect(() => { loadProducts(); }, [loadProducts]);
 
   return (
-    <SafeAreaView
-      style={[styles.safe, { backgroundColor: colors.background }]}
-      edges={["top"]}
-    >
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
       <Header onMenuPress={() => setMenuOpen(true)} />
       <HamburgerMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
@@ -72,12 +73,18 @@ export default function ProductListScreen() {
       ) : (
         <FlatList
           data={products}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => item.id}
           numColumns={COLUMNS}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <ProductCard item={item} width={CARD_WIDTH} />}
+          renderItem={({ item }) => (
+            <ProductCard
+              item={item}
+              width={CARD_WIDTH}
+              onPress={() => setSelectedProduct(item)}
+            />
+          )}
           ListHeaderComponent={
             <ThemedText type="subtitle" style={styles.heading}>Productos</ThemedText>
           }
@@ -88,6 +95,13 @@ export default function ProductListScreen() {
           }
         />
       )}
+
+      <ProductBottomSheet
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={(qty) => console.log("Agregar", qty)}
+        onBuyNow={(qty) => console.log("Comprar", qty)}
+      />
     </SafeAreaView>
   );
 }
@@ -96,14 +110,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   heading: { marginBottom: vs(16) },
   grid: { padding: H_PADDING, paddingBottom: vs(32) },
-  row:  { justifyContent: "space-between", marginBottom: GAP },
+  row: { justifyContent: "space-between", marginBottom: GAP },
   center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: vs(12),
-    padding: s(24),
-    backgroundColor: "transparent",
+    flex: 1, alignItems: "center", justifyContent: "center",
+    gap: vs(12), padding: s(24), backgroundColor: "transparent",
   },
   errorText: { textAlign: "center", opacity: 0.8 },
   retryBtn: {
@@ -114,3 +124,4 @@ const styles = StyleSheet.create({
   },
   retryText: { color: "#fff", fontSize: ms(14) },
 });
+

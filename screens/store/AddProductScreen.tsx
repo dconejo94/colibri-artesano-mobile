@@ -76,7 +76,7 @@ export default function AddProductScreen() {
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
         <View style={[shared.card, isDark && shared.cardDark]}>
           <Input label="Nombre del producto" value={name} onChangeText={setName} placeholder="Ej: Vasija de Barro" />
-          <Input label="Descripcion" value={description} onChangeText={setDescription} placeholder="Describe tu producto..." multiline />
+          <Input label="Descripción" value={description} onChangeText={setDescription} placeholder="Describe tu producto..." multiline />
           <Input label="Precio base (colones)" value={basePrice} onChangeText={setBasePrice} placeholder="25000" keyboardType="numeric" />
 
           <CategoryPicker

@@ -64,7 +64,7 @@ export async function updateProduct(
     is_active: boolean;
   }>
 ): Promise<Product> {
-  const { data } = await client.patch<Product>(
+  const { data } = await client.put<Product>(
     `/api/v1/products/${productId}`,
     body
   );
@@ -119,7 +119,7 @@ export async function updateProductVariant(
     stock_quantity: number;
   }>
 ): Promise<ProductVariant> {
-  const { data } = await client.patch<ProductVariant>(
+  const { data } = await client.put<ProductVariant>(
     `/api/v1/products/${productId}/variants/${variantId}`,
     body
   );

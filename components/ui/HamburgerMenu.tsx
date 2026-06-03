@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-} from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
+import { ms, s, vs } from "@/utils/scale";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import { s, vs, ms } from "@/utils/scale";
+import { useEffect, useState } from "react";
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 const DRAWER_WIDTH = s(264);
 
@@ -26,6 +26,7 @@ type MenuEntry = {
 };
 
 const MENU_ITEMS: MenuEntry[] = [
+  { icon: "home", label: "Inicio", route: "/" },
   { icon: "person", label: "Mi Cuenta" },
   { icon: "shopping-cart", label: "Carrito" },
   { icon: "favorite", label: "Favoritos" },
@@ -57,7 +58,6 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
       translateX.value = withTiming(0, { duration: 300 });
     } else {
       translateX.value = withTiming(-DRAWER_WIDTH, { duration: 300 });
-      // hide modal after animation completes
       const timer = setTimeout(() => setVisible(false), 300);
       return () => clearTimeout(timer);
     }
@@ -81,7 +81,6 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
         {/* semi-transparent backdrop — closes menu on tap */}
         <Pressable style={styles.backdrop} onPress={onClose} />
 
-        {/* drawer panel slides in from left */}
         <Animated.View style={[
           styles.drawer,
           isDark ? styles.drawerDark : styles.drawerLight,
@@ -110,6 +109,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
               © 2025 El Colibri Artesano Costa Rica.{"\n"}Todos los derechos reservados.
             </Text>
           </View>
+
         </Animated.View>
       </View>
     </Modal>
@@ -154,6 +154,9 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: ms(20),
     fontWeight: "500",
+  },
+  linkDisabled: {
+    opacity: 0.35,
   },
   textLight: {
     color: "#000",

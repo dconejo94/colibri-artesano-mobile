@@ -1,84 +1,146 @@
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Product } from "@/types/store";
+import { Colors } from "@/constants/theme";
+import type { Product } from "@/types/store";
 import { formatPrice } from "@/utils/format";
 import { ms, s, vs } from "@/utils/scale";
-import { useRouter } from "expo-router";
-import { Image, StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import {
+  Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View,
+} from "react-native";
 
-type Props = {
-  item: Product;
-  width: number;
-};
+type Props = { item: Product; width: number; onPress: () => void };
 
-export function ProductCard({ item, width }: Props) {
-  const router = useRouter();
+export function ProductCard({ item, width, onPress }: Props) {
   const isDark = useColorScheme() === "dark";
+  const C = isDark ? Colors.dark : Colors.light;
 
-  // Get primary image or first image, fallback to placeholder URL if none
-  const primaryImage = item.images?.find((img) => img.is_primary)?.image_url 
-    ?? item.images?.[0]?.image_url 
-    ?? "https://via.placeholder.com/150";
+  const primaryImage = item.images?.find((img) => img.is_primary)?.image_url
+    ?? item.images?.[0]?.image_url
+    ?? null;
 
   return (
     <TouchableOpacity
-      style={[styles.card, { width }, isDark ? styles.cardDark : styles.cardLight]}
-      activeOpacity={0.85}
-      onPress={() => router.push(`/products/${item.id}`)}
+      style={[styles.card, { width, backgroundColor: C.headerBg }]}
+      activeOpacity={0.88}
+      onPress={onPress}
     >
-      <Image
-        source={{ uri: primaryImage }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <ThemedView style={styles.body}>
-        <ThemedText type="defaultSemiBold" numberOfLines={2} style={styles.name}>
+      <View style={[styles.favBtn, { backgroundColor: C.background }]}>
+        <MaterialIcons name="star" size={ms(18)} color={C.star} />
+      </View>
+
+      {primaryImage ? (
+        <Image
+          source={{ uri: primaryImage }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={[styles.image, styles.placeholderImage]}>
+          <MaterialIcons name="image" size={ms(40)} color="#ccc" />
+        </View>
+      )}
+
+      <View style={styles.body}>
+        <ThemedText
+          type="defaultSemiBold"
+          numberOfLines={2}
+          style={styles.name}
+          lightColor={C.textOnBrand}
+          darkColor={C.textOnBrand}
+        >
           {item.name}
         </ThemedText>
-        <ThemedText type="default" numberOfLines={2} style={styles.desc}>
+        <Text numberOfLines={2} style={[styles.subtitle, { color: C.textOnBrandMuted }]}>
           {item.description}
-        </ThemedText>
-        <ThemedText type="defaultSemiBold" style={styles.price}>
-          {formatPrice(item.base_price)}
-        </ThemedText>
-      </ThemedView>
+        </Text>
+      </View>
+
+      <View style={styles.footer}>
+        <View style={[styles.avatar, { backgroundColor: C.brand }]}>
+          <Text style={[styles.avatarText, { color: C.textOnBrand }]}>AR</Text>
+        </View>
+
+        <View style={styles.artisanInfo}>
+          <Text style={[styles.artisanName, { color: C.textOnBrand }]} numberOfLines={1}>
+            Artesano
+          </Text>
+          <Text style={[styles.artisanCategory, { color: C.textOnBrandMuted }]} numberOfLines={1}>
+            {formatPrice(item.base_price)}
+          </Text>
+        </View>
+
+        <View style={[styles.obtenerBtn, { backgroundColor: C.brandDeep }]}>
+          <Text style={[styles.obtenerText, { color: C.textOnBrand }]}>Obtener</Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: ms(12),
+    borderRadius: ms(16),
     overflow: "hidden",
-    elevation: 2,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
   },
-  cardLight: { backgroundColor: "#fff" },
-  cardDark:  { backgroundColor: "#1A1A1A" },
+  favBtn: {
+    position: "absolute",
+    top: s(8), right: s(8),
+    zIndex: 10,
+    borderRadius: ms(999),
+    padding: s(4),
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   image: {
     width: "100%",
-    height: vs(130),
+    height: vs(160),
+    borderRadius: ms(12),
+    marginTop: vs(8),
+    alignSelf: "center",
+  },
+  placeholderImage: {
+    backgroundColor: "#e8e8e8",
+    justifyContent: "center",
+    alignItems: "center",
   },
   body: {
-    padding: s(10),
-    gap: vs(4),
-    backgroundColor: "transparent",
+    paddingHorizontal: s(12),
+    paddingTop: vs(10),
+    paddingBottom: vs(4),
+    gap: vs(3),
   },
-  name: {
-    fontSize: ms(14),
-    lineHeight: ms(18),
+  name:     { fontSize: ms(15), lineHeight: ms(20) },
+  subtitle: { fontSize: ms(12), lineHeight: ms(16), fontStyle: "italic" },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: s(10),
+    paddingVertical: vs(10),
+    gap: s(8),
   },
-  desc: {
-    fontSize: ms(12),
-    lineHeight: ms(16),
-    opacity: 0.6,
+  avatar: {
+    width: ms(34), height: ms(34),
+    borderRadius: ms(999),
+    alignItems: "center",
+    justifyContent: "center",
   },
-  price: {
-    fontSize: ms(14),
-    marginTop: vs(4),
-    color: "#6B9E98",
+  avatarText:      { fontSize: ms(12), fontWeight: "700" },
+  artisanInfo:     { flex: 1 },
+  artisanName:     { fontSize: ms(12), fontWeight: "600", lineHeight: ms(16) },
+  artisanCategory: { fontSize: ms(11), lineHeight: ms(14) },
+  obtenerBtn: {
+    paddingHorizontal: s(14),
+    paddingVertical: vs(7),
+    borderRadius: ms(999),
   },
+  obtenerText: { fontSize: ms(12), fontWeight: "600" },
 });
+

@@ -92,7 +92,7 @@ export default function MyStoreScreen() {
             <View style={[shared.card, isDark && shared.cardDark]}>
               <Text style={[local.createTitle, isDark && shared.textDark]}>Crear mi tienda</Text>
               <Input label="Nombre" value={storeName} onChangeText={setStoreName} placeholder="Ej: Artesanias Chorotega" />
-              <Input label="Descripcion" value={storeDesc} onChangeText={setStoreDesc} placeholder="Describe tu tienda..." multiline />
+              <Input label="Descripción" value={storeDesc} onChangeText={setStoreDesc} placeholder="Describe tu tienda..." multiline />
               <View style={local.createActions}>
                 <Button title="Cancelar" variant="outline" onPress={() => setCreating(false)} />
                 <Button title="Crear" onPress={handleCreate} disabled={submitLoading || !storeName.trim()} />
@@ -101,9 +101,9 @@ export default function MyStoreScreen() {
           ) : (
             <View style={local.emptyState}>
               <MaterialIcons name="storefront" size={ms(80)} color={isDark ? "#4E7C74" : "#82A8AC"} />
-              <Text style={[local.emptyTitle, isDark && shared.textDark]}>Aun no tienes una tienda</Text>
+              <Text style={[local.emptyTitle, isDark && shared.textDark]}>Aún no tienes una tienda</Text>
               <Text style={[local.emptyBody, isDark && shared.textMuted]}>
-                Crea tu tienda para comenzar a vender tus artesanias.
+                Crea tu tienda para comenzar a vender tus artesanías.
               </Text>
               <Button title="Crear tienda" onPress={() => setCreating(true)} />
             </View>
@@ -134,7 +134,7 @@ export default function MyStoreScreen() {
               <MaterialIcons name="storefront" size={ms(36)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
               <View style={local.storeInfo}>
                 <Text style={[local.storeName, isDark && shared.textDark]} numberOfLines={1}>{store?.name}</Text>
-                <Text style={[local.storeDesc, isDark && shared.textMuted]} numberOfLines={2}>{store?.description || "Sin descripcion"}</Text>
+                <Text style={[local.storeDesc, isDark && shared.textMuted]} numberOfLines={2}>{store?.description || "Sin descripción"}</Text>
               </View>
               <TouchableOpacity onPress={() => router.push({ pathname: "/store/edit" as never, params: { storeId: store?.id } })} hitSlop={12}>
                 <MaterialIcons name="edit" size={ms(22)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
@@ -155,7 +155,7 @@ export default function MyStoreScreen() {
           </View>
 
           <View style={local.actionsSection}>
-            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Acciones rapidas</Text>
+            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Acciones rápidas</Text>
             <View style={local.actionsGrid}>
               {([
                 { icon: "add-box" as const, label: "Agregar producto", route: "/store/products/add" as const },

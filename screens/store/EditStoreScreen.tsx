@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   useColorScheme,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -67,6 +68,17 @@ export default function EditStoreScreen() {
     }
   };
 
+  const confirmSave = () => {
+    Alert.alert(
+      "Confirmar cambios",
+      "¿Deseas guardar los cambios de la tienda?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Guardar", onPress: handleSave },
+      ]
+    );
+  };
+
   const hasChanges = store && (name !== store.name || description !== store.description);
 
   return (
@@ -84,7 +96,7 @@ export default function EditStoreScreen() {
               <MaterialIcons name="storefront" size={ms(40)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
             </View>
             <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setSuccess(false); }} placeholder="Nombre" />
-            <Input label="Descripcion" value={description} onChangeText={(t) => { setDescription(t); setSuccess(false); }} placeholder="Describe tu tienda..." multiline />
+            <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSuccess(false); }} placeholder="Describe tu tienda..." multiline />
 
             {error && <Text style={shared.errorText}>{error}</Text>}
             {success && (
@@ -94,7 +106,7 @@ export default function EditStoreScreen() {
               </View>
             )}
 
-            <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={handleSave} disabled={saving || !hasChanges || !name.trim()} />
+            <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSave} disabled={saving || !hasChanges || !name.trim()} />
           </View>
         </ScrollView>
       )}

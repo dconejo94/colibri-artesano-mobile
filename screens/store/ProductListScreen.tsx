@@ -51,21 +51,20 @@ export default function ProductListScreen() {
   const totalStock = (product: Product) =>
     product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0;
 
-  const handleStockDelta = async (product: Product, delta: number) => {
+  const handleStockDelta = async (product: Product, delta: number, variantId: string) => {
     if (!product.variants || product.variants.length === 0) return;
-    if (product.variants.length > 1) {
-      Alert.alert("Multiples variantes", "Por favor edita el stock en los detalles del producto.");
-      return;
-    }
-    const variant = product.variants[0];
+    const variant = product.variants.find(v => v.id === variantId);
+    if (!variant) return;
+    
     const newStock = Math.max(0, variant.stock_quantity + delta);
     try {
       await updateProductVariant(product.id, variant.id, { stock_quantity: newStock });
       setProducts(products.map(p => {
         if (p.id === product.id) {
-          const newVars = [...p.variants];
-          newVars[0] = { ...newVars[0], stock_quantity: newStock };
-          return { ...p, variants: newVars };
+          return {
+            ...p,
+            variants: p.variants.map(v => v.id === variant.id ? { ...v, stock_quantity: newStock } : v)
+          };
         }
         return p;
       }));
@@ -74,20 +73,22 @@ export default function ProductListScreen() {
     }
   };
 
-  const handleStockChange = async (product: Product, value: string) => {
+  const handleStockChange = async (product: Product, value: string, variantId: string) => {
     if (!product.variants || product.variants.length === 0) return;
-    if (product.variants.length > 1) return;
+    const variant = product.variants.find(v => v.id === variantId);
+    if (!variant) return;
+
     const num = parseInt(value, 10);
     if (isNaN(num) || num < 0) return;
     
-    const variant = product.variants[0];
     try {
       await updateProductVariant(product.id, variant.id, { stock_quantity: num });
       setProducts(products.map(p => {
         if (p.id === product.id) {
-          const newVars = [...p.variants];
-          newVars[0] = { ...newVars[0], stock_quantity: num };
-          return { ...p, variants: newVars };
+          return {
+            ...p,
+            variants: p.variants.map(v => v.id === variant.id ? { ...v, stock_quantity: num } : v)
+          };
         }
         return p;
       }));
@@ -120,35 +121,7 @@ export default function ProductListScreen() {
         </View>
         <MaterialIcons name="chevron-right" size={ms(24)} color={isDark ? "#9BA1A6" : "#687076"} />
       </TouchableOpacity>
-      
-      {/* Stock Editor Inline */}
-      <View style={local.stockControls}>
-        <MaterialIcons name="inventory" size={ms(16)} color={isDark ? "#ACD4CD" : "#6B9E98"} style={{ marginRight: s(4) }} />
-        {item.variants && item.variants.length === 1 ? (
-          <View style={local.inlineEditor}>
-            <TouchableOpacity style={local.circleBtn} onPress={() => handleStockDelta(item, -1)}>
-              <MaterialIcons name="remove" size={ms(16)} color="#fff" />
-            </TouchableOpacity>
-            <TextInput
-              style={[local.stockInput, isDark && local.stockInputDark]}
-              value={String(totalStock(item))}
-              keyboardType="number-pad"
-              onChangeText={(text) => {
-                if (text === "") return;
-                handleStockChange(item, text);
-              }}
-            />
-            <TouchableOpacity style={local.circleBtn} onPress={() => handleStockDelta(item, 1)}>
-              <MaterialIcons name="add" size={ms(16)} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <Text style={[local.stockText, isDark && shared.textMuted]}>
-            {item.variants && item.variants.length > 1 ? `${totalStock(item)} uds (Multiples)` : "Sin variantes"}
-          </Text>
-        )}
-      </View>
-
+      {/* Remove stock controls from list view as requested */}
       {!item.is_active && (
         <View style={local.inactiveBadge}>
           <Text style={local.inactiveText}>Inactivo</Text>
@@ -168,7 +141,7 @@ export default function ProductListScreen() {
       ) : products.length === 0 ? (
         <View style={shared.centered}>
           <MaterialIcons name="inventory-2" size={ms(64)} color={isDark ? "#4E7C74" : "#82A8AC"} />
-          <Text style={[local.emptyTitle, isDark && shared.textDark]}>Sin productos aun</Text>
+          <Text style={[local.emptyTitle, isDark && shared.textDark]}>Sin productos aún</Text>
           <Button title="Agregar producto" onPress={() => router.push({ pathname: "/store/products/add" as never, params: { storeId } })} />
         </View>
       ) : (
@@ -198,12 +171,15 @@ const local = StyleSheet.create({
   productName: { fontSize: ms(14), fontWeight: "700", color: "#000" },
   productDesc: { fontSize: ms(11), color: "#687076" },
   price: { fontSize: ms(14), fontWeight: "700", color: "#000", marginTop: vs(4) },
-  stockControls: { flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: "rgba(150,150,150,0.2)", paddingTop: vs(10) },
+  stockControls: { alignItems: "flex-start", borderTopWidth: 1, borderTopColor: "rgba(150,150,150,0.2)", paddingTop: vs(10) },
+  variantsContainer: { gap: vs(6), width: "100%", marginTop: vs(4) },
+  variantRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingLeft: s(20) },
+  variantName: { fontSize: ms(12), color: "#687076", flex: 1 },
   inlineEditor: { flexDirection: "row", alignItems: "center", gap: s(8) },
   circleBtn: { width: ms(24), height: ms(24), borderRadius: ms(12), backgroundColor: "#6B9E98", justifyContent: "center", alignItems: "center" },
   stockInput: { fontSize: ms(14), fontWeight: "600", color: "#000", minWidth: ms(40), textAlign: "center", padding: 0 },
   stockInputDark: { color: "#fff" },
-  stockText: { fontSize: ms(11), color: "#687076" },
+  stockText: { fontSize: ms(11), color: "#687076", marginLeft: s(20), marginTop: vs(4) },
   inactiveBadge: { position: "absolute", top: 0, right: 0, backgroundColor: "#EF4444", paddingHorizontal: s(8), paddingVertical: vs(2), borderBottomLeftRadius: ms(8) },
   inactiveText: { fontSize: ms(10), color: "#fff", fontWeight: "600" },
   emptyTitle: { fontSize: ms(16), fontWeight: "600", color: "#000" },

@@ -1,6 +1,7 @@
 export type Category = {
   id: string;
   name: string;
+  slug: string;
   description?: string;
 };
 
@@ -16,7 +17,7 @@ export type ProductVariant = {
   product_id: string;
   name: string;
   value: string;
-  price_modifier: number;
+  price_modifier: string | number;
   stock_quantity: number;
 };
 
@@ -26,7 +27,7 @@ export type Product = {
   category_id: string;
   name: string;
   description: string;
-  base_price: number;
+  base_price: string | number;
   is_active: boolean;
   images: ProductImage[];
   variants: ProductVariant[];
@@ -39,6 +40,7 @@ export type Store = {
   owner_id: string;
   name: string;
   description: string;
+  logo_url?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -49,7 +51,7 @@ export type OrderItem = {
   product_id: string;
   variant_id: string | null;
   quantity: number;
-  unit_price: number;
+  unit_price: string | number;
   product?: Product;
 };
 

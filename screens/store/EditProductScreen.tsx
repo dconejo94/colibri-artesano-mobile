@@ -97,13 +97,20 @@ export default function EditProductScreen() {
         base_price: price,
         category_id: categoryId ?? undefined,
       });
-      setProduct(updated);
+      setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
       setSaveMsg("Producto actualizado");
     } catch {
       setSaveError("No se pudo actualizar.");
     } finally {
       setSaving(false);
     }
+  };
+
+  const confirmSaveProduct = () => {
+    Alert.alert("Confirmar", "¿Guardar los cambios del producto?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Guardar", onPress: handleSaveProduct },
+    ]);
   };
 
   const handleAddVariant = async () => {
@@ -118,12 +125,19 @@ export default function EditProductScreen() {
         price_modifier: priceMod,
         stock_quantity: stock,
       });
-      setProduct((prev) => prev ? { ...prev, variants: [...prev.variants, variant] } : prev);
+      setProduct((prev) => prev ? { ...prev, variants: [...(prev.variants || []), variant] } : prev);
       setVarName(""); setVarValue(""); setVarPrice(""); setVarStock("");
       setShowVariantForm(false);
     } catch { /* silent */ } finally {
       setVarSaving(false);
     }
+  };
+
+  const confirmAddVariant = () => {
+    Alert.alert("Confirmar", "¿Agregar nueva variante?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Agregar", onPress: handleAddVariant },
+    ]);
   };
 
   const handleUpdateStock = async (variant: ProductVariant) => {
@@ -135,13 +149,25 @@ export default function EditProductScreen() {
       const updated = await updateProductVariant(id, variant.id, { stock_quantity: qty });
       setProduct((prev) => prev ? {
         ...prev,
-        variants: prev.variants.map((v) => v.id === variant.id ? updated : v),
+        variants: (prev.variants || []).map((v) => v.id === variant.id ? updated : v),
       } : prev);
       setEditingVariantId(null);
       setEditStock("");
     } catch { /* silent */ } finally {
       setStockSaving(false);
     }
+  };
+
+  const confirmSaveStock = (variant: ProductVariant) => {
+    Alert.alert("Confirmar", `¿Guardar cambios de stock para "${variant.value}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Guardar", onPress: () => handleUpdateStock(variant) },
+    ]);
+  };
+
+  const handleStockDelta = (delta: number) => {
+    const current = parseInt(editStock, 10) || 0;
+    setEditStock(String(Math.max(0, current + delta)));
   };
 
   const handleDeleteVariant = (variant: ProductVariant) => {
@@ -154,7 +180,7 @@ export default function EditProductScreen() {
             await deleteProductVariant(id, variant.id);
             setProduct((prev) => prev ? {
               ...prev,
-              variants: prev.variants.filter((v) => v.id !== variant.id),
+              variants: (prev.variants || []).filter((v) => v.id !== variant.id),
             } : prev);
           } catch { /* silent */ }
         },
@@ -166,8 +192,8 @@ export default function EditProductScreen() {
     if (!id || !imageUrl.trim()) return;
     setImageSaving(true);
     try {
-      const img = await addProductImage(id, { image_url: imageUrl.trim(), is_primary: (product?.images.length ?? 0) === 0 });
-      setProduct((prev) => prev ? { ...prev, images: [...prev.images, img] } : prev);
+      const img = await addProductImage(id, { image_url: imageUrl.trim(), is_primary: (product?.images?.length ?? 0) === 0 });
+      setProduct((prev) => prev ? { ...prev, images: [...(prev.images || []), img] } : prev);
       setImageUrl("");
       setShowImageForm(false);
     } catch { /* silent */ } finally {
@@ -192,9 +218,9 @@ export default function EditProductScreen() {
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
         {/* Product info section */}
         <View style={[shared.section, isDark && shared.sectionDark]}>
-          <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Informacion del producto</Text>
+          <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Información del producto</Text>
           <Input label="Nombre" value={name} onChangeText={(t) => { setName(t); setSaveMsg(null); }} placeholder="Nombre" />
-          <Input label="Descripcion" value={description} onChangeText={(t) => { setDescription(t); setSaveMsg(null); }} placeholder="Descripcion" multiline />
+          <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSaveMsg(null); }} placeholder="Descripción" multiline />
           <Input label="Precio base" value={basePrice} onChangeText={(t) => { setBasePrice(t); setSaveMsg(null); }} placeholder="25000" keyboardType="numeric" />
 
           {categories.length > 0 && (
@@ -212,19 +238,19 @@ export default function EditProductScreen() {
               <Text style={shared.successText}>{saveMsg}</Text>
             </View>
           )}
-          <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={handleSaveProduct} disabled={saving || !name.trim()} />
+          <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSaveProduct} disabled={saving || !name.trim()} />
         </View>
 
         {/* Images section */}
         <View style={[shared.section, isDark && shared.sectionDark]}>
           <View style={shared.sectionHeader}>
-            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Imagenes</Text>
+            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Imágenes</Text>
             <TouchableOpacity onPress={() => setShowImageForm(!showImageForm)}>
               <MaterialIcons name={showImageForm ? "close" : "add-circle"} size={ms(24)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
             </TouchableOpacity>
           </View>
           {product?.images.length === 0 && !showImageForm && (
-            <Text style={[shared.emptyText, isDark && shared.textMuted]}>Sin imagenes</Text>
+            <Text style={[shared.emptyText, isDark && shared.textMuted]}>Sin imágenes</Text>
           )}
           {product?.images.map((img) => (
             <View key={img.id} style={[local.imageRow, isDark && local.imageRowDark]}>
@@ -271,9 +297,19 @@ export default function EditProductScreen() {
               </View>
               {editingVariantId === v.id ? (
                 <View style={local.stockEditRow}>
-                  <Input value={editStock} onChangeText={setEditStock} placeholder="Cantidad" keyboardType="numeric" style={local.stockInput} />
-                  <Button title={stockSaving ? "..." : "Guardar"} onPress={() => handleUpdateStock(v)} disabled={stockSaving} />
-                  <Button title="X" variant="outline" onPress={() => setEditingVariantId(null)} />
+                  <View style={local.stepper}>
+                    <TouchableOpacity style={local.circleBtn} onPress={() => handleStockDelta(-1)}>
+                      <MaterialIcons name="remove" size={ms(16)} color="#fff" />
+                    </TouchableOpacity>
+                    <Input value={editStock} onChangeText={setEditStock} keyboardType="numeric" style={local.stockInput} />
+                    <TouchableOpacity style={local.circleBtn} onPress={() => handleStockDelta(1)}>
+                      <MaterialIcons name="add" size={ms(16)} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={local.stockEditActions}>
+                    <Button title={stockSaving ? "..." : "Guardar"} onPress={() => confirmSaveStock(v)} disabled={stockSaving} />
+                    <Button title="Cancelar" variant="outline" onPress={() => setEditingVariantId(null)} />
+                  </View>
                 </View>
               ) : (
                 <TouchableOpacity onPress={() => { setEditingVariantId(v.id); setEditStock(String(v.stock_quantity)); }} style={local.editStockBtn}>
@@ -287,11 +323,11 @@ export default function EditProductScreen() {
           {showVariantForm && (
             <View style={[local.variantForm, isDark && local.variantFormDark]}>
               <Text style={[local.formTitle, isDark && shared.textDark]}>Nueva variante</Text>
-              <Input label="Nombre (ej: Tamano)" value={varName} onChangeText={setVarName} placeholder="Tamano" />
+              <Input label="Nombre (ej: Tamaño)" value={varName} onChangeText={setVarName} placeholder="Tamaño" />
               <Input label="Valor (ej: Grande)" value={varValue} onChangeText={setVarValue} placeholder="Grande" />
               <Input label="Modificador de precio" value={varPrice} onChangeText={setVarPrice} placeholder="5000" keyboardType="numeric" />
               <Input label="Stock inicial" value={varStock} onChangeText={setVarStock} placeholder="10" keyboardType="numeric" />
-              <Button title={varSaving ? "Guardando..." : "Agregar variante"} onPress={handleAddVariant} disabled={varSaving || !varName.trim() || !varValue.trim()} />
+              <Button title={varSaving ? "Guardando..." : "Agregar variante"} onPress={confirmAddVariant} disabled={varSaving || !varName.trim() || !varValue.trim()} />
             </View>
           )}
         </View>
@@ -314,8 +350,11 @@ const local = StyleSheet.create({
   variantInfo: { flex: 1, gap: vs(2) },
   variantName: { fontSize: ms(13), fontWeight: "600", color: "#000" },
   variantMeta: { fontSize: ms(11), color: "#687076" },
-  stockEditRow: { flexDirection: "row", alignItems: "center", gap: s(8) },
-  stockInput: { flex: 1 },
+  stockEditRow: { gap: vs(8), marginTop: vs(8), paddingTop: vs(8), borderTopWidth: 1, borderTopColor: "rgba(150,150,150,0.2)" },
+  stepper: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: s(16) },
+  circleBtn: { width: ms(32), height: ms(32), borderRadius: ms(16), backgroundColor: "#6B9E98", justifyContent: "center", alignItems: "center" },
+  stockInput: { flex: 0, minWidth: ms(80), textAlign: "center" },
+  stockEditActions: { flexDirection: "row", justifyContent: "flex-end", gap: s(8) },
   editStockBtn: { flexDirection: "row", alignItems: "center", gap: s(4) },
   editStockText: { fontSize: ms(12), color: "#6B9E98", fontWeight: "600" },
   variantForm: { backgroundColor: "rgba(107,158,152,0.08)", borderRadius: ms(12), padding: s(16), gap: vs(12) },
