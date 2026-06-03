@@ -12,12 +12,13 @@ export async function createStore(body: {
 
 export async function getStoreByOwner(ownerId: string): Promise<Store | null> {
   try {
-    const { data } = await client.get<{ items: Store[] }>("/api/v1/stores/", {
-      params: { owner_id: ownerId }
-    });
-    return data.items.length > 0 ? data.items[0] : null;
-  } catch (error) {
-    return null;
+    const { data } = await client.get<Store>(`/api/v1/stores/owner/${ownerId}`);
+    return data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
   }
 }
 

@@ -77,7 +77,7 @@ export default function EditProductScreen() {
         setBasePrice(String(prod.base_price));
         setCategoryId(prod.category_id);
         setCategories(catRes.items);
-      } catch { /* silent */ } finally {
+      } catch { Alert.alert("Error", "No se pudo cargar el producto."); } finally {
         setLoading(false);
       }
     })();
@@ -128,7 +128,7 @@ export default function EditProductScreen() {
       setProduct((prev) => prev ? { ...prev, variants: [...(prev.variants || []), variant] } : prev);
       setVarName(""); setVarValue(""); setVarPrice(""); setVarStock("");
       setShowVariantForm(false);
-    } catch { /* silent */ } finally {
+    } catch { Alert.alert("Error", "No se pudo agregar la variante."); } finally {
       setVarSaving(false);
     }
   };
@@ -153,7 +153,7 @@ export default function EditProductScreen() {
       } : prev);
       setEditingVariantId(null);
       setEditStock("");
-    } catch { /* silent */ } finally {
+    } catch { Alert.alert("Error", "No se pudo actualizar el stock."); } finally {
       setStockSaving(false);
     }
   };
@@ -182,7 +182,7 @@ export default function EditProductScreen() {
               ...prev,
               variants: (prev.variants || []).filter((v) => v.id !== variant.id),
             } : prev);
-          } catch { /* silent */ }
+          } catch { Alert.alert("Error", "No se pudo eliminar la variante."); }
         },
       },
     ]);
@@ -196,7 +196,7 @@ export default function EditProductScreen() {
       setProduct((prev) => prev ? { ...prev, images: [...(prev.images || []), img] } : prev);
       setImageUrl("");
       setShowImageForm(false);
-    } catch { /* silent */ } finally {
+    } catch { Alert.alert("Error", "No se pudo agregar la imagen."); } finally {
       setImageSaving(false);
     }
   };
