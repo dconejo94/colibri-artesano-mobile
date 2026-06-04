@@ -19,13 +19,23 @@ import Animated, {
 
 const DRAWER_WIDTH = s(264);
 
-// placeholder links — onPress wired when screens are built
-const NAV_LINKS: { label: string; route: string | null }[] = [
-  { label: "Productos",       route: "/products" },
-  { label: "Marcas Aliadas",  route: null },
-  { label: "Contacto",        route: null },
-  { label: "Blog y novedades",route: null },
-  { label: "Eventos",         route: null },
+type MenuEntry = {
+  icon: React.ComponentProps<typeof MaterialIcons>["name"];
+  label: string;
+  route?: string;
+};
+
+const MENU_ITEMS: MenuEntry[] = [
+  { icon: "home", label: "Inicio", route: "/" },
+  { icon: "person", label: "Mi Cuenta" },
+  { icon: "shopping-cart", label: "Carrito" },
+  { icon: "favorite", label: "Favoritos" },
+  { icon: "storefront", label: "Mi Tienda", route: "/store" },
+  { icon: "category", label: "Productos", route: "/products" },
+  { icon: "handshake", label: "Marcas Aliadas" },
+  { icon: "mail", label: "Contacto" },
+  { icon: "article", label: "Blog y novedades" },
+  { icon: "event", label: "Eventos" },
 ];
 
 type Props = {
@@ -57,10 +67,11 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
     transform: [{ translateX: translateX.value }],
   }));
 
-  const handleNavPress = (route: string | null) => {
-    if (!route) return;
+  const handlePress = (entry: MenuEntry) => {
     onClose();
-    setTimeout(() => router.push(route as any), 320);
+    if (entry.route) {
+      router.push(entry.route as never);
+    }
   };
 
   return (
@@ -76,39 +87,17 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           animatedStyle,
         ]}>
 
-          {/* drawer panel slides in from left */}
-          <View style={styles.iconsRow}>
-            <TouchableOpacity onPress={() => {}}>
-              <MaterialIcons name="person" size={ms(45)} color="#6B9E98" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <MaterialIcons name="shopping-cart" size={ms(45)} color="#6B9E98" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <MaterialIcons name="star" size={ms(45)} color="#6B9E98" />
-            </TouchableOpacity>
-          </View>
-
-          {/* search bar placeholder — SearchBar component (#18) wired here later */}
-          <View style={[styles.searchBar, isDark ? styles.searchBarDark : styles.searchBarLight]}>
-            <MaterialIcons name="search" size={ms(20)} color={isDark ? "#fff" : "#888"} />
-          </View>
-
           {/* navigation links */}
           <View style={styles.links}>
-            {NAV_LINKS.map(({ label, route }) => (
+            {MENU_ITEMS.map((entry) => (
               <TouchableOpacity
-                key={label}
+                key={entry.label}
                 style={styles.linkItem}
-                onPress={() => handleNavPress(route)}
-                activeOpacity={route ? 0.6 : 1}
+                onPress={() => handlePress(entry)}
               >
-                <Text style={[
-                  styles.linkText,
-                  isDark ? styles.textDark : styles.textLight,
-                  !route && styles.linkDisabled,
-                ]}>
-                  {label}
+                <MaterialIcons name={entry.icon} size={ms(22)} color="#6B9E98" />
+                <Text style={[styles.linkText, isDark ? styles.textDark : styles.textLight]}>
+                  {entry.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -117,7 +106,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           {/* footer branding */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, isDark ? styles.textDark : styles.textLight]}>
-              © 2025 El Colibrí Artesano Costa Rica.{"\n"}Todos los derechos reservados.
+              © 2025 El Colibri Artesano Costa Rica.{"\n"}Todos los derechos reservados.
             </Text>
           </View>
 
@@ -153,31 +142,13 @@ const styles = StyleSheet.create({
   drawerDark: {
     backgroundColor: "rgba(0,0,0,0.88)",
   },
-  iconsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: s(24),
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: ms(20),
-    borderWidth: 1,
-    paddingHorizontal: s(12),
-    paddingVertical: vs(8),
-  },
-  searchBarLight: {
-    borderColor: "#ccc",
-    backgroundColor: "#f5f5f5",
-  },
-  searchBarDark: {
-    borderColor: "#444",
-    backgroundColor: "#111",
-  },
   links: {
     gap: vs(4),
   },
   linkItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: s(10),
     paddingVertical: vs(12),
   },
   linkText: {

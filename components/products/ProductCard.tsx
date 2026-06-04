@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { Colors } from "@/constants/theme";
-import { Product } from "@/services/products";
-import { getProductImage } from "@/utils/productImages";
+import type { Product } from "@/types/store";
+import { formatPrice } from "@/utils/format";
 import { ms, s, vs } from "@/utils/scale";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
@@ -14,6 +14,10 @@ export function ProductCard({ item, width, onPress }: Props) {
   const isDark = useColorScheme() === "dark";
   const C = isDark ? Colors.dark : Colors.light;
 
+  const primaryImage = item.images?.find((img) => img.is_primary)?.image_url
+    ?? item.images?.[0]?.image_url
+    ?? null;
+
   return (
     <TouchableOpacity
       style={[styles.card, { width, backgroundColor: C.headerBg }]}
@@ -24,11 +28,17 @@ export function ProductCard({ item, width, onPress }: Props) {
         <MaterialIcons name="star" size={ms(18)} color={C.star} />
       </View>
 
-      <Image
-        source={getProductImage(item.image_url)}
-        style={styles.image}
-        resizeMode="cover"
-      />
+      {primaryImage ? (
+        <Image
+          source={{ uri: primaryImage }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={[styles.image, styles.placeholderImage]}>
+          <MaterialIcons name="image" size={ms(40)} color="#ccc" />
+        </View>
+      )}
 
       <View style={styles.body}>
         <ThemedText
@@ -55,7 +65,7 @@ export function ProductCard({ item, width, onPress }: Props) {
             Artesano
           </Text>
           <Text style={[styles.artisanCategory, { color: C.textOnBrandMuted }]} numberOfLines={1}>
-            {item.category ?? "Artesanía"}
+            {formatPrice(item.base_price)}
           </Text>
         </View>
 
@@ -96,6 +106,11 @@ const styles = StyleSheet.create({
     marginTop: vs(8),
     alignSelf: "center",
   },
+  placeholderImage: {
+    backgroundColor: "#e8e8e8",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   body: {
     paddingHorizontal: s(12),
     paddingTop: vs(10),
@@ -128,3 +143,4 @@ const styles = StyleSheet.create({
   },
   obtenerText: { fontSize: ms(12), fontWeight: "600" },
 });
+

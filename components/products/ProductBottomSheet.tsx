@@ -2,7 +2,7 @@ import { ProductDescription } from "./Detail/ProductDescription";
 import { ProductDetailHeader } from "./Detail/ProductDetailHeader";
 import { ProductMeta } from "./Detail/ProductMeta";
 import { Colors } from "@/constants/theme";
-import { Product } from "@/services/products";
+import type { Product } from "@/types/store";
 import { ms, s, vs } from "@/utils/scale";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -53,6 +53,15 @@ export function ProductBottomSheet({ product, onClose, onAddToCart, onBuyNow }: 
 
   if (!visibleProduct) return null;
 
+  const primaryImageUrl = visibleProduct.images?.find((img) => img.is_primary)?.image_url
+    ?? visibleProduct.images?.[0]?.image_url
+    ?? undefined;
+
+  const totalStock = visibleProduct.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) ?? 0;
+  const price = typeof visibleProduct.base_price === "string"
+    ? parseFloat(visibleProduct.base_price)
+    : visibleProduct.base_price;
+
   return (
     <>
       <Animated.View
@@ -72,7 +81,7 @@ export function ProductBottomSheet({ product, onClose, onAddToCart, onBuyNow }: 
         <ProductDetailHeader
           name={visibleProduct.name}
           storeName="Artesano"
-          imageUrl={visibleProduct.image_url}
+          imageUrl={primaryImageUrl}
           isDark={isDark}
         />
 
@@ -85,10 +94,10 @@ export function ProductBottomSheet({ product, onClose, onAddToCart, onBuyNow }: 
           bounces={false}
         >
           <ProductMeta
-            price={visibleProduct.price ?? null}
+            price={price ?? null}
             rating={4.8}
             reviewCount={124}
-            stock={visibleProduct.stock ?? 0}
+            stock={totalStock}
             qty={qty}
             onQtyChange={setQty}
           />

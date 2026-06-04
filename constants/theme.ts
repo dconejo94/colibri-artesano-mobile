@@ -17,8 +17,8 @@ export const Colors = {
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
 
-    headerBg:   '#ACD4CD',
-    contentBg:  '#FAE4E4',
+    headerBg: '#ACD4CD',
+    contentBg: '#FAE4E4',
     surfaceAlt: '#F0F5F5',
     divider:    '#EFEFEF',
 
@@ -44,8 +44,8 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
 
-    headerBg:   '#4E7C74',
-    contentBg:  '#3F1D23',
+    headerBg: '#4E7C74',
+    contentBg: '#3F1D23',
     surfaceAlt: '#2A2A2A',
     divider:    '#222222',
 

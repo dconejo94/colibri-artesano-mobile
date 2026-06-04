@@ -9,7 +9,8 @@ import Header from "@/components/ui/Header";
 import { Colors } from "@/constants/theme";
 
 import { ms, s, vs } from "@/utils/scale";
-import { getProducts, Product } from "@/services/products";
+import { getProducts } from "@/api/products";
+import type { Product } from "@/types/store";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -72,7 +73,7 @@ export default function ProductListScreen() {
       ) : (
         <FlatList
           data={products}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => item.id}
           numColumns={COLUMNS}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.row}
@@ -81,7 +82,7 @@ export default function ProductListScreen() {
             <ProductCard
               item={item}
               width={CARD_WIDTH}
-              onPress={() => setSelectedProduct(item)} // ← nuevo
+              onPress={() => setSelectedProduct(item)}
             />
           )}
           ListHeaderComponent={
@@ -123,3 +124,4 @@ const styles = StyleSheet.create({
   },
   retryText: { color: "#fff", fontSize: ms(14) },
 });
+
