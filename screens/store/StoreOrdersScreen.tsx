@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   useColorScheme,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
@@ -40,7 +41,7 @@ export default function StoreOrdersScreen() {
       setOrders(append ? (prev) => [...prev, ...res.items] : res.items);
       setTotal(res.total);
       setPage(p);
-    } catch { /* silent */ } finally {
+    } catch { Alert.alert("Error", "No se pudieron cargar los pedidos."); } finally {
       setLoading(false);
       setLoadingMore(false);
     }
@@ -57,7 +58,7 @@ export default function StoreOrdersScreen() {
     try {
       const updated = await updateOrderStatus(storeId, order.id, next);
       setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
-    } catch { /* silent */ } finally {
+    } catch { Alert.alert("Error", "No se pudo actualizar el pedido."); } finally {
       setUpdatingId(null);
     }
   };
@@ -68,7 +69,7 @@ export default function StoreOrdersScreen() {
     try {
       const updated = await updateOrderStatus(storeId, order.id, "cancelled");
       setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
-    } catch { /* silent */ } finally {
+    } catch { Alert.alert("Error", "No se pudo cancelar el pedido."); } finally {
       setUpdatingId(null);
     }
   };
