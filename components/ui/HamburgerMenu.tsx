@@ -4,7 +4,6 @@ import {
   View,
   Text,
   Pressable,
-  TouchableOpacity,
   StyleSheet,
 } from 'react-native';
 import Animated, {
@@ -13,17 +12,31 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { s, vs, ms } from '@/utils/scale';
+import { useRouter, usePathname } from 'expo-router';
+import { s, vs } from '@/utils/scale';
 import { useTheme } from '@/src/theme';
 
-const DRAWER_WIDTH = s(264);
+// ─── Ancho del panel ─────────────────────────────────────────────────────────
+const DRAWER_WIDTH = s(280);
+const ANIM_DURATION = 280;
 
-const NAV_LINKS = [
-  'Productos',
-  'Marcas Aliadas',
-  'Contacto',
-  'Blog y novedades',
-  'Eventos',
+// ─── Datos del usuario (placeholder — reemplazar con contexto de auth) ───────
+const USER = {
+  initials: 'EG',
+  name:     'Elena Gómez',
+  role:     'Artesana',
+  location: 'Heredia',
+};
+
+// ─── Items de navegación ─────────────────────────────────────────────────────
+// icon: nombre de MaterialIcons, href: ruta de Expo Router
+const NAV_ITEMS = [
+  { label: 'Inicio',     icon: 'home'           as const, href: '/'          },
+  { label: 'Productos',  icon: 'eco'            as const, href: '/productos'  },
+  { label: 'Mi Tienda',  icon: 'storefront'     as const, href: '/tienda'    },
+  { label: 'Eventos',    icon: 'event'          as const, href: '/eventos'   },
+  { label: 'Carrito',    icon: 'shopping-cart'  as const, href: '/carrito'   },
+  { label: 'Favoritos',  icon: 'favorite'       as const, href: '/favoritos' },
 ];
 
 type Props = {
@@ -32,19 +45,22 @@ type Props = {
 };
 
 export default function HamburgerMenu({ isOpen, onClose }: Props) {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, radii, text } = useTheme();
+  const router   = useRouter();
+  const pathname = usePathname();
 
   const [visible, setVisible] = useState(false);
   const translateX = useSharedValue(-DRAWER_WIDTH);
 
+  // Maneja animación de entrada / salida
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
-      translateX.value = withTiming(0, { duration: 300 });
+      translateX.value = withTiming(0, { duration: ANIM_DURATION });
     } else {
-      translateX.value = withTiming(-DRAWER_WIDTH, { duration: 300 });
-      const timer = setTimeout(() => setVisible(false), 300);
-      return () => clearTimeout(timer);
+      translateX.value = withTiming(-DRAWER_WIDTH, { duration: ANIM_DURATION });
+      const t = setTimeout(() => setVisible(false), ANIM_DURATION);
+      return () => clearTimeout(t);
     }
   }, [isOpen]);
 
@@ -52,148 +68,165 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
     transform: [{ translateX: translateX.value }],
   }));
 
+  // Navega a la ruta y cierra el drawer
+  const handleNav = (href: string) => {
+    onClose();
+    // Pequeño delay para dejar que la animación de cierre empiece
+    setTimeout(() => router.push(href as any), 80);
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        {/* Backdrop con tinte verde oscuro de la marca, no negro genérico */}
-        <Pressable
-          style={[styles.backdrop, { backgroundColor: 'rgba(44,56,48,0.5)' }]}
-          onPress={onClose}
-          accessibilityLabel="Cerrar menú"
-        />
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      {/* Backdrop con tinte verde oscuro de la marca */}
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: 'rgba(44,56,48,0.45)' }]}
+        onPress={onClose}
+        accessibilityLabel="Cerrar menú"
+      />
 
-        <Animated.View
-          style={[
-            styles.drawer,
-            {
-              backgroundColor:  colors.bgNavbar,
-              borderRightWidth: 0.5,
-              borderRightColor: colors.border,
-              paddingTop:       vs(60),
-              paddingHorizontal: s(20),
-              paddingBottom:    vs(24),
-            },
-            animatedStyle,
-          ]}
-        >
-          {/* Íconos de acción superiores */}
-          <View style={styles.iconsRow}>
-            <TouchableOpacity
-              onPress={() => {}}
-              accessibilityLabel="Mi perfil"
-              accessibilityRole="button"
-            >
-              <MaterialIcons name="person" size={ms(45)} color={colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {}}
-              accessibilityLabel="Mi carrito"
-              accessibilityRole="button"
-            >
-              <MaterialIcons name="shopping-cart" size={ms(45)} color={colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {}}
-              accessibilityLabel="Mis favoritos"
-              accessibilityRole="button"
-            >
-              <MaterialIcons name="star" size={ms(45)} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Barra de búsqueda placeholder */}
+      {/* Panel deslizable */}
+      <Animated.View
+        style={[
+          styles.drawer,
+          {
+            width:            DRAWER_WIDTH,
+            backgroundColor:  colors.bgPage,
+            paddingTop:       vs(56),
+            paddingBottom:    vs(40),
+            borderRightWidth: 0,
+          },
+          animatedStyle,
+        ]}
+      >
+        {/* ── Perfil de usuario ──────────────────────────────────────────── */}
+        <View style={[styles.profile, { paddingHorizontal: spacing[5] }]}>
+          {/* Avatar circular con iniciales */}
           <View
             style={[
-              styles.searchBar,
+              styles.avatar,
               {
-                borderColor:     colors.border,
-                backgroundColor: colors.bgSection,
-                borderRadius:    ms(20),
+                backgroundColor: colors.primary,
+                borderRadius:    radii.full,
               },
             ]}
           >
-            <MaterialIcons name="search" size={ms(20)} color={colors.textMuted} />
-          </View>
-
-          {/* Links de navegación */}
-          <View style={[styles.links, { gap: vs(4) }]}>
-            {NAV_LINKS.map((link) => (
-              <TouchableOpacity
-                key={link}
-                style={styles.linkItem}
-                onPress={() => {}}
-                accessibilityLabel={link}
-                accessibilityRole="button"
-              >
-                <Text
-                  style={[
-                    styles.linkText,
-                    { color: colors.textPrimary, fontSize: ms(20) },
-                  ]}
-                >
-                  {link}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Footer de branding */}
-          <View style={styles.footer}>
-            <Text
-              style={[
-                styles.footerText,
-                { color: colors.textMuted, fontSize: ms(10) },
-              ]}
-            >
-              © 2025 El Colibrí Artesano Costa Rica.{'\n'}
-              Todos los derechos reservados.
+            <Text style={[text.button, { color: colors.textOnPrimary, fontSize: 18 }]}>
+              {USER.initials}
             </Text>
           </View>
-        </Animated.View>
-      </View>
+
+          {/* Nombre y subtítulo */}
+          <View style={{ flex: 1 }}>
+            <Text style={[text.productName, { color: colors.textPrimary }]}>
+              {USER.name}
+            </Text>
+            <Text style={[text.label, { color: colors.textSecondary, marginTop: 2 }]}>
+              {USER.role} • {USER.location}
+            </Text>
+          </View>
+        </View>
+
+        {/* Separador */}
+        <View
+          style={[
+            styles.divider,
+            {
+              backgroundColor:  colors.border,
+              marginHorizontal: spacing[5],
+              marginVertical:   vs(20),
+            },
+          ]}
+        />
+
+        {/* ── Links de navegación ───────────────────────────────────────── */}
+        <View style={[styles.nav, { paddingHorizontal: spacing[4] }]}>
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+
+            return (
+              <Pressable
+                key={item.href}
+                style={({ pressed }) => [
+                  styles.navItem,
+                  {
+                    backgroundColor: isActive
+                      ? colors.bgSection
+                      : pressed
+                      ? colors.bgSection + '80'
+                      : 'transparent',
+                    borderRadius:    radii.md,
+                    paddingVertical:   vs(14),
+                    paddingHorizontal: spacing[4],
+                    marginBottom:      vs(4),
+                  },
+                ]}
+                onPress={() => handleNav(item.href)}
+                accessibilityLabel={item.label}
+                accessibilityRole="button"
+              >
+                <MaterialIcons
+                  name={item.icon}
+                  size={22}
+                  color={isActive ? colors.primary : colors.primarySoft}
+                />
+                <Text
+                  style={[
+                    text.body,
+                    {
+                      color:      isActive ? colors.primary : colors.textPrimary,
+                      fontFamily: isActive
+                        ? 'DMSans_500Medium'
+                        : 'DMSans_400Regular',
+                      marginLeft: spacing[3],
+                    },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Animated.View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex:            1,
-  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
   },
   drawer: {
-    position:       'absolute',
-    left:           0,
-    top:            0,
-    bottom:         0,
-    width:          DRAWER_WIDTH,
-    justifyContent: 'flex-start',
-    gap:            vs(24),
+    position: 'absolute',
+    left:     0,
+    top:      0,
+    bottom:   0,
   },
-  iconsRow: {
-    flexDirection:  'row',
-    justifyContent: 'center',
-    gap:            s(24),
+  profile: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           12,
   },
-  searchBar: {
-    flexDirection:   'row',
+  avatar: {
+    width:           48,
+    height:          48,
     alignItems:      'center',
-    borderWidth:     1,
-    paddingHorizontal: s(12),
-    paddingVertical: vs(8),
+    justifyContent:  'center',
   },
-  links: {},
-  linkItem: {
-    paddingVertical: vs(12),
+  divider: {
+    height: 1,
   },
-  linkText: {
-    fontWeight: '500',
+  nav: {
+    flex: 1,
   },
-  footer: {
-    marginTop: 'auto',
-  },
-  footerText: {
-    lineHeight: ms(16),
+  navItem: {
+    flexDirection: 'row',
+    alignItems:    'center',
   },
 });

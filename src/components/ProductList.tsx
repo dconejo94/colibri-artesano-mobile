@@ -9,45 +9,40 @@ import {
 import { useTheme } from '@/src/theme';
 import ProductCard, { type Product } from './ProductCard';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
 interface Props {
   products:        Product[];
   onSelectProduct: (id: string) => void;
+  onObtainProduct: (id: string) => void;  // botón "Obtener" en cada card
   isLoading?:      boolean;
   title?:          string;
   numColumns?:     number;
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
 export default function ProductList({
   products,
   onSelectProduct,
-  isLoading   = false,
+  onObtainProduct,
+  isLoading  = false,
   title,
-  numColumns  = 2,
+  numColumns = 1,   // default 1 para el diseño rico de card
 }: Props) {
   const { colors, spacing, text } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
 
-  // Ancho de cada card calculado para que la grilla encaje exactamente.
-  // FlatList con numColumns no soporta gap de CSS — el espacio entre
-  // columnas se aplica manualmente con marginRight en cada item.
-  const HORIZONTAL_PADDING = spacing[4] * 2;  // 16 * 2 = 32
-  const GAP = spacing[3];                      // 12
+  const HORIZONTAL_PADDING = spacing[4] * 2;
+  const GAP                = spacing[3];
   const cardWidth =
     (screenWidth - HORIZONTAL_PADDING - GAP * (numColumns - 1)) / numColumns;
 
-  // ─── Header: título con subrayado de acento cálido ────────────────────────
+  // Header con título + underline de acento
   const ListHeader = title ? (
-    <View style={[styles.titleRow, { marginBottom: spacing[4] }]}>
-      <Text style={[text.h3, { color: colors.primaryDeep }]}>{title}</Text>
-      <View
-        style={[styles.titleUnderline, { backgroundColor: colors.accent }]}
-      />
+    <View style={[styles.titleRow, { marginBottom: spacing[5] }]}>
+      <Text style={[text.h2, { color: colors.primaryDeep }]}>{title}</Text>
+      <View style={[styles.titleUnderline, { backgroundColor: colors.accent }]} />
     </View>
   ) : null;
 
-  // ─── Estado vacío ─────────────────────────────────────────────────────────
+  // Estado vacío / loading
   const ListEmpty = (
     <View style={styles.emptyContainer}>
       {isLoading ? (
@@ -62,7 +57,6 @@ export default function ProductList({
 
   return (
     <FlatList
-      // key cambia cuando numColumns cambia para evitar el error de React Native
       key={`cols-${numColumns}`}
       data={products}
       numColumns={numColumns}
@@ -72,7 +66,7 @@ export default function ProductList({
         { paddingHorizontal: spacing[4], paddingBottom: spacing[10] },
       ]}
       columnWrapperStyle={numColumns > 1 ? { gap: GAP } : undefined}
-      ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
+      ItemSeparatorComponent={() => <View style={{ height: spacing[4] }} />}
       ListHeaderComponent={ListHeader}
       ListEmptyComponent={ListEmpty}
       showsVerticalScrollIndicator={false}
@@ -80,7 +74,8 @@ export default function ProductList({
         <ProductCard
           product={item}
           onPress={onSelectProduct}
-          width={cardWidth}
+          onObtain={onObtainProduct}
+          width={numColumns === 1 ? cardWidth : cardWidth}
         />
       )}
     />
@@ -93,7 +88,7 @@ const styles = StyleSheet.create({
     flexGrow:   1,
   },
   titleRow: {
-    gap: 6,
+    gap: 8,
   },
   titleUnderline: {
     height:       3,

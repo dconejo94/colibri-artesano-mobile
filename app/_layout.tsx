@@ -14,10 +14,26 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider } from '@/src/theme';
 
-// Mantiene el splash visible hasta que las fuentes carguen.
-// Sin esto, React Native usa fuentes del sistema como fallback
-// y el diseño causa un flash visual (FOUT) al montar.
 SplashScreen.preventAutoHideAsync();
+
+// Tokens de color del sistema de tema (estáticos para las opciones del Stack)
+const C = {
+  primary:     '#4A7C59',
+  primaryDeep: '#3A5E47',
+  bgNavbar:    '#FAFAF7',
+  textPrimary: '#2C3830',
+  bgNavbarDk:  '#1A1F1C',
+};
+
+const headerTheme = {
+  headerStyle:      { backgroundColor: C.bgNavbar },
+  headerTintColor:  C.primary,
+  headerTitleStyle: {
+    fontFamily: 'DMSans_500Medium',
+    color:      C.textPrimary,
+    fontSize:   16,
+  },
+};
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -33,13 +49,18 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  // No renderizar nada hasta que las fuentes estén listas.
   if (!fontsLoaded) return null;
 
   return (
     <ThemeProvider>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="index"              options={{ headerShown: false }} />
+        <Stack.Screen name="productos"          options={{ title: 'Productos',   ...headerTheme }} />
+        <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
+        <Stack.Screen name="tienda"             options={{ title: 'Mi Tienda',  ...headerTheme }} />
+        <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />
+        <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
+        <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />
       </Stack>
     </ThemeProvider>
   );
