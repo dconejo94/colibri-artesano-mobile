@@ -1,21 +1,28 @@
-import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, StyleSheet, useColorScheme } from "react-native";
-import Header from "@/components/ui/Header";
-import HamburgerMenu from "@/components/ui/HamburgerMenu";
-import HeroBanner from "@/components/home/HeroBanner";
-import CategoriesSection from "@/components/home/CategoriesSection";
-import SellersSection from "@/components/home/SellersSection";
-import EventsSection from "@/components/home/EventsSection";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native';
+import { useState } from 'react';
+import { useTheme } from '@/src/theme';
+import Header from '@/components/ui/Header';
+import HamburgerMenu from '@/components/ui/HamburgerMenu';
+import HeroBanner from '@/components/home/HeroBanner';
+import CategoriesSection from '@/components/home/CategoriesSection';
+import SellersSection from '@/components/home/SellersSection';
+import EventsSection from '@/components/home/EventsSection';
 
 export default function HomeScreen() {
-  const isDark = useColorScheme() === "dark";
+  const { colors, spacing } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <SafeAreaView edges={["top"]} style={[styles.wrapper, isDark && styles.wrapperDark]}>
+    <SafeAreaView
+      edges={['top']}
+      style={{ flex: 1, backgroundColor: colors.bgPage }}
+    >
       <Header onMenuPress={() => setMenuOpen(true)} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: spacing[6] }}
+        showsVerticalScrollIndicator={false}
+      >
         <HeroBanner />
         <CategoriesSection />
         <SellersSection />
@@ -25,16 +32,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  wrapperDark: {
-    backgroundColor: "#000",
-  },
-  content: {
-    paddingBottom: 24,
-  },
-});
