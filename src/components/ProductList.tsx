@@ -16,6 +16,7 @@ interface Props {
   isLoading?:      boolean;
   title?:          string;
   numColumns?:     number;
+  onEndReached?:   () => void;
 }
 
 export default function ProductList({
@@ -25,6 +26,7 @@ export default function ProductList({
   isLoading  = false,
   title,
   numColumns = 1,   // default 1 para el diseño rico de card
+  onEndReached,
 }: Props) {
   const { colors, spacing, text } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
@@ -70,6 +72,8 @@ export default function ProductList({
       ListHeaderComponent={ListHeader}
       ListEmptyComponent={ListEmpty}
       showsVerticalScrollIndicator={false}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
       renderItem={({ item }) => (
         <ProductCard
           product={item}

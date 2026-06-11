@@ -55,7 +55,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <Stack>
         <Stack.Screen name="index"              options={{ headerShown: false }} />
-        <Stack.Screen name="productos"          options={{ title: 'Productos',   ...headerTheme }} />
+        <Stack.Screen name="productos"          options={{ headerShown: false }} />
         <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
         <Stack.Screen name="tienda"             options={{ title: 'Mi Tienda',  ...headerTheme }} />
         <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />

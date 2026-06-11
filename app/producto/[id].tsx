@@ -1,17 +1,25 @@
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { View, Text } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/src/theme';
 import ProductDetailScreen from '@/screens/ProductDetailScreen';
-import { findProduct } from '@/data/products';
+import { useProductDetail } from '@/src/hooks/useProductDetail';
 
 export default function ProductoRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, text, spacing } = useTheme();
 
-  const product = findProduct(id);
+  const { product, isLoading, isError } = useProductDetail(id);
 
-  // Producto no encontrado — no debería ocurrir con datos reales de la API
-  if (!product) {
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bgPage, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // Producto no encontrado o error en API
+  if (isError || !product) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bgPage, alignItems: 'center', justifyContent: 'center', padding: spacing[4] }}>
         <Text style={[text.h3, { color: colors.textMuted, textAlign: 'center' }]}>
