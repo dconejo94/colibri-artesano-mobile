@@ -10,20 +10,57 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
+    text:           '#11181C',
+    background:     '#fff',
+    tint:           tintColorLight,
+    icon:           '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+
+    headerBg: '#ACD4CD',
+    contentBg: '#FAE4E4',
+    surfaceAlt: '#F0F5F5',
+    divider:    '#EFEFEF',
+
+    brand:      '#3E5F63',
+    brandLight: '#82A8AC',
+    brandDeep:  '#1A3336',
+
+    // Texto sobre superficies de marca
+    textOnBrand:      '#FFFFFF',
+    textOnBrandMuted: 'rgba(255,255,255,0.75)',
+
+    textDescription: '#5A1A1A',
+    linkDescription: '#B91C1C',
+
+    star:   '#F5C842',
+    handle: '#D0D0D0',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
+    text:           '#ECEDEE',
+    background:     '#151718',
+    tint:           tintColorDark,
+    icon:           '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+
+    headerBg: '#4E7C74',
+    contentBg: '#3F1D23',
+    surfaceAlt: '#2A2A2A',
+    divider:    '#222222',
+
+    brand:      '#3E5F63',
+    brandLight: '#82A8AC',
+    brandDeep:  '#1A3336',
+
+    textOnBrand:      '#FFFFFF',
+    textOnBrandMuted: 'rgba(255,255,255,0.75)',
+
+    textDescription: '#F9C6C6',
+    linkDescription: '#F87171',
+
+    star:   '#F5C842',
+    handle: '#444444',
   },
 };
 

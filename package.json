@@ -3,12 +3,13 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
+    "start": "bunx expo start",
+    "reset-project": "bun ./scripts/reset-project.ts",
+    "android": "bunx expo start --android",
+    "ios": "bunx expo start --ios",
+    "web": "bunx expo start --web",
+    "lint": "bunx expo lint",
+    "typecheck": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",

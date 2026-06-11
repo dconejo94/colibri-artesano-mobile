@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
   Modal,
-  View,
-  Text,
   Pressable,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, usePathname } from 'expo-router';
-import { s, vs } from '@/utils/scale';
+import { s, vs, ms } from '@/utils/scale';
 import { useTheme } from '@/src/theme';
 
 // ─── Ancho del panel ─────────────────────────────────────────────────────────
