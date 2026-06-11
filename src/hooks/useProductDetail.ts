@@ -31,12 +31,12 @@ export function useProductDetail(id: string) {
         const mapped: UIProductDetail = {
           id: data.id,
           name: data.name,
-          artisan: 'Colibrí Artesano', // Default until stores are loaded
+          artisan: data.store?.name || 'Colibrí Artesano', // Maps to the backend store object
           price: Number(data.base_price) || 0,
           currency: 'CRC',
           images,
           status: isAvailable ? 'available' : 'sold_out',
-          category: 'Artesanía', // Default category
+          category: data.category?.name || 'Artesanía', // Maps to backend category name
           description: data.description || 'Sin descripción',
           // Optional fields from variants if needed
           materials: [],

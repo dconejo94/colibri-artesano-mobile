@@ -12,7 +12,7 @@ export async function getProducts(
   limit = 20
 ): Promise<PaginatedResponse<Product>> {
   const { data } = await client.get<PaginatedResponse<Product>>(
-    "/api/v1/products",
+    "/api/v1/products/",
     { params: { page, limit } }
   );
   return data;
@@ -24,7 +24,7 @@ export async function getStoreProducts(
   limit = 20
 ): Promise<PaginatedResponse<Product>> {
   const { data } = await client.get<PaginatedResponse<Product>>(
-    `/api/v1/stores/${storeId}/products`,
+    `/api/v1/stores/${storeId}/products/`,
     { params: { page, limit } }
   );
   return data;

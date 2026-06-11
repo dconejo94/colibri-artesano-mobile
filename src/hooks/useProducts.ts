@@ -27,12 +27,12 @@ export function useProducts(options: { limit?: number; page?: number } = {}) {
         return {
           id: p.id,
           name: p.name,
-          artisan: 'Colibrí Artesano', // Fallback since we don't fetch store name right now
+          artisan: p.store?.name || 'Colibrí Artesano', // Maps to the backend store object
           price: Number(p.base_price) || 0,
           currency: 'CRC', // Default
           imageUri: primaryImage,
           status: isAvailable ? 'available' : 'sold_out',
-          category: 'Artesanía', // Fallback category
+          category: p.category?.name || 'Artesanía', // Maps to backend category name
           shortDescription: p.description?.substring(0, 50),
         };
       });

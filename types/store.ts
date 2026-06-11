@@ -29,8 +29,10 @@ export type Product = {
   description: string;
   base_price: string | number;
   is_active: boolean;
-  images: ProductImage[];
-  variants: ProductVariant[];
+  images?: ProductImage[];
+  variants?: ProductVariant[];
+  store?: Store;
+  category?: Category;
   created_at: string;
   updated_at: string;
 };
