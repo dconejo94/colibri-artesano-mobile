@@ -21,11 +21,11 @@ export function useProductDetail(id: string) {
         if (!isMounted) return;
 
         // Determine if available based on active flag and variants stock
-        const isAvailable = data.is_active && (!data.variants?.length || data.variants.some(v => v.stock_quantity > 0));
+        const isAvailable = data.is_active && (!(data.variants?.length ?? 0) || data.variants!.some(v => v.stock_quantity > 0));
 
-        // Gather all image urls
-        const images = data.images?.length > 0 
-          ? data.images.sort((a, b) => (a.is_primary === b.is_primary) ? 0 : a.is_primary ? -1 : 1).map(img => img.image_url) 
+        // Gather all image urls; copy before sorting to avoid mutating the API response
+        const images = (data.images?.length ?? 0) > 0
+          ? [...data.images!].sort((a, b) => Number(b.is_primary) - Number(a.is_primary)).map(img => img.image_url)
           : ['https://via.placeholder.com/600'];
 
         const mapped: UIProductDetail = {

@@ -79,7 +79,7 @@ export default function ProductList({
           product={item}
           onPress={onSelectProduct}
           onObtain={onObtainProduct}
-          width={numColumns === 1 ? cardWidth : cardWidth}
+          width={cardWidth}
         />
       )}
     />

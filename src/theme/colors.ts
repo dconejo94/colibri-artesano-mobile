@@ -59,35 +59,54 @@ const palette = {
   black: '#000000',
 } as const;
 
-// ─── Capa 2: tokens semánticos — Modo claro ───────────────────────────────────
+// Shape: all semantic color keys map to a plain string value.
+// Declared before lightColors so darkColors can reuse it as its type.
+export type AppColors = Record<string, string> & {
+  bgPage: string; bgSection: string; bgCard: string; bgCardAlt: string; bgNavbar: string;
+  textPrimary: string; textSecondary: string; textMuted: string; textOnPrimary: string;
+  primary: string; primaryDeep: string; primarySoft: string;
+  accent: string; accentSoft: string;
+  border: string; borderFocus: string;
+  btnPrimaryBg: string; btnPrimaryText: string;
+  btnSecondaryBg: string; btnSecondaryText: string; btnSecondaryBorder: string;
+  btnGhostText: string; btnGhostBorder: string;
+  successBg: string; successText: string;
+  warningBg: string; warningText: string;
+  errorBg: string; errorText: string;
+  infoBg: string; infoText: string;
+};
+
+// Layer 2: semantic tokens — Light mode
+// Values are narrowed via `satisfies` so autocomplete works on palette members,
+// but the inferred type stays `AppColors` (string), not a union of literals.
 const lightColors = {
-  // Fondos
-  bgPage:    palette.beige200,       // #F5EFE6 — fondo principal
-  bgSection: palette.beige300,       // #ECDFD0 — secciones alternas, bio
-  bgCard:    palette.white,          // #FFFFFF — cards de producto
-  bgCardAlt: palette.beige400,       // #D4C5B0 — cards de destaque
-  bgNavbar:  palette.beige100,       // #FAFAF7 — barra de navegación
+  // Backgrounds
+  bgPage:    palette.beige200,       // #F5EFE6 — main background
+  bgSection: palette.beige300,       // #ECDFD0 — alternate sections, bio
+  bgCard:    palette.white,          // #FFFFFF — product cards
+  bgCardAlt: palette.beige400,       // #D4C9B8 — featured cards
+  bgNavbar:  palette.beige100,       // #FAFAF7 — navigation bar
 
-  // Textos
-  textPrimary:   palette.inkDark,    // #2C3830 — texto principal
-  textSecondary: palette.inkMid,     // #5C6B5E — artesano, etiquetas
-  textMuted:     palette.beige800,   // #9A8E80 — categorías uppercase
-  textOnPrimary: palette.white,      // #FFFFFF — texto sobre botones verdes
+  // Text
+  textPrimary:   palette.inkDark,    // #2C3830 — primary text
+  textSecondary: palette.inkMid,     // #5C6B5E — artisan name, labels
+  textMuted:     palette.beige800,   // #9A8E80 — uppercase categories
+  textOnPrimary: palette.white,      // #FFFFFF — text on green buttons
 
-  // Verdes de marca
-  primary:     palette.green600,     // #4A7C59 — CTA, precio, borde focus
-  primaryDeep: palette.green700,     // #3A5E47 — nombre artesano, títulos
-  primarySoft: palette.green400,     // #8FAF7E — hover, íconos decorativos
+  // Brand greens
+  primary:     palette.green600,     // #4A7C59 — CTA, price, focus border
+  primaryDeep: palette.green700,     // #3A5E47 — artisan name, headings
+  primarySoft: palette.green400,     // #8FAF7E — hover, decorative icons
 
-  // Acento cálido
-  accent:     palette.beige700,      // #A0876B — borde bio, underline títulos
-  accentSoft: palette.beige600,      // #B89A7A — versión suavizada
+  // Warm accent
+  accent:     palette.beige700,      // #A0876B — bio border, title underline
+  accentSoft: palette.beige600,      // #B89A7A — softened accent
 
-  // Bordes
-  border:       palette.beige500,    // #C4B89A — cards, separadores
-  borderFocus:  palette.green600,    // #4A7C59 — input activo, miniatura seleccionada
+  // Borders
+  border:       palette.beige500,    // #C4B89A — cards, dividers
+  borderFocus:  palette.green600,    // #4A7C59 — active input, selected thumbnail
 
-  // Botones
+  // Buttons
   btnPrimaryBg:       palette.green600,  // #4A7C59
   btnPrimaryText:     palette.white,     // #FFFFFF
   btnSecondaryBg:     palette.beige200,  // #F5EFE6
@@ -96,7 +115,7 @@ const lightColors = {
   btnGhostText:       palette.green600,  // #4A7C59
   btnGhostBorder:     palette.green600,  // #4A7C59
 
-  // Estados de producto
+  // Product states
   successBg:   palette.successBg,
   successText: palette.successText,
   warningBg:   palette.warningBg,
@@ -105,11 +124,11 @@ const lightColors = {
   errorText:   palette.errorText,
   infoBg:      palette.infoBg,
   infoText:    palette.infoText,
-} as const;
+} satisfies AppColors;
 
-// ─── Capa 2: tokens semánticos — Modo oscuro ──────────────────────────────────
-// No es una inversión mecánica: los fondos heredan el tinte verde de marca.
-const darkColors: typeof lightColors = {
+// Layer 2: semantic tokens — Dark mode
+// Not a mechanical inversion: backgrounds inherit the brand green tint.
+const darkColors: AppColors = {
   // Fondos — teñidos de verde, no grises genéricos
   bgPage:    palette.greenNight,     // #1A1F1C — verde noche
   bgSection: palette.greenNight2,    // #222820 — limo oscuro
@@ -154,7 +173,6 @@ const darkColors: typeof lightColors = {
   errorText:   palette.errorTxtDk,
   infoBg:      palette.infoBgDk,
   infoText:    palette.infoTxtDk,
-} as const;
+};
 
-export type AppColors = typeof lightColors;
 export { lightColors, darkColors };
