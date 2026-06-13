@@ -6,15 +6,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
-import { formatPrice, translateStatus, statusColor } from "@/utils/format";
 import { OWNER_ID } from "@/constants/auth";
-import shared from "@/constants/shared-styles";
+import { useTheme } from "@/src/theme";
 import { getStoreByOwner, createStore } from "@/api/stores";
 import { getStoreProducts } from "@/api/products";
 import { getStoreOrders } from "@/api/orders";
@@ -25,7 +23,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
 export default function MyStoreScreen() {
-  const isDark = useColorScheme() === "dark";
+  const { colors, spacing, radii, shadows, text, isDark } = useTheme();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
@@ -53,7 +51,7 @@ export default function MyStoreScreen() {
         setOrders(orderRes.items);
       }
     } catch {
-      setError("No se pudo cargar la tienda. Revisa tu conexion.");
+      setError("No se pudo cargar la tienda. Revisa tu conexión.");
     } finally {
       setLoading(false);
     }
@@ -85,24 +83,24 @@ export default function MyStoreScreen() {
 
   if (!loading && !store && !error) {
     return (
-      <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
+      <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
         <Header onMenuPress={() => setMenuOpen(true)} />
         <ScrollView contentContainerStyle={local.centeredContent}>
           {creating ? (
-            <View style={[shared.card, isDark && shared.cardDark]}>
-              <Text style={[local.createTitle, isDark && shared.textDark]}>Crear mi tienda</Text>
-              <Input label="Nombre" value={storeName} onChangeText={setStoreName} placeholder="Ej: Artesanias Chorotega" />
+            <View style={[local.cardForm, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>
+              <Text style={[text.h2, { color: colors.primaryDeep, marginBottom: spacing[3] }]}>Crear mi tienda</Text>
+              <Input label="Nombre" value={storeName} onChangeText={setStoreName} placeholder="Ej: Artesanías Chorotega" />
               <Input label="Descripción" value={storeDesc} onChangeText={setStoreDesc} placeholder="Describe tu tienda..." multiline />
               <View style={local.createActions}>
-                <Button title="Cancelar" variant="ghost" onPress={() => setCreating(false)} />
+                <Button title="Cancelar" variant="secondary" onPress={() => setCreating(false)} />
                 <Button title="Crear" onPress={handleCreate} disabled={submitLoading || !storeName.trim()} />
               </View>
             </View>
           ) : (
             <View style={local.emptyState}>
-              <MaterialIcons name="storefront" size={ms(80)} color={isDark ? "#4E7C74" : "#82A8AC"} />
-              <Text style={[local.emptyTitle, isDark && shared.textDark]}>Aún no tienes una tienda</Text>
-              <Text style={[local.emptyBody, isDark && shared.textMuted]}>
+              <MaterialIcons name="storefront" size={ms(80)} color={colors.primarySoft} style={{ marginBottom: spacing[3] }} />
+              <Text style={[text.h2, { color: colors.primaryDeep, textAlign: "center" }]}>Aún no tienes una tienda</Text>
+              <Text style={[text.body, { color: colors.textSecondary, textAlign: "center", marginVertical: spacing[3], lineHeight: ms(20) }]}>
                 Crea tu tienda para comenzar a vender tus artesanías.
               </Text>
               <Button title="Crear tienda" onPress={() => setCreating(true)} />
@@ -115,62 +113,65 @@ export default function MyStoreScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
+    <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
       <Header onMenuPress={() => setMenuOpen(true)} />
       {loading ? (
-        <View style={shared.centered}>
-          <ActivityIndicator size="large" color={isDark ? "#82A8AC" : "#6B9E98"} />
+        <View style={local.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <View style={shared.centered}>
-          <MaterialIcons name="error-outline" size={ms(48)} color="#EF4444" />
-          <Text style={[shared.errorText, isDark && shared.textDark]}>{error}</Text>
+        <View style={local.centered}>
+          <MaterialIcons name="error-outline" size={ms(48)} color={colors.errorText} />
+          <Text style={[text.body, { color: colors.errorText, marginVertical: spacing[3], textAlign: "center" }]}>{error}</Text>
           <Button title="Reintentar" onPress={loadData} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={local.content} showsVerticalScrollIndicator={false}>
-          <View style={[local.storeCard, isDark ? local.storeCardDark : local.storeCardLight]}>
+          {/* Tarjeta de la tienda */}
+          <View style={[local.storeCard, { backgroundColor: colors.bgSection, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
             <View style={local.storeCardHeader}>
-              <MaterialIcons name="storefront" size={ms(36)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
+              <MaterialIcons name="storefront" size={ms(36)} color={colors.primary} />
               <View style={local.storeInfo}>
-                <Text style={[local.storeName, isDark && shared.textDark]} numberOfLines={1}>{store?.name}</Text>
-                <Text style={[local.storeDesc, isDark && shared.textMuted]} numberOfLines={2}>{store?.description || "Sin descripción"}</Text>
+                <Text style={[text.h2, { color: colors.primaryDeep }]} numberOfLines={1}>{store?.name}</Text>
+                <Text style={[text.body, { color: colors.textSecondary, marginTop: vs(2) }]} numberOfLines={2}>{store?.description || "Sin descripción"}</Text>
               </View>
               <TouchableOpacity onPress={() => router.push({ pathname: "/store/edit" as never, params: { storeId: store?.id } })} hitSlop={12}>
-                <MaterialIcons name="edit" size={ms(22)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
+                <MaterialIcons name="edit" size={ms(22)} color={colors.primary} />
               </TouchableOpacity>
             </View>
+
             <View style={local.statsRow}>
               {[
                 { icon: "inventory-2" as const, label: "Productos", value: String(products.length) },
                 { icon: "local-shipping" as const, label: "Pendientes", value: String(pendingOrders.length) },
               ].map((stat) => (
-                <View key={stat.label} style={[local.statItem, isDark && local.statItemDark]}>
-                  <MaterialIcons name={stat.icon} size={ms(20)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
-                  <Text style={[local.statValue, isDark && shared.textDark]}>{stat.value}</Text>
-                  <Text style={[local.statLabel, isDark && shared.textMuted]}>{stat.label}</Text>
+                <View key={stat.label} style={[local.statItem, { backgroundColor: colors.bgCard, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5 }]}>
+                  <MaterialIcons name={stat.icon} size={ms(20)} color={colors.primary} />
+                  <Text style={[text.priceDetail, { color: colors.textPrimary, fontSize: ms(20) }]}>{stat.value}</Text>
+                  <Text style={[text.caption, { color: colors.textSecondary, textAlign: "center" }]}>{stat.label}</Text>
                 </View>
               ))}
             </View>
           </View>
 
-          <View style={local.actionsSection}>
-            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Acciones rápidas</Text>
+          {/* Acciones Rápidas */}
+          <View style={[local.actionsSection, { paddingHorizontal: spacing[4], gap: spacing[3] }]}>
+            <Text style={[text.h3, { color: colors.primaryDeep }]}>Acciones rápidas</Text>
             <View style={local.actionsGrid}>
               {([
-                { icon: "add-box" as const, label: "Agregar producto", route: "/store/products/add" as const },
-                { icon: "inventory" as const, label: "Mis productos", route: "/store/products" as const },
-                { icon: "receipt-long" as const, label: "Pedidos", route: "/store/orders" as const },
-                { icon: "edit" as const, label: "Editar tienda", route: "/store/edit" as const },
+                { icon: "add-box" as const, label: "Agregar producto", route: "/store/products/add" as const, bg: colors.bgCard },
+                { icon: "inventory" as const, label: "Mis productos", route: "/store/products" as const, bg: colors.bgCardAlt },
+                { icon: "receipt-long" as const, label: "Pedidos", route: "/store/orders" as const, bg: colors.bgCardAlt },
+                { icon: "edit" as const, label: "Editar tienda", route: "/store/edit" as const, bg: colors.bgCard },
               ]).map((action) => (
                 <TouchableOpacity
                   key={action.label}
-                  style={[local.actionCard, isDark ? local.actionCardDark : local.actionCardLight]}
+                  style={[local.actionCard, { backgroundColor: action.bg, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5, ...shadows.sm }]}
                   onPress={() => router.push({ pathname: action.route as never, params: { storeId: store?.id } })}
                   activeOpacity={0.7}
                 >
-                  <MaterialIcons name={action.icon} size={ms(28)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
-                  <Text style={[local.actionLabel, isDark && shared.textDark]}>{action.label}</Text>
+                  <MaterialIcons name={action.icon} size={ms(28)} color={colors.primary} />
+                  <Text style={[text.label, { color: colors.textPrimary, textAlign: "center" }]}>{action.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -183,41 +184,23 @@ export default function MyStoreScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+});
+
 const local = StyleSheet.create({
   content: { paddingBottom: vs(32) },
   centeredContent: { flexGrow: 1, justifyContent: "center", alignItems: "center", padding: s(24) },
-  emptyState: { alignItems: "center", gap: vs(16), maxWidth: s(280) },
-  emptyTitle: { fontSize: ms(20), fontWeight: "700", color: "#000", textAlign: "center" },
-  emptyBody: { fontSize: ms(14), color: "#687076", textAlign: "center", lineHeight: ms(20) },
-  createTitle: { fontSize: ms(18), fontWeight: "700", color: "#000" },
-  createActions: { flexDirection: "row", gap: s(12), justifyContent: "flex-end" },
-  storeCard: { margin: s(16), borderRadius: ms(16), padding: s(16), gap: vs(16) },
-  storeCardLight: { backgroundColor: "#ACD4CD" },
-  storeCardDark: { backgroundColor: "#2A4A45" },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
+  emptyState: { alignItems: "center", maxWidth: s(280) },
+  cardForm: { width: "100%", padding: s(20), gap: vs(12), borderWidth: 0.5 },
+  createActions: { flexDirection: "row", gap: s(12), justifyContent: "flex-end", marginTop: vs(8) },
+  storeCard: { margin: s(16), padding: s(16), gap: vs(16), borderWidth: 0.5 },
   storeCardHeader: { flexDirection: "row", alignItems: "center", gap: s(12) },
   storeInfo: { flex: 1 },
-  storeName: { fontSize: ms(18), fontWeight: "700", color: "#000" },
-  storeDesc: { fontSize: ms(12), color: "#333", marginTop: vs(2) },
   statsRow: { flexDirection: "row", gap: s(12) },
-  statItem: { flex: 1, backgroundColor: "rgba(255,255,255,0.5)", borderRadius: ms(12), padding: s(12), alignItems: "center", gap: vs(4) },
-  statItemDark: { backgroundColor: "rgba(0,0,0,0.25)" },
-  statValue: { fontSize: ms(20), fontWeight: "700", color: "#000" },
-  statLabel: { fontSize: ms(10), color: "#333", textAlign: "center" },
-  actionsSection: { paddingHorizontal: s(16), gap: vs(12) },
+  statItem: { flex: 1, padding: s(12), alignItems: "center", gap: vs(4) },
+  actionsSection: { gap: vs(12) },
   actionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: s(12) },
-  actionCard: { width: "47%", borderRadius: ms(12), padding: s(16), alignItems: "center", gap: vs(8) },
-  actionCardLight: { backgroundColor: "#FAE4E4" },
-  actionCardDark: { backgroundColor: "#3F1D23" },
-  actionLabel: { fontSize: ms(12), fontWeight: "600", color: "#000", textAlign: "center" },
-  previewSection: { marginTop: vs(24), paddingHorizontal: s(16), gap: vs(8) },
-  previewHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  viewAll: { fontSize: ms(13), color: "#6B9E98", fontWeight: "600" },
-  listRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: ms(10), padding: s(12), marginTop: vs(4) },
-  listRowLight: { backgroundColor: "#f5f5f5" },
-  listRowDark: { backgroundColor: "#1a1a1a" },
-  rowInfo: { flex: 1, gap: vs(2) },
-  rowTitle: { fontSize: ms(13), fontWeight: "600", color: "#000" },
-  rowSub: { fontSize: ms(11), color: "#687076" },
-  statusBadge: { paddingHorizontal: s(10), paddingVertical: vs(4), borderRadius: ms(12) },
-  statusText: { fontSize: ms(11), color: "#fff", fontWeight: "600" },
+  actionCard: { width: "47%", padding: s(16), alignItems: "center", gap: vs(8) },
 });

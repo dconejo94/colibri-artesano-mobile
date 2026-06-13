@@ -5,15 +5,15 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  useColorScheme,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice, translateStatus, statusColor } from "@/utils/format";
-import shared from "@/constants/shared-styles";
+import { useTheme } from "@/src/theme";
 import { getStoreOrders, updateOrderStatus } from "@/api/orders";
 import type { StoreOrder } from "@/types/store";
 import SubHeader from "@/components/ui/SubHeader";
@@ -21,8 +21,17 @@ import Button from "@/components/ui/Button";
 
 const STATUS_FLOW = ["pending", "processing", "shipped", "delivered"] as const;
 
+// Maps status key to MaterialIcons icon name
+const STATUS_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  pending: "schedule",
+  processing: "autorenew",
+  shipped: "local-shipping",
+  delivered: "check-circle",
+  cancelled: "cancel",
+};
+
 export default function StoreOrdersScreen() {
-  const isDark = useColorScheme() === "dark";
+  const { colors, spacing, radii, shadows, text } = useTheme();
   const router = useRouter();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
 
@@ -41,7 +50,9 @@ export default function StoreOrdersScreen() {
       setOrders(append ? (prev) => [...prev, ...res.items] : res.items);
       setTotal(res.total);
       setPage(p);
-    } catch { Alert.alert("Error", "No se pudieron cargar los pedidos."); } finally {
+    } catch {
+      Alert.alert("Error", "No se pudieron cargar los pedidos.");
+    } finally {
       setLoading(false);
       setLoadingMore(false);
     }
@@ -58,20 +69,37 @@ export default function StoreOrdersScreen() {
     try {
       const updated = await updateOrderStatus(storeId, order.id, next);
       setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
-    } catch { Alert.alert("Error", "No se pudo actualizar el pedido."); } finally {
+    } catch {
+      Alert.alert("Error", "No se pudo actualizar el pedido.");
+    } finally {
       setUpdatingId(null);
     }
   };
 
   const handleCancel = async (order: StoreOrder) => {
     if (!storeId) return;
-    setUpdatingId(order.id);
-    try {
-      const updated = await updateOrderStatus(storeId, order.id, "cancelled");
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
-    } catch { Alert.alert("Error", "No se pudo cancelar el pedido."); } finally {
-      setUpdatingId(null);
-    }
+    Alert.alert(
+      "Cancelar pedido",
+      "¿Estás seguro de que quieres cancelar este pedido?",
+      [
+        { text: "Volver", style: "cancel" },
+        {
+          text: "Cancelar pedido",
+          style: "destructive",
+          onPress: async () => {
+            setUpdatingId(order.id);
+            try {
+              const updated = await updateOrderStatus(storeId, order.id, "cancelled");
+              setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
+            } catch {
+              Alert.alert("Error", "No se pudo cancelar el pedido.");
+            } finally {
+              setUpdatingId(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const canAdvance = (status: string) => {
@@ -81,59 +109,115 @@ export default function StoreOrdersScreen() {
 
   const renderOrder = ({ item }: { item: StoreOrder }) => {
     const isUpdating = updatingId === item.id;
+    const badgeBg = statusColor(item.seller_status);
+    const statusIcon = STATUS_ICONS[item.seller_status] ?? "help-outline";
+    const isFinal = item.seller_status === "cancelled" || item.seller_status === "delivered";
+
     return (
-      <View style={[local.orderCard, isDark ? local.orderCardDark : local.orderCardLight]}>
-        <View style={local.orderHeader}>
-          <Text style={[local.orderId, isDark && shared.textDark]} numberOfLines={1}>
-            Pedido #{item.id.slice(0, 8)}
-          </Text>
-          <View style={[local.badge, { backgroundColor: statusColor(item.seller_status) }]}>
-            <Text style={local.badgeText}>{translateStatus(item.seller_status)}</Text>
+      <View
+        style={[
+          local.card,
+          {
+            backgroundColor: colors.bgCard,
+            borderRadius: radii.lg,
+            borderColor: colors.border,
+            ...shadows.sm,
+          },
+        ]}
+      >
+        {/* Card header */}
+        <View style={local.cardHeader}>
+          <View style={local.orderIdRow}>
+            <MaterialIcons name="receipt-long" size={ms(18)} color={colors.primarySoft} />
+            <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
+              Pedido #{item.id.slice(0, 8).toUpperCase()}
+            </Text>
+          </View>
+          <View style={[local.badge, { backgroundColor: badgeBg + "22", borderColor: badgeBg, borderWidth: 1 }]}>
+            <MaterialIcons name={statusIcon} size={ms(12)} color={badgeBg} />
+            <Text style={[local.badgeText, { color: badgeBg }]}>
+              {translateStatus(item.seller_status)}
+            </Text>
           </View>
         </View>
 
+        {/* Divider */}
+        <View style={[local.divider, { backgroundColor: colors.border }]} />
+
+        {/* Order items */}
         <View style={local.itemsList}>
           {item.items.map((oi) => (
             <View key={oi.id} style={local.itemRow}>
-              <Text style={[local.itemName, isDark && shared.textDark]} numberOfLines={1}>
+              <View style={[local.qtyBadge, { backgroundColor: colors.bgSection, borderRadius: radii.sm }]}>
+                <Text style={[text.caption, { color: colors.textSecondary, fontWeight: "700" }]}>
+                  x{oi.quantity}
+                </Text>
+              </View>
+              <Text
+                style={[text.body, { color: colors.textPrimary, flex: 1 }]}
+                numberOfLines={1}
+              >
                 {oi.product?.name ?? `Producto ${oi.product_id.slice(0, 8)}`}
               </Text>
-              <Text style={[local.itemQty, isDark && shared.textMuted]}>x{oi.quantity}</Text>
-              <Text style={[local.itemPrice, isDark && shared.textMuted]}>
+              <Text style={[text.label, { color: colors.primary, fontWeight: "700" }]}>
                 {formatPrice(oi.unit_price)}
               </Text>
             </View>
           ))}
         </View>
 
-        {item.seller_status !== "cancelled" && item.seller_status !== "delivered" && (
-          <View style={local.orderActions}>
-            {canAdvance(item.seller_status) && (
+        {/* Action buttons */}
+        {!isFinal && (
+          <>
+            <View style={[local.divider, { backgroundColor: colors.border }]} />
+            <View style={local.actions}>
+              {canAdvance(item.seller_status) && (
+                <Button
+                  title={
+                    isUpdating
+                      ? "Actualizando..."
+                      : `Marcar: ${translateStatus(
+                        STATUS_FLOW[
+                        STATUS_FLOW.indexOf(item.seller_status as typeof STATUS_FLOW[number]) + 1
+                        ]
+                      )}`
+                  }
+                  onPress={() => handleAdvanceStatus(item)}
+                  disabled={isUpdating}
+                />
+              )}
               <Button
-                title={isUpdating ? "..." : `Marcar: ${translateStatus(STATUS_FLOW[STATUS_FLOW.indexOf(item.seller_status as typeof STATUS_FLOW[number]) + 1])}`}
-                onPress={() => handleAdvanceStatus(item)}
+                title="Cancelar pedido"
+                variant="ghost"
+                onPress={() => handleCancel(item)}
                 disabled={isUpdating}
               />
-            )}
-            <Button title="Cancelar" variant="ghost" onPress={() => handleCancel(item)} disabled={isUpdating} />
-          </View>
+            </View>
+          </>
         )}
       </View>
     );
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
-      <SubHeader title="Pedidos" onBack={() => router.back()} />
+    <SafeAreaView edges={["top"]} style={[local.wrapper, { backgroundColor: colors.bgPage }]}>
+      <SubHeader title="Pedidos recibidos" onBack={() => router.back()} />
 
       {loading ? (
-        <View style={shared.centered}>
-          <ActivityIndicator size="large" color={isDark ? "#82A8AC" : "#6B9E98"} />
+        <View style={local.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : orders.length === 0 ? (
-        <View style={shared.centered}>
-          <MaterialIcons name="receipt-long" size={ms(64)} color={isDark ? "#4E7C74" : "#82A8AC"} />
-          <Text style={[local.emptyTitle, isDark && shared.textDark]}>No hay pedidos aún</Text>
+        <View style={local.centered}>
+          <View style={[local.emptyIcon, { backgroundColor: colors.bgSection, borderRadius: radii.xl }]}>
+            <MaterialIcons name="receipt-long" size={ms(48)} color={colors.primarySoft} />
+          </View>
+          <Text style={[text.h3, { color: colors.primaryDeep, marginTop: spacing[4], textAlign: "center" }]}>
+            No hay pedidos aún
+          </Text>
+          <Text style={[text.body, { color: colors.textSecondary, textAlign: "center" }]}>
+            Los pedidos de tus clientes aparecerán aquí.
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -145,7 +229,12 @@ export default function StoreOrdersScreen() {
             if (!loadingMore && orders.length < total) fetchOrders(page + 1, true);
           }}
           onEndReachedThreshold={0.3}
-          ListFooterComponent={loadingMore ? <ActivityIndicator style={local.footer} color="#6B9E98" /> : null}
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator style={local.footer} color={colors.primary} />
+            ) : null
+          }
+          showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>
@@ -153,20 +242,26 @@ export default function StoreOrdersScreen() {
 }
 
 const local = StyleSheet.create({
+  wrapper: { flex: 1 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: s(24), gap: vs(12) },
   list: { padding: s(16), gap: vs(12) },
-  orderCard: { borderRadius: ms(12), padding: s(16), gap: vs(12) },
-  orderCardLight: { backgroundColor: "#f5f5f5" },
-  orderCardDark: { backgroundColor: "#1a1a1a" },
-  orderHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  orderId: { fontSize: ms(14), fontWeight: "700", color: "#000", flex: 1 },
-  badge: { paddingHorizontal: s(10), paddingVertical: vs(4), borderRadius: ms(12) },
-  badgeText: { fontSize: ms(11), color: "#fff", fontWeight: "600" },
-  itemsList: { gap: vs(6) },
-  itemRow: { flexDirection: "row", alignItems: "center", gap: s(8) },
-  itemName: { flex: 1, fontSize: ms(13), color: "#000" },
-  itemQty: { fontSize: ms(12), color: "#687076", fontWeight: "600" },
-  itemPrice: { fontSize: ms(12), color: "#687076", minWidth: s(70), textAlign: "right" },
-  orderActions: { flexDirection: "row", gap: s(8), flexWrap: "wrap" },
-  emptyTitle: { fontSize: ms(16), fontWeight: "600", color: "#000" },
+  card: { padding: s(16), gap: vs(10), borderWidth: 0.5, overflow: "hidden" },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  orderIdRow: { flexDirection: "row", alignItems: "center", gap: s(6), flex: 1 },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: s(4),
+    paddingHorizontal: s(10),
+    paddingVertical: vs(4),
+    borderRadius: 20,
+  },
+  badgeText: { fontSize: ms(11), fontWeight: "700" },
+  divider: { height: 0.5, marginHorizontal: 0 },
+  itemsList: { gap: vs(8) },
+  itemRow: { flexDirection: "row", alignItems: "center", gap: s(10) },
+  qtyBadge: { paddingHorizontal: s(8), paddingVertical: vs(2), minWidth: ms(32), alignItems: "center" },
+  actions: { flexDirection: "row", gap: s(8), flexWrap: "wrap" },
+  emptyIcon: { width: ms(96), height: ms(96), justifyContent: "center", alignItems: "center" },
   footer: { paddingVertical: vs(16) },
 });

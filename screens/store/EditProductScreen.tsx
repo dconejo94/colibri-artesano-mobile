@@ -7,14 +7,13 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
-  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
-import shared from "@/constants/shared-styles";
+import { useTheme } from "@/src/theme";
 import {
   getProduct,
   updateProduct,
@@ -31,7 +30,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
 export default function EditProductScreen() {
-  const isDark = useColorScheme() === "dark";
+  const { colors, spacing, radii, shadows, text } = useTheme();
   const router = useRouter();
   const { id, storeId } = useLocalSearchParams<{ id: string; storeId: string }>();
 
@@ -86,7 +85,7 @@ export default function EditProductScreen() {
   const handleSaveProduct = async () => {
     if (!id || !name.trim() || !basePrice.trim()) return;
     const price = parseFloat(basePrice);
-    if (isNaN(price) || price < 0) { setSaveError("Precio invalido."); return; }
+    if (isNaN(price) || price < 0) { setSaveError("Precio inválido."); return; }
     setSaving(true);
     setSaveError(null);
     setSaveMsg(null);
@@ -172,7 +171,7 @@ export default function EditProductScreen() {
 
   const handleDeleteVariant = (variant: ProductVariant) => {
     if (!id) return;
-    Alert.alert("Eliminar variante", `Eliminar "${variant.name}: ${variant.value}"?`, [
+    Alert.alert("Eliminar variante", `¿Eliminar "${variant.name}: ${variant.value}"?`, [
       { text: "Cancelar", style: "cancel" },
       {
         text: "Eliminar", style: "destructive", onPress: async () => {
@@ -203,22 +202,22 @@ export default function EditProductScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
-        <View style={shared.centered}>
-          <ActivityIndicator size="large" color={isDark ? "#82A8AC" : "#6B9E98"} />
+      <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+        <View style={local.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
+    <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
       <SubHeader title="Editar producto" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
         {/* Product info section */}
-        <View style={[shared.section, isDark && shared.sectionDark]}>
-          <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Información del producto</Text>
+        <View style={[local.section, { backgroundColor: colors.bgSection, borderRadius: radii.lg, borderColor: colors.border }]}>
+          <Text style={[text.h3, { color: colors.primaryDeep }]}>Información del producto</Text>
           <Input label="Nombre" value={name} onChangeText={(t) => { setName(t); setSaveMsg(null); }} placeholder="Nombre" />
           <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSaveMsg(null); }} placeholder="Descripción" multiline />
           <Input label="Precio base" value={basePrice} onChangeText={(t) => { setBasePrice(t); setSaveMsg(null); }} placeholder="25000" keyboardType="numeric" />
@@ -231,33 +230,33 @@ export default function EditProductScreen() {
             />
           )}
 
-          {saveError && <Text style={shared.errorText}>{saveError}</Text>}
+          {saveError && <Text style={[text.body, { color: colors.errorText }]}>{saveError}</Text>}
           {saveMsg && (
-            <View style={shared.successRow}>
-              <MaterialIcons name="check-circle" size={ms(16)} color="#10B981" />
-              <Text style={shared.successText}>{saveMsg}</Text>
+            <View style={local.successRow}>
+              <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
+              <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>{saveMsg}</Text>
             </View>
           )}
           <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSaveProduct} disabled={saving || !name.trim()} />
         </View>
 
         {/* Images section */}
-        <View style={[shared.section, isDark && shared.sectionDark]}>
-          <View style={shared.sectionHeader}>
-            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Imágenes</Text>
+        <View style={[local.section, { backgroundColor: colors.bgSection, borderRadius: radii.lg, borderColor: colors.border }]}>
+          <View style={local.sectionHeader}>
+            <Text style={[text.h3, { color: colors.primaryDeep }]}>Imágenes</Text>
             <TouchableOpacity onPress={() => setShowImageForm(!showImageForm)}>
-              <MaterialIcons name={showImageForm ? "close" : "add-circle"} size={ms(24)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
+              <MaterialIcons name={showImageForm ? "close" : "add-circle"} size={ms(24)} color={colors.primary} />
             </TouchableOpacity>
           </View>
-          {(product?.images?.length ?? 0) === 0 && !showImageForm && (
-            <Text style={[shared.emptyText, isDark && shared.textMuted]}>Sin imágenes</Text>
+          {product?.images?.length === 0 && !showImageForm && (
+            <Text style={[text.caption, { color: colors.textMuted, fontStyle: "italic" }]}>Sin imágenes</Text>
           )}
-          {(product?.images ?? []).map((img) => (
-            <View key={img.id} style={[local.imageRow, isDark && local.imageRowDark]}>
-              <MaterialIcons name="image" size={ms(20)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
-              <Text style={[local.imageUrl, isDark && shared.textMuted]} numberOfLines={1}>{img.image_url}</Text>
+          {product?.images?.map((img) => (
+            <View key={img.id} style={[local.imageRow, { backgroundColor: colors.bgCard, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5 }]}>
+              <MaterialIcons name="image" size={ms(20)} color={colors.primary} />
+              <Text style={[text.caption, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>{img.image_url}</Text>
               {img.is_primary && (
-                <View style={local.primaryBadge}><Text style={local.primaryText}>Principal</Text></View>
+                <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}><Text style={local.primaryText}>Principal</Text></View>
               )}
             </View>
           ))}
@@ -270,59 +269,59 @@ export default function EditProductScreen() {
         </View>
 
         {/* Variants section */}
-        <View style={[shared.section, isDark && shared.sectionDark]}>
-          <View style={shared.sectionHeader}>
-            <Text style={[shared.sectionTitle, isDark && shared.textDark]}>Variantes y stock</Text>
+        <View style={[local.section, { backgroundColor: colors.bgSection, borderRadius: radii.lg, borderColor: colors.border }]}>
+          <View style={local.sectionHeader}>
+            <Text style={[text.h3, { color: colors.primaryDeep }]}>Variantes y stock</Text>
             <TouchableOpacity onPress={() => setShowVariantForm(!showVariantForm)}>
-              <MaterialIcons name={showVariantForm ? "close" : "add-circle"} size={ms(24)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
+              <MaterialIcons name={showVariantForm ? "close" : "add-circle"} size={ms(24)} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
-          {(product?.variants?.length ?? 0) === 0 && !showVariantForm && (
-            <Text style={[shared.emptyText, isDark && shared.textMuted]}>Sin variantes</Text>
+          {product?.variants?.length === 0 && !showVariantForm && (
+            <Text style={[text.caption, { color: colors.textMuted, fontStyle: "italic" }]}>Sin variantes</Text>
           )}
 
-          {(product?.variants ?? []).map((v) => (
-            <View key={v.id} style={[local.variantCard, isDark && local.variantCardDark]}>
+          {product?.variants?.map((v) => (
+            <View key={v.id} style={[local.variantCard, { backgroundColor: colors.bgCard, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5, ...shadows.sm }]}>
               <View style={local.variantHeader}>
                 <View style={local.variantInfo}>
-                  <Text style={[local.variantName, isDark && shared.textDark]}>{v.name}: {v.value}</Text>
-                  <Text style={[local.variantMeta, isDark && shared.textMuted]}>
+                  <Text style={[text.label, { color: colors.textPrimary, fontWeight: "600" }]}>{v.name}: {v.value}</Text>
+                  <Text style={[text.caption, { color: colors.textSecondary }]}>
                     +{formatPrice(v.price_modifier)} | Stock: {v.stock_quantity}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => handleDeleteVariant(v)} hitSlop={8}>
-                  <MaterialIcons name="delete-outline" size={ms(20)} color="#EF4444" />
+                  <MaterialIcons name="delete-outline" size={ms(20)} color={colors.errorText} />
                 </TouchableOpacity>
               </View>
               {editingVariantId === v.id ? (
                 <View style={local.stockEditRow}>
                   <View style={local.stepper}>
-                    <TouchableOpacity style={local.circleBtn} onPress={() => handleStockDelta(-1)}>
+                    <TouchableOpacity style={[local.circleBtn, { backgroundColor: colors.primary }]} onPress={() => handleStockDelta(-1)}>
                       <MaterialIcons name="remove" size={ms(16)} color="#fff" />
                     </TouchableOpacity>
                     <Input value={editStock} onChangeText={setEditStock} keyboardType="numeric" style={local.stockInput} />
-                    <TouchableOpacity style={local.circleBtn} onPress={() => handleStockDelta(1)}>
+                    <TouchableOpacity style={[local.circleBtn, { backgroundColor: colors.primary }]} onPress={() => handleStockDelta(1)}>
                       <MaterialIcons name="add" size={ms(16)} color="#fff" />
                     </TouchableOpacity>
                   </View>
                   <View style={local.stockEditActions}>
                     <Button title={stockSaving ? "..." : "Guardar"} onPress={() => confirmSaveStock(v)} disabled={stockSaving} />
-                    <Button title="Cancelar" variant="ghost" onPress={() => setEditingVariantId(null)} />
+                    <Button title="Cancelar" variant="secondary" onPress={() => setEditingVariantId(null)} />
                   </View>
                 </View>
               ) : (
                 <TouchableOpacity onPress={() => { setEditingVariantId(v.id); setEditStock(String(v.stock_quantity)); }} style={local.editStockBtn}>
-                  <MaterialIcons name="edit" size={ms(14)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
-                  <Text style={local.editStockText}>Editar stock</Text>
+                  <MaterialIcons name="edit" size={ms(14)} color={colors.primary} />
+                  <Text style={[text.label, { color: colors.primary, fontWeight: "600" }]}>Editar stock</Text>
                 </TouchableOpacity>
               )}
             </View>
           ))}
 
           {showVariantForm && (
-            <View style={[local.variantForm, isDark && local.variantFormDark]}>
-              <Text style={[local.formTitle, isDark && shared.textDark]}>Nueva variante</Text>
+            <View style={[local.variantForm, { backgroundColor: colors.bgPage, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5 }]}>
+              <Text style={[text.label, { color: colors.primaryDeep, fontWeight: "700", marginBottom: spacing[2] }]}>Nueva variante</Text>
               <Input label="Nombre (ej: Tamaño)" value={varName} onChangeText={setVarName} placeholder="Tamaño" />
               <Input label="Valor (ej: Grande)" value={varValue} onChangeText={setVarValue} placeholder="Grande" />
               <Input label="Modificador de precio" value={varPrice} onChangeText={setVarPrice} placeholder="5000" keyboardType="numeric" />
@@ -336,28 +335,27 @@ export default function EditProductScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+});
+
 const local = StyleSheet.create({
   content: { padding: s(16), gap: vs(16), paddingBottom: vs(40) },
-  imageRow: { flexDirection: "row", alignItems: "center", gap: s(8), backgroundColor: "rgba(0,0,0,0.05)", borderRadius: ms(8), padding: s(10) },
-  imageRowDark: { backgroundColor: "rgba(255,255,255,0.05)" },
-  imageUrl: { flex: 1, fontSize: ms(11), color: "#687076" },
-  primaryBadge: { backgroundColor: "#6B9E98", paddingHorizontal: s(8), paddingVertical: vs(2), borderRadius: ms(8) },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  section: { padding: s(16), gap: vs(12), borderWidth: 0.5 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  imageRow: { flexDirection: "row", alignItems: "center", gap: s(8), padding: s(10), borderWidth: 0.5 },
+  primaryBadge: { paddingHorizontal: s(8), paddingVertical: vs(2), borderRadius: 8 },
   primaryText: { fontSize: ms(10), color: "#fff", fontWeight: "600" },
   inlineForm: { gap: vs(10) },
-  variantCard: { backgroundColor: "rgba(0,0,0,0.04)", borderRadius: ms(10), padding: s(12), gap: vs(8) },
-  variantCardDark: { backgroundColor: "rgba(255,255,255,0.06)" },
+  variantCard: { padding: s(12), gap: vs(8), borderWidth: 0.5 },
   variantHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   variantInfo: { flex: 1, gap: vs(2) },
-  variantName: { fontSize: ms(13), fontWeight: "600", color: "#000" },
-  variantMeta: { fontSize: ms(11), color: "#687076" },
-  stockEditRow: { gap: vs(8), marginTop: vs(8), paddingTop: vs(8), borderTopWidth: 1, borderTopColor: "rgba(150,150,150,0.2)" },
+  stockEditRow: { gap: vs(8), marginTop: vs(8), paddingTop: vs(8), borderTopWidth: 0.5, borderTopColor: "rgba(150,150,150,0.2)" },
   stepper: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: s(16) },
-  circleBtn: { width: ms(32), height: ms(32), borderRadius: ms(16), backgroundColor: "#6B9E98", justifyContent: "center", alignItems: "center" },
+  circleBtn: { width: ms(32), height: ms(32), borderRadius: ms(16), justifyContent: "center", alignItems: "center" },
   stockInput: { flex: 0, minWidth: ms(80), textAlign: "center" },
   stockEditActions: { flexDirection: "row", justifyContent: "flex-end", gap: s(8) },
   editStockBtn: { flexDirection: "row", alignItems: "center", gap: s(4) },
-  editStockText: { fontSize: ms(12), color: "#6B9E98", fontWeight: "600" },
-  variantForm: { backgroundColor: "rgba(107,158,152,0.08)", borderRadius: ms(12), padding: s(16), gap: vs(12) },
-  variantFormDark: { backgroundColor: "rgba(107,158,152,0.12)" },
-  formTitle: { fontSize: ms(14), fontWeight: "700", color: "#000" },
+  variantForm: { padding: s(16), gap: vs(12) },
 });
