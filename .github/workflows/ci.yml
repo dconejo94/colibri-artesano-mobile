@@ -1,6 +1,9 @@
 name: CI Mobile Pipeline
 
 on:
+  push:
+    branches-ignore:
+      - main
   pull_request:
     branches:
       - main
