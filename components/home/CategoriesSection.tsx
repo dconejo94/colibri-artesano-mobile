@@ -1,5 +1,5 @@
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import { s, vs, ms } from '@/utils/scale';
+import { s, vs } from '@/utils/scale';
 import { useTheme } from '@/src/theme';
 
 const CATEGORIES = [
@@ -9,7 +9,7 @@ const CATEGORIES = [
 ];
 
 export default function CategoriesSection() {
-  const { colors, spacing, radii, text } = useTheme();
+  const { colors, radii, text } = useTheme();
 
   return (
     <View style={[styles.section, { paddingVertical: vs(16), paddingHorizontal: s(16) }]}>

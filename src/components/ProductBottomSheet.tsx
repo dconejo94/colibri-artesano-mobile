@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/theme';
@@ -50,7 +49,6 @@ export default function ProductBottomSheet({
 }: Props) {
   const { colors, spacing, radii, shadows, text } = useTheme();
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useWindowDimensions();
 
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
@@ -68,7 +66,7 @@ export default function ProductBottomSheet({
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
+  }, [visible, translateY]);
 
   if (!product) return null;
 

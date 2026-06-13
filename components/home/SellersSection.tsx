@@ -1,12 +1,12 @@
 import { View, Text, Image, StyleSheet } from 'react-native';
-import { s, vs, ms } from '@/utils/scale';
+import { s, vs } from '@/utils/scale';
 import { useTheme } from '@/src/theme';
 
 const PLACEHOLDER_TEXT =
   'Los productos que distribuimos son más que solo objetos decorativos, son el reflejo de las manos que los crean. Conoce a los artesanos que, con paciencia y destreza, dan forma a la tradición y cultura local. Como don Juan, quien lleva más de 30 años trabajando la cerámica en su pequeño taller.';
 
 export default function SellersSection() {
-  const { colors, spacing, radii, shadows, text } = useTheme();
+  const { colors, radii, shadows, text } = useTheme();
 
   return (
     <View

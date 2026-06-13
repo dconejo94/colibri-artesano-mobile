@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getProducts } from '@/api/products';
 import { Product as UIProduct } from '@/src/components/ProductCard';
 import { Product as BackendProduct } from '@/types/store';
@@ -10,7 +10,7 @@ export function useProducts(options: { limit?: number; page?: number } = {}) {
   const [page, setPage] = useState(options.page || 1);
   const [hasNextPage, setHasNextPage] = useState(true);
 
-  const fetchProducts = async (currentPage: number) => {
+  const fetchProducts = useCallback(async (currentPage: number) => {
     try {
       setIsLoading(true);
       const response = await getProducts(currentPage, options.limit || 20);
@@ -51,11 +51,11 @@ export function useProducts(options: { limit?: number; page?: number } = {}) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [options.limit]);
 
   useEffect(() => {
     fetchProducts(page);
-  }, [page]);
+  }, [page, fetchProducts]);
 
   const fetchNextPage = () => {
     if (hasNextPage && !isLoading) {

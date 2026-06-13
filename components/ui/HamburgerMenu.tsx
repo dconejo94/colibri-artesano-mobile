@@ -4,7 +4,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import Animated, {
@@ -14,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter, usePathname } from 'expo-router';
-import { s, vs, ms } from '@/utils/scale';
+import { s, vs } from '@/utils/scale';
 import { useTheme } from '@/src/theme';
 
 // ─── Ancho del panel ─────────────────────────────────────────────────────────
@@ -63,7 +62,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
       const t = setTimeout(() => setVisible(false), ANIM_DURATION);
       return () => clearTimeout(t);
     }
-  }, [isOpen]);
+  }, [isOpen, translateX]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],

@@ -35,7 +35,7 @@ export default function DetailArtisanBio({ artisan, artisanBio }: Props) {
 
       {/* Texto de bio en itálica editorial */}
       <Text style={[text.quote, { color: colors.textSecondary }]}>
-        "{artisanBio}"
+        &quot;{artisanBio}&quot;
       </Text>
     </View>
   );
