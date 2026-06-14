@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/theme';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+// Types ───────────────────────────────────────────────────────────────────────
 export type BadgeStatus = 'available' | 'pending' | 'sold_out' | 'new' | 'artisan';
 
 interface Props {
   status: BadgeStatus;
 }
 
-// ─── Textos por estado ────────────────────────────────────────────────────────
+// Labels per status ────────────────────────────────────────────────────────────
 const LABELS: Record<BadgeStatus, string> = {
   available: 'Disponible',
   pending:   'Bajo encargo',
@@ -17,14 +17,14 @@ const LABELS: Record<BadgeStatus, string> = {
   artisan:   'Artesanal',
 };
 
-// ─── Componente ──────────────────────────────────────────────────────────────
-// El badge resuelve colores internamente según el tema actual.
-// El texto siempre está presente junto al color — sin depender solo del color
-// para comunicar el estado (accesibilidad WCAG 1.4.1).
+// Component ────────────────────────────────────────────────────────────────────
+// The badge resolves colors internally from the current theme.
+// Text is always present alongside color — not relying on color alone
+// to convey state (WCAG 1.4.1 accessibility).
 export default function StatusBadge({ status }: Props) {
   const { colors, radii, text } = useTheme();
 
-  // Colores semánticos por estado, tomados del sistema de tema
+  // Semantic colors per status, sourced from the theme system
   const badgeColors = {
     available: { bg: colors.successBg,  fg: colors.successText },
     pending:   { bg: colors.warningBg,  fg: colors.warningText },

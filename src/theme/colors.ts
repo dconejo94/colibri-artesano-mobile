@@ -1,8 +1,8 @@
-// ─── Capa 1: paleta cruda ────────────────────────────────────────────────────
-// Estos valores nunca se usan directamente en componentes.
-// Siempre usá los tokens semánticos de lightColors / darkColors.
+// Layer 1: raw palette ───────────────────────────────────────────────────────
+// These values are never used directly in components.
+// Always use the semantic tokens from lightColors / darkColors.
 const palette = {
-  // Verdes de marca
+  // Brand greens
   green100: '#EBF3ED',
   green200: '#C8DFD0',
   green300: '#A8CBB5',
@@ -13,13 +13,13 @@ const palette = {
   green800: '#2C3830',
   green900: '#1A1F1C',
 
-  // Fondos verdes oscuros (dark mode)
+  // Dark-mode green backgrounds
   greenNight:   '#1A1F1C',
   greenNight2:  '#222820',
   greenNight3:  '#2A3028',
   greenNight4:  '#3A4438',
 
-  // Beige / lino
+  // Beige / linen
   beige100: '#FAFAF7',
   beige200: '#F5EFE6',
   beige300: '#ECDFD0',
@@ -30,11 +30,11 @@ const palette = {
   beige800: '#9A8E80',
   beige900: '#8C8074',
 
-  // Texto
+  // Text
   inkDark:  '#2C3830',
   inkMid:   '#5C6B5E',
 
-  // Estados semánticos
+  // Semantic states
   successBg:   '#D6ECD9',
   successText: '#2D6A35',
   successBgDk: '#1E3326',
@@ -129,33 +129,33 @@ const lightColors = {
 // Layer 2: semantic tokens — Dark mode
 // Not a mechanical inversion: backgrounds inherit the brand green tint.
 const darkColors: AppColors = {
-  // Fondos — teñidos de verde, no grises genéricos
-  bgPage:    palette.greenNight,     // #1A1F1C — verde noche
-  bgSection: palette.greenNight2,    // #222820 — limo oscuro
-  bgCard:    palette.greenNight3,    // #2A3028 — verde topo
+  // Backgrounds — green-tinted, not generic grays
+  bgPage:    palette.greenNight,     // #1A1F1C — night green
+  bgSection: palette.greenNight2,    // #222820 — dark moss
+  bgCard:    palette.greenNight3,    // #2A3028 — dark sage
   bgCardAlt: palette.greenNight3,
   bgNavbar:  palette.greenNight,
 
-  // Textos — los beige toman el rol del texto
-  textPrimary:   palette.beige400,   // #D4C9B8 — reemplaza al inkDark
-  textSecondary: palette.beige900,   // #8C8074 — texto secundario
+  // Text — beige tones take over the ink role
+  textPrimary:   palette.beige400,   // #D4C9B8 — replaces inkDark
+  textSecondary: palette.beige900,   // #8C8074 — secondary text
   textMuted:     palette.beige800,   // #9A8E80 — muted
-  textOnPrimary: palette.greenNight, // #1A1F1C — texto sobre verde claro
+  textOnPrimary: palette.greenNight, // #1A1F1C — text on light green
 
-  // Verdes — se aclaran para mantener contraste sobre fondos oscuros
+  // Greens — lightened to maintain contrast on dark backgrounds
   primary:     palette.green500,     // #6FA882
   primaryDeep: palette.green300,     // #A8CBB5
   primarySoft: palette.green400,     // #8FAF7E
 
-  // Acento cálido — se aclara ligeramente
+  // Warm accent — slightly lightened
   accent:     palette.beige600,      // #B89A7A
   accentSoft: palette.beige700,      // #A0876B
 
-  // Bordes
-  border:      palette.greenNight4,  // #3A4438 — borde verde oscuro
-  borderFocus: palette.green500,     // #6FA882 — foco verde claro
+  // Borders
+  border:      palette.greenNight4,  // #3A4438 — dark green border
+  borderFocus: palette.green500,     // #6FA882 — light green focus
 
-  // Botones
+  // Buttons
   btnPrimaryBg:       palette.green500,
   btnPrimaryText:     palette.greenNight,
   btnSecondaryBg:     palette.greenNight2,
@@ -164,7 +164,7 @@ const darkColors: AppColors = {
   btnGhostText:       palette.green500,
   btnGhostBorder:     palette.green500,
 
-  // Estados de producto — versiones oscuras empolvadas
+  // Product states — muted dark variants
   successBg:   palette.successBgDk,
   successText: palette.successTxtDk,
   warningBg:   palette.warningBgDk,

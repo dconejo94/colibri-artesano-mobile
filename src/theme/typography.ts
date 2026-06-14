@@ -1,6 +1,6 @@
-// ─── Fuentes ─────────────────────────────────────────────────────────────────
-// DM Sans → interfaz funcional (botones, precios, etiquetas, cuerpo)
-// Lora    → display editorial (títulos de sección, hero, citas de artesano)
+// Fonts ───────────────────────────────────────────────────────────────────────
+// DM Sans → functional UI (buttons, prices, labels, body)
+// Lora    → editorial display (section titles, hero, artisan quotes)
 export const fonts = {
   sanRegular:  'DMSans_400Regular',
   sanMedium:   'DMSans_500Medium',
@@ -10,20 +10,20 @@ export const fonts = {
   serifItalic: 'Lora_400Regular_Italic',
 } as const;
 
-// ─── Escala tipográfica (px) ─────────────────────────────────────────────────
+// Type scale (px) ─────────────────────────────────────────────────────────────
 export const fontSizes = {
-  xs:  11,  // categorías uppercase, labels de estado
-  sm:  13,  // precios en lista, metadatos, etiquetas secundarias
-  md:  15,  // cuerpo principal, descripción corta
-  lg:  17,  // nombre del producto en card, subtítulos
-  xl:  20,  // H3 interior de sección
-  '2xl': 24, // H2, nombre en detalle, precio en detalle
-  '3xl': 28, // H1, título de pantalla principal
+  xs:  11,  // uppercase categories, status labels
+  sm:  13,  // list prices, metadata, secondary labels
+  md:  15,  // main body, short description
+  lg:  17,  // product name in card, subtitles
+  xl:  20,  // H3 inside a section
+  '2xl': 24, // H2, name in detail view, detail price
+  '3xl': 28, // H1, main screen title
   '4xl': 34, // hero display
 } as const;
 
-// ─── Multiplicadores de lineHeight ──────────────────────────────────────────
-// React Native necesita valores absolutos en px, no multiplicadores.
+// Line-height multipliers ─────────────────────────────────────────────────────
+// React Native requires absolute px values, not multipliers.
 const lineHeights = {
   tight:  1.2,
   snug:   1.35,
@@ -31,21 +31,21 @@ const lineHeights = {
   relaxed:1.65,
 } as const;
 
-// ─── Letter spacing ──────────────────────────────────────────────────────────
+// Letter spacing ──────────────────────────────────────────────────────────────
 export const tracking = {
-  wide:    0.8,   // categorías uppercase
+  wide:    0.8,   // uppercase categories
   normal:  0,
-  tight:  -0.3,   // títulos display
+  tight:  -0.3,   // display titles
 } as const;
 
-// ─── Pesos tipográficos ──────────────────────────────────────────────────────
+// Font weights ────────────────────────────────────────────────────────────────
 export const weights = {
   regular: '400' as const,
   medium:  '500' as const,
   bold:    '700' as const,
 } as const;
 
-// ─── Estilos compuestos (listos para usar con [text.h2, { color }]) ──────────
+// Composite text styles (ready to use with [text.h2, { color }]) ──────────────
 export const textStyles = {
   hero: {
     fontFamily:   fonts.serifSemi,

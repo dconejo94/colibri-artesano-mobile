@@ -1,29 +1,29 @@
-// ─── Spacing (múltiplos de 4) ─────────────────────────────────────────────────
-// Usá siempre spacing[N] en lugar de números hardcodeados.
+// Spacing (multiples of 4) ────────────────────────────────────────────────────
+// Always use spacing[N] instead of hard-coded numbers.
 export const spacing = {
-  1:  4,   // separación mínima entre elementos relacionados
-  2:  8,   // gap interno de un componente compacto
-  3:  12,  // padding interno de cards pequeñas
-  4:  16,  // padding horizontal estándar de pantalla
-  5:  20,  // separación entre secciones dentro de un componente
-  6:  24,  // separación entre secciones de pantalla
-  8:  32,  // separación entre bloques grandes
-  10: 40,  // padding bottom del último elemento en scroll
-  12: 48,  // paddingBottom de SafeAreaView — encima de la action bar
+  1:  4,   // minimum gap between related elements
+  2:  8,   // internal gap of a compact component
+  3:  12,  // internal padding of small cards
+  4:  16,  // standard horizontal screen padding
+  5:  20,  // gap between sections inside a component
+  6:  24,  // gap between screen sections
+  8:  32,  // gap between large blocks
+  10: 40,  // paddingBottom of the last element in a scroll view
+  12: 48,  // paddingBottom of SafeAreaView — above the action bar
 } as const;
 
-// ─── Border radius ───────────────────────────────────────────────────────────
+// Border radius ───────────────────────────────────────────────────────────────
 export const radii = {
-  sm:   6,   // inputs, chips pequeños
-  md:   10,  // cards pequeñas, thumbnails, botones
-  lg:   14,  // ProductCard, contenedores principales
-  xl:   20,  // modales, bottom sheets
-  full: 999, // badges circulares (StatusBadge), avatares
+  sm:   6,   // inputs, small chips
+  md:   10,  // small cards, thumbnails, buttons
+  lg:   14,  // ProductCard, main containers
+  xl:   20,  // modals, bottom sheets
+  full: 999, // circular badges (StatusBadge), avatars
 } as const;
 
-// ─── Sombras ─────────────────────────────────────────────────────────────────
-// Usan #2C3830 (tinta verde oscura) en lugar de negro puro.
-// Hacer spread directamente: style={[styles.card, { ...shadows.md }]}
+// Shadows ─────────────────────────────────────────────────────────────────────
+// Uses #2C3830 (dark green ink) instead of pure black.
+// Spread directly onto the style: style={[styles.card, { ...shadows.md }]}
 export const shadows = {
   none: {
     shadowColor:   'transparent',

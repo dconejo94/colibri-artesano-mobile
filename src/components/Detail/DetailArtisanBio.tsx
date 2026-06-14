@@ -1,4 +1,4 @@
-// Cita/bio del artesano con borde izquierdo de acento cálido (patrón editorial).
+// Artisan quote / bio with a warm-accent left border (editorial pattern).
 import { View, Text } from 'react-native';
 import { useTheme } from '@/src/theme';
 
@@ -23,17 +23,17 @@ export default function DetailArtisanBio({ artisan, artisanBio }: Props) {
       }}
       accessibilityLabel={`Sobre el artesano: ${artisan}`}
     >
-      {/* Etiqueta de sección */}
+      {/* Section label */}
       <Text style={[text.caption, { color: colors.accent, letterSpacing: 0.8, marginBottom: spacing[2] }]}>
         SOBRE EL ARTESANO
       </Text>
 
-      {/* Nombre del artesano */}
+      {/* Artisan name */}
       <Text style={[text.h3, { color: colors.primaryDeep, marginBottom: spacing[2] }]}>
         {artisan}
       </Text>
 
-      {/* Texto de bio en itálica editorial */}
+      {/* Bio text in editorial italic */}
       <Text style={[text.quote, { color: colors.textSecondary }]}>
         &quot;{artisanBio}&quot;
       </Text>

@@ -1,5 +1,5 @@
-// Barra de acciones sticky (Comprar ahora + Al carrito).
-// Usa SafeAreaView para quedar por encima del home indicator.
+// Sticky action bar (Buy now + Add to cart).
+// Uses SafeAreaView to render above the home indicator.
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/theme';
@@ -38,7 +38,7 @@ export default function DetailActionBar({
         },
       ]}
     >
-      {/* Botón secundario: Agregar al carrito (flex: 1) */}
+      {/* Secondary button: Add to cart (flex: 1) */}
       <Pressable
         style={({ pressed }) => [
           styles.btn,
@@ -61,7 +61,7 @@ export default function DetailActionBar({
         </Text>
       </Pressable>
 
-      {/* Botón primario: Comprar ahora (flex: 1.6 — más prominente) */}
+      {/* Primary button: Buy now (flex: 1.6 — more prominent) */}
       <Pressable
         style={({ pressed }) => [
           styles.btn,
