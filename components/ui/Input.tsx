@@ -3,22 +3,22 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  useColorScheme,
   KeyboardTypeOptions,
   ViewStyle,
-} from "react-native";
+} from 'react-native';
+import { useTheme } from '@/src/theme';
 
 type Props = {
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  label?: string;
-  secureTextEntry?: boolean;
-  keyboardType?: KeyboardTypeOptions;
-  multiline?: boolean;
-  error?: string;
-  disabled?: boolean;
-  style?: ViewStyle;
+  value:          string;
+  onChangeText:   (text: string) => void;
+  placeholder?:   string;
+  label?:         string;
+  secureTextEntry?:boolean;
+  keyboardType?:  KeyboardTypeOptions;
+  multiline?:     boolean;
+  error?:         string;
+  disabled?:      boolean;
+  style?:         ViewStyle;
 };
 
 export default function Input({
@@ -33,37 +33,41 @@ export default function Input({
   disabled,
   style,
 }: Props) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { colors, spacing, radii, text } = useTheme();
 
   return (
     <View style={[styles.container, style]}>
       {label && (
-        <Text style={[styles.label, isDark && styles.labelDark]}>{label}</Text>
+        <Text style={[text.label, { color: colors.textPrimary }]}>{label}</Text>
       )}
       <TextInput
         style={[
           styles.input,
-          isDark ? styles.inputDark : styles.inputLight, // dark / light mode background
+          {
+            backgroundColor:  colors.bgSection,
+            color:            colors.textPrimary,
+            borderRadius:     radii.sm,
+            borderWidth:      1,
+            borderColor:      error ? colors.errorText : colors.border,
+            paddingHorizontal: spacing[4],
+            fontSize:         15,
+          },
           multiline && styles.multiline,
-          disabled && styles.disabled,
-          error ? styles.inputError : null,
+          disabled  && styles.disabled,
         ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={
-          isDark
-            ? "rgba(255,255,255,0.4)" // dark mode placeholder
-            : "rgba(0,0,0,0.4)"       // light mode placeholder
-        }
+        placeholderTextColor={colors.textMuted}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         multiline={multiline}
         editable={!disabled}
-        textAlignVertical={multiline ? "top" : "center"}
+        textAlignVertical={multiline ? 'top' : 'center'}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text style={[text.caption, { color: colors.errorText }]}>{error}</Text>
+      )}
     </View>
   );
 }
@@ -72,43 +76,14 @@ const styles = StyleSheet.create({
   container: {
     gap: 4,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000", // light mode label
-  },
-  labelDark: {
-    color: "#fff", // dark mode label
-  },
-
   input: {
     height: 44,
-    borderRadius: 15,
-    paddingHorizontal: 14,
-    fontSize: 15,
   },
-  inputLight: {
-    backgroundColor: "rgba(130,168,172,0.7)", // light mode
-    color: "#000",
-  },
-  inputDark: {
-    backgroundColor: "rgba(63,29,35,0.6)", // dark mode
-    color: "#fff",
-  },
-
   multiline: {
-    height: 100,
+    height:    100,
     paddingTop: 12,
   },
   disabled: {
     opacity: 0.5,
-  },
-  inputError: {
-    borderWidth: 1.5,
-    borderColor: "#EF4444",
-  },
-  errorText: {
-    fontSize: 12,
-    color: "#EF4444",
   },
 });

@@ -1,34 +1,49 @@
-import { View, Text, Image, ScrollView, StyleSheet, useColorScheme } from "react-native";
-import { s, vs, ms } from "@/utils/scale";
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { s, vs } from '@/utils/scale';
+import { useTheme } from '@/src/theme';
 
-// static list — will be replaced with API data later
 const CATEGORIES = [
-  { id: "1", label: "Cerámica", image: require("@/assets/home/Ceramica.png") },
-  { id: "2", label: "Téxtiles", image: require("@/assets/home/Textiles.png") },
-  { id: "3", label: "Pinturas", image: require("@/assets/home/Pinturas.png") },
+  { id: '1', label: 'Cerámica',  image: require('@/assets/home/Ceramica.png')  },
+  { id: '2', label: 'Téxtiles', image: require('@/assets/home/Textiles.png')  },
+  { id: '3', label: 'Pinturas',  image: require('@/assets/home/Pinturas.png')  },
 ];
 
 export default function CategoriesSection() {
-  const isDark = useColorScheme() === "dark";
+  const { colors, radii, text } = useTheme();
 
   return (
-    <View style={styles.section}>
-      <Text style={[styles.title, isDark && styles.titleDark]}>Categorías</Text>
+    <View style={[styles.section, { paddingVertical: vs(16), paddingHorizontal: s(16) }]}>
+      {/* Título con subrayado de acento cálido */}
+      <View style={{ marginBottom: vs(12) }}>
+        <Text style={[text.h3, { color: colors.primaryDeep }]}>Categorías</Text>
+        <View style={[styles.underline, { backgroundColor: colors.accent }]} />
+      </View>
 
-      {/* horizontal scroll in case more categories are added */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carousel}
+        contentContainerStyle={[styles.carousel, { gap: s(32) }]}
       >
         {CATEGORIES.map((cat) => (
-          <View key={cat.id} style={styles.card}>
+          <View key={cat.id} style={[styles.card, { gap: vs(6) }]}>
             <Image
               source={cat.image}
-              style={[styles.image, isDark && styles.imageDark]}
+              style={[
+                styles.image,
+                {
+                  width:        s(98),
+                  height:       vs(108),
+                  borderRadius: radii.lg,
+                  borderWidth:  0.5,
+                  borderColor:  colors.border,
+                },
+              ]}
               resizeMode="cover"
+              accessibilityLabel={`Categoría: ${cat.label}`}
             />
-            <Text style={[styles.label, isDark && styles.labelDark]}>{cat.label}</Text>
+            <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8 }]}>
+              {cat.label.toUpperCase()}
+            </Text>
           </View>
         ))}
       </ScrollView>
@@ -37,46 +52,18 @@ export default function CategoriesSection() {
 }
 
 const styles = StyleSheet.create({
-  section: {
-    paddingVertical: vs(16),
-    paddingHorizontal: s(16),
-  },
-  title: {
-    fontSize: ms(15),
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: vs(12),
-  },
-  titleDark: {
-    color: "#fff",
+  section:    {},
+  underline: {
+    height:       3,
+    width:        40,
+    borderRadius: 2,
+    marginTop:    6,
   },
   carousel: {
-    // gap of 32 distributes the 3 images evenly across the screen width
-    gap: s(32),
     paddingBottom: vs(4),
   },
   card: {
-    alignItems: "center",
-    gap: vs(6),
+    alignItems: 'center',
   },
-  image: {
-    width: s(98),
-    height: vs(108),
-    borderRadius: ms(15),
-    // rgba instead of hex so we can control opacity (28% black from Figma spec)
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.28)",
-  },
-  imageDark: {
-    // flipped to white at the same opacity so the border stays visible in dark mode
-    borderColor: "rgba(255,255,255,0.28)",
-  },
-  label: {
-    fontSize: ms(11),
-    fontWeight: "600",
-    color: "#000",
-  },
-  labelDark: {
-    color: "#fff",
-  },
+  image: {},
 });

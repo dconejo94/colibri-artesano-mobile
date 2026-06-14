@@ -1,174 +1,232 @@
-import { ms, s, vs } from "@/utils/scale";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from 'react';
 import {
   Modal,
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  useColorScheme,
   View,
-} from "react-native";
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter, usePathname } from 'expo-router';
+import { s, vs } from '@/utils/scale';
+import { useTheme } from '@/src/theme';
 
-const DRAWER_WIDTH = s(264);
+// ─── Ancho del panel ─────────────────────────────────────────────────────────
+const DRAWER_WIDTH = s(280);
+const ANIM_DURATION = 280;
 
-type MenuEntry = {
-  icon: React.ComponentProps<typeof MaterialIcons>["name"];
-  label: string;
-  route?: string;
+// ─── Datos del usuario (placeholder — reemplazar con contexto de auth) ───────
+const USER = {
+  initials: 'EG',
+  name:     'Elena Gómez',
+  role:     'Artesana',
+  location: 'Heredia',
 };
 
-const MENU_ITEMS: MenuEntry[] = [
-  { icon: "home", label: "Inicio", route: "/" },
-  { icon: "person", label: "Mi Cuenta" },
-  { icon: "shopping-cart", label: "Carrito" },
-  { icon: "favorite", label: "Favoritos" },
-  { icon: "storefront", label: "Mi Tienda", route: "/store" },
-  { icon: "category", label: "Productos", route: "/products" },
-  { icon: "handshake", label: "Marcas Aliadas" },
-  { icon: "mail", label: "Contacto" },
-  { icon: "article", label: "Blog y novedades" },
-  { icon: "event", label: "Eventos" },
+// ─── Items de navegación ─────────────────────────────────────────────────────
+// icon: nombre de MaterialIcons, href: ruta de Expo Router
+const NAV_ITEMS = [
+  { label: 'Inicio',     icon: 'home'           as const, href: '/'          },
+  { label: 'Productos',  icon: 'eco'            as const, href: '/productos'  },
+  { label: 'Mi Tienda',  icon: 'storefront'     as const, href: '/tienda'    },
+  { label: 'Eventos',    icon: 'event'          as const, href: '/eventos'   },
+  { label: 'Carrito',    icon: 'shopping-cart'  as const, href: '/carrito'   },
+  { label: 'Favoritos',  icon: 'favorite'       as const, href: '/favoritos' },
 ];
 
 type Props = {
-  isOpen: boolean;
+  isOpen:  boolean;
   onClose: () => void;
 };
 
 export default function HamburgerMenu({ isOpen, onClose }: Props) {
-  const isDark = useColorScheme() === "dark";
-  const router = useRouter();
+  const { colors, spacing, radii, text } = useTheme();
+  const router   = useRouter();
+  const pathname = usePathname();
 
-  // internal visibility controls modal — separate from isOpen so we can
-  // animate out before hiding the modal
   const [visible, setVisible] = useState(false);
   const translateX = useSharedValue(-DRAWER_WIDTH);
 
+  // Maneja animación de entrada / salida
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
-      translateX.value = withTiming(0, { duration: 300 });
+      translateX.value = withTiming(0, { duration: ANIM_DURATION });
     } else {
-      translateX.value = withTiming(-DRAWER_WIDTH, { duration: 300 });
-      const timer = setTimeout(() => setVisible(false), 300);
-      return () => clearTimeout(timer);
+      translateX.value = withTiming(-DRAWER_WIDTH, { duration: ANIM_DURATION });
+      const t = setTimeout(() => setVisible(false), ANIM_DURATION);
+      return () => clearTimeout(t);
     }
-  }, [isOpen]);
+  }, [isOpen, translateX]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
 
-  const handlePress = (entry: MenuEntry) => {
+  // Navega a la ruta y cierra el drawer
+  const handleNav = (href: string) => {
     onClose();
-    if (entry.route) {
-      router.push(entry.route as never);
-    }
+    // Pequeño delay para dejar que la animación de cierre empiece
+    setTimeout(() => router.push(href as any), 80);
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      {/* Backdrop con tinte verde oscuro de la marca */}
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: 'rgba(44,56,48,0.45)' }]}
+        onPress={onClose}
+        accessibilityLabel="Cerrar menú"
+      />
 
-        {/* semi-transparent backdrop — closes menu on tap */}
-        <Pressable style={styles.backdrop} onPress={onClose} />
-
-        <Animated.View style={[
+      {/* Panel deslizable */}
+      <Animated.View
+        style={[
           styles.drawer,
-          isDark ? styles.drawerDark : styles.drawerLight,
+          {
+            width:            DRAWER_WIDTH,
+            backgroundColor:  colors.bgPage,
+            paddingTop:       vs(56),
+            paddingBottom:    vs(40),
+            borderRightWidth: 0,
+          },
           animatedStyle,
-        ]}>
-
-          {/* navigation links */}
-          <View style={styles.links}>
-            {MENU_ITEMS.map((entry) => (
-              <TouchableOpacity
-                key={entry.label}
-                style={styles.linkItem}
-                onPress={() => handlePress(entry)}
-              >
-                <MaterialIcons name={entry.icon} size={ms(22)} color="#6B9E98" />
-                <Text style={[styles.linkText, isDark ? styles.textDark : styles.textLight]}>
-                  {entry.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* footer branding */}
-          <View style={styles.footer}>
-            <Text style={[styles.footerText, isDark ? styles.textDark : styles.textLight]}>
-              © 2025 El Colibri Artesano Costa Rica.{"\n"}Todos los derechos reservados.
+        ]}
+      >
+        {/* ── Perfil de usuario ──────────────────────────────────────────── */}
+        <View style={[styles.profile, { paddingHorizontal: spacing[5] }]}>
+          {/* Avatar circular con iniciales */}
+          <View
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: colors.primary,
+                borderRadius:    radii.full,
+              },
+            ]}
+          >
+            <Text style={[text.button, { color: colors.textOnPrimary, fontSize: 18 }]}>
+              {USER.initials}
             </Text>
           </View>
 
-        </Animated.View>
-      </View>
+          {/* Nombre y subtítulo */}
+          <View style={{ flex: 1 }}>
+            <Text style={[text.productName, { color: colors.textPrimary }]}>
+              {USER.name}
+            </Text>
+            <Text style={[text.label, { color: colors.textSecondary, marginTop: 2 }]}>
+              {USER.role} • {USER.location}
+            </Text>
+          </View>
+        </View>
+
+        {/* Separador */}
+        <View
+          style={[
+            styles.divider,
+            {
+              backgroundColor:  colors.border,
+              marginHorizontal: spacing[5],
+              marginVertical:   vs(20),
+            },
+          ]}
+        />
+
+        {/* ── Links de navegación ───────────────────────────────────────── */}
+        <View style={[styles.nav, { paddingHorizontal: spacing[4] }]}>
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+
+            return (
+              <Pressable
+                key={item.href}
+                style={({ pressed }) => [
+                  styles.navItem,
+                  {
+                    backgroundColor: isActive
+                      ? colors.bgSection
+                      : pressed
+                      ? colors.bgSection + '80'
+                      : 'transparent',
+                    borderRadius:    radii.md,
+                    paddingVertical:   vs(14),
+                    paddingHorizontal: spacing[4],
+                    marginBottom:      vs(4),
+                  },
+                ]}
+                onPress={() => handleNav(item.href)}
+                accessibilityLabel={item.label}
+                accessibilityRole="button"
+              >
+                <MaterialIcons
+                  name={item.icon}
+                  size={22}
+                  color={isActive ? colors.primary : colors.primarySoft}
+                />
+                <Text
+                  style={[
+                    text.body,
+                    {
+                      color:      isActive ? colors.primary : colors.textPrimary,
+                      fontFamily: isActive
+                        ? 'DMSans_500Medium'
+                        : 'DMSans_400Regular',
+                      marginLeft: spacing[3],
+                    },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Animated.View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
   },
   drawer: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: DRAWER_WIDTH,
-    paddingTop: vs(60),
-    paddingHorizontal: s(20),
-    paddingBottom: vs(24),
-    justifyContent: "flex-start",
-    gap: vs(24),
+    position: 'absolute',
+    left:     0,
+    top:      0,
+    bottom:   0,
   },
-  drawerLight: {
-    backgroundColor: "rgba(255,255,255,0.92)",
+  profile: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           12,
   },
-  drawerDark: {
-    backgroundColor: "rgba(0,0,0,0.88)",
+  avatar: {
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
   },
-  links: {
-    gap: vs(4),
+  divider: {
+    height: 1,
   },
-  linkItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: s(10),
-    paddingVertical: vs(12),
+  nav: {
+    flex: 1,
   },
-  linkText: {
-    fontSize: ms(20),
-    fontWeight: "500",
-  },
-  linkDisabled: {
-    opacity: 0.35,
-  },
-  textLight: {
-    color: "#000",
-  },
-  textDark: {
-    color: "#fff",
-  },
-  footer: {
-    marginTop: "auto",
-  },
-  footerText: {
-    fontSize: ms(10),
-    lineHeight: ms(16),
+  navItem: {
+    flexDirection: 'row',
+    alignItems:    'center',
   },
 });

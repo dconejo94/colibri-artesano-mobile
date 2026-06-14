@@ -249,10 +249,10 @@ export default function EditProductScreen() {
               <MaterialIcons name={showImageForm ? "close" : "add-circle"} size={ms(24)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
             </TouchableOpacity>
           </View>
-          {product?.images.length === 0 && !showImageForm && (
+          {(product?.images?.length ?? 0) === 0 && !showImageForm && (
             <Text style={[shared.emptyText, isDark && shared.textMuted]}>Sin imágenes</Text>
           )}
-          {product?.images.map((img) => (
+          {(product?.images ?? []).map((img) => (
             <View key={img.id} style={[local.imageRow, isDark && local.imageRowDark]}>
               <MaterialIcons name="image" size={ms(20)} color={isDark ? "#ACD4CD" : "#6B9E98"} />
               <Text style={[local.imageUrl, isDark && shared.textMuted]} numberOfLines={1}>{img.image_url}</Text>
@@ -278,11 +278,11 @@ export default function EditProductScreen() {
             </TouchableOpacity>
           </View>
 
-          {product?.variants.length === 0 && !showVariantForm && (
+          {(product?.variants?.length ?? 0) === 0 && !showVariantForm && (
             <Text style={[shared.emptyText, isDark && shared.textMuted]}>Sin variantes</Text>
           )}
 
-          {product?.variants.map((v) => (
+          {(product?.variants ?? []).map((v) => (
             <View key={v.id} style={[local.variantCard, isDark && local.variantCardDark]}>
               <View style={local.variantHeader}>
                 <View style={local.variantInfo}>
@@ -308,7 +308,7 @@ export default function EditProductScreen() {
                   </View>
                   <View style={local.stockEditActions}>
                     <Button title={stockSaving ? "..." : "Guardar"} onPress={() => confirmSaveStock(v)} disabled={stockSaving} />
-                    <Button title="Cancelar" variant="outline" onPress={() => setEditingVariantId(null)} />
+                    <Button title="Cancelar" variant="ghost" onPress={() => setEditingVariantId(null)} />
                   </View>
                 </View>
               ) : (
