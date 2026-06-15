@@ -1,6 +1,6 @@
 import { getStoreProducts, updateProductVariant } from "@/api/products";
 import Button from "@/components/ui/Button";
-import EmptyState from "@/components/ui/ErrorState";
+import EmptyState from "@/components/ui/EmptyState";
 import SubHeader from "@/components/ui/SubHeader";
 import shared from "@/constants/shared-styles";
 import type { Product } from "@/types/store";
