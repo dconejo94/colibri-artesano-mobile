@@ -1,25 +1,25 @@
-import { useState, useCallback } from "react";
+import { getStoreProducts, updateProductVariant } from "@/api/products";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import SubHeader from "@/components/ui/SubHeader";
+import shared from "@/constants/shared-styles";
+import type { Product } from "@/types/store";
+import { formatPrice } from "@/utils/format";
+import { ms, s, vs } from "@/utils/scale";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
-  useColorScheme,
-  TextInput,
   Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { s, vs, ms } from "@/utils/scale";
-import { formatPrice } from "@/utils/format";
-import shared from "@/constants/shared-styles";
-import { getStoreProducts, updateProductVariant } from "@/api/products";
-import type { Product } from "@/types/store";
-import SubHeader from "@/components/ui/SubHeader";
-import Button from "@/components/ui/Button";
 
 export default function ProductListScreen() {
   const isDark = useColorScheme() === "dark";
@@ -140,8 +140,7 @@ export default function ProductListScreen() {
         </View>
       ) : products.length === 0 ? (
         <View style={shared.centered}>
-          <MaterialIcons name="inventory-2" size={ms(64)} color={isDark ? "#4E7C74" : "#82A8AC"} />
-          <Text style={[local.emptyTitle, isDark && shared.textDark]}>Sin productos aún</Text>
+          <EmptyState message="Sin productos aún" icon="inventory-2"/>
           <Button title="Agregar producto" onPress={() => router.push({ pathname: "/store/products/add" as never, params: { storeId } })} />
         </View>
       ) : (

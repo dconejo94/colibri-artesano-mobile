@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useTheme } from '@/src/theme';
+import { s, vs } from '@/utils/scale';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { usePathname, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -11,22 +15,18 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter, usePathname } from 'expo-router';
-import { s, vs } from '@/utils/scale';
-import { useTheme } from '@/src/theme';
 
 // ─── Ancho del panel ─────────────────────────────────────────────────────────
 const DRAWER_WIDTH = s(280);
 const ANIM_DURATION = 280;
 
-// ─── Datos del usuario (placeholder — reemplazar con contexto de auth) ───────
-const USER = {
-  initials: 'EG',
-  name:     'Elena Gómez',
-  role:     'Artesana',
-  location: 'Heredia',
-};
+// ─── Datos del usuario (Contexto auth lo pasan las pantallas) ───────
+type User = {
+  initials:  string;
+  name:      string;
+  role?:     string;
+  location?: string;
+}
 
 // ─── Items de navegación ─────────────────────────────────────────────────────
 // icon: nombre de MaterialIcons, href: ruta de Expo Router
@@ -42,10 +42,17 @@ const NAV_ITEMS = [
 type Props = {
   isOpen:  boolean;
   onClose: () => void;
+  user?:   User;
 };
 
-export default function HamburgerMenu({ isOpen, onClose }: Props) {
+export default function HamburgerMenu({ isOpen, onClose, user }: Props) {
   const { colors, spacing, radii, text } = useTheme();
+  const displayUser = user ?? {
+    initials: '?',
+    name:     'Usuario',
+    role:     undefined,
+    location: undefined,
+  }
   const router   = useRouter();
   const pathname = usePathname();
 
@@ -117,17 +124,17 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
             ]}
           >
             <Text style={[text.button, { color: colors.textOnPrimary, fontSize: 18 }]}>
-              {USER.initials}
+              {displayUser.initials}
             </Text>
           </View>
 
           {/* Nombre y subtítulo */}
           <View style={{ flex: 1 }}>
             <Text style={[text.productName, { color: colors.textPrimary }]}>
-              {USER.name}
+              {displayUser.name}
             </Text>
             <Text style={[text.label, { color: colors.textSecondary, marginTop: 2 }]}>
-              {USER.role} • {USER.location}
+              {[displayUser.role, displayUser.location].filter(Boolean).join ('•')} 
             </Text>
           </View>
         </View>
