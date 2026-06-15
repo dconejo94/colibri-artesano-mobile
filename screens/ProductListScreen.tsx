@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { View, ActivityIndicator, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/src/theme';
-import ProductList from '@/src/components/ProductList';
-import Header from '@/components/ui/Header';
+import ErrorState from '@/components/ui/ErrorState';
 import HamburgerMenu from '@/components/ui/HamburgerMenu';
+import Header from '@/components/ui/Header';
+import LoadingState from '@/components/ui/LoadingState';
+import ProductList from '@/src/components/ProductList';
 import { useProducts } from '@/src/hooks/useProducts';
+import { useTheme } from '@/src/theme';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProductListScreen() {
   const { colors, text } = useTheme();
@@ -24,13 +26,9 @@ export default function ProductListScreen() {
       
       <View style={{ flex: 1 }}>
         {isLoading && products.length === 0 ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <LoadingState message="Cargando productos..."/>
         ) : isError ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={[text.body, { color: colors.errorText }]}>Error al cargar los productos.</Text>
-          </View>
+          <ErrorState message="Error al cargar los productos."/>
         ) : (
           <ProductList
             products={products}
