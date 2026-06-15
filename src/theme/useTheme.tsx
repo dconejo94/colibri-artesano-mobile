@@ -5,7 +5,7 @@ import { lightColors, darkColors, type AppColors } from './colors';
 import { fonts, fontSizes, textStyles, tracking, weights } from './typography';
 import { spacing, radii, shadows } from './spacing';
 
-// ─── Tipo del objeto de tema completo ────────────────────────────────────────
+// Full theme object type ───────────────────────────────────────────────────────
 interface Theme {
   colors:   AppColors;
   fonts:    typeof fonts;
@@ -19,11 +19,11 @@ interface Theme {
   isDark:   boolean;
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// Context ──────────────────────────────────────────────────────────────────────
 const ThemeContext = createContext<Theme | null>(null);
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
-// Debe envolver la app completa, antes del NavigationContainer.
+// Provider ─────────────────────────────────────────────────────────────────────
+// Must wrap the entire app, before the NavigationContainer.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const scheme = useColorScheme();
   const isDark  = scheme === 'dark';
@@ -48,12 +48,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-// Uso: const { colors, spacing, radii, shadows, text, isDark } = useTheme();
+// Hook ─────────────────────────────────────────────────────────────────────────
+// Usage: const { colors, spacing, radii, shadows, text, isDark } = useTheme();
 export function useTheme(): Theme {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    throw new Error('useTheme debe usarse dentro de <ThemeProvider>');
+    throw new Error('useTheme must be used inside <ThemeProvider>');
   }
   return ctx;
 }

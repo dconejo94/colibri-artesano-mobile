@@ -1,4 +1,4 @@
-// Descripción, materiales, dimensiones y tiempo de entrega.
+// Description, materials, dimensions, and lead time.
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/theme';
 
@@ -21,7 +21,7 @@ export default function DetailInfo({
 
   return (
     <View style={{ paddingHorizontal: spacing[4] }}>
-      {/* Descripción */}
+      {/* Description */}
       <View style={{ marginBottom: spacing[5] }}>
         <SectionTitle label="Descripción" />
         <Text style={[text.bodyLong, { color: colors.textPrimary, marginTop: spacing[2] }]}>
@@ -29,7 +29,7 @@ export default function DetailInfo({
         </Text>
       </View>
 
-      {/* Ficha técnica — solo si algún campo está presente */}
+      {/* Tech sheet — only shown when at least one field is present */}
       {hasMetadata && (
         <View
           style={[
@@ -59,7 +59,7 @@ export default function DetailInfo({
   );
 }
 
-// ─── Sub-componentes internos ─────────────────────────────────────────────────
+// Internal sub-components ─────────────────────────────────────────────────────
 function SectionTitle({ label }: { label: string }) {
   const { colors, text } = useTheme();
   return (

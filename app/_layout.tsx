@@ -16,7 +16,7 @@ import { ThemeProvider } from '@/src/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-// Tokens de color del sistema de tema (estáticos para las opciones del Stack)
+// Static color tokens for Stack screen options (cannot use hooks here)
 const C = {
   primary:     '#4A7C59',
   primaryDeep: '#3A5E47',

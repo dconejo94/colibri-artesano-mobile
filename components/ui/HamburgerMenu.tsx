@@ -8,13 +8,24 @@ import {
   Pressable,
   StyleSheet,
   Text,
+<<<<<<< HEAD
   View
+=======
+  View,
+>>>>>>> origin/main
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+<<<<<<< HEAD
+=======
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter, usePathname } from 'expo-router';
+import { s, vs } from '@/utils/scale';
+import { useTheme } from '@/src/theme';
+>>>>>>> origin/main
 
 // ─── Ancho del panel ─────────────────────────────────────────────────────────
 const DRAWER_WIDTH = s(280);
@@ -69,7 +80,7 @@ export default function HamburgerMenu({ isOpen, onClose, user }: Props) {
       const t = setTimeout(() => setVisible(false), ANIM_DURATION);
       return () => clearTimeout(t);
     }
-  }, [isOpen]);
+  }, [isOpen, translateX]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],

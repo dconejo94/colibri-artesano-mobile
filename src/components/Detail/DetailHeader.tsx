@@ -1,4 +1,4 @@
-// Información principal: nombre, artesano, precio y badge de estado.
+// Main product info: name, artisan, price, and status badge.
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/theme';
 import StatusBadge, { type BadgeStatus } from '../StatusBadge';
@@ -29,7 +29,7 @@ export default function DetailHeader({
 
   return (
     <View style={[styles.container, { padding: spacing[4] }]}>
-      {/* Categoría + badge en la misma fila */}
+      {/* Category + badge on the same row */}
       <View style={styles.topRow}>
         <Text style={[text.caption, { color: colors.textMuted, letterSpacing: 0.8 }]}>
           {category.toUpperCase()}
@@ -37,17 +37,17 @@ export default function DetailHeader({
         <StatusBadge status={status} />
       </View>
 
-      {/* Nombre del producto */}
+      {/* Product name */}
       <Text style={[text.h2, { color: colors.textPrimary, marginTop: spacing[2] }]}>
         {name}
       </Text>
 
-      {/* Nombre del artesano */}
+      {/* Artisan name */}
       <Text style={[text.label, { color: colors.primaryDeep, marginTop: spacing[1] }]}>
         {artisan}
       </Text>
 
-      {/* Precio */}
+      {/* Price */}
       <Text style={[text.priceDetail, { color: colors.primary, marginTop: spacing[3] }]}>
         {priceFormatted}
       </Text>

@@ -63,7 +63,7 @@ export default function ProductListScreen() {
         if (p.id === product.id) {
           return {
             ...p,
-            variants: p.variants.map(v => v.id === variant.id ? { ...v, stock_quantity: newStock } : v)
+            variants: (p.variants ?? []).map(v => v.id === variant.id ? { ...v, stock_quantity: newStock } : v)
           };
         }
         return p;
@@ -87,7 +87,7 @@ export default function ProductListScreen() {
         if (p.id === product.id) {
           return {
             ...p,
-            variants: p.variants.map(v => v.id === variant.id ? { ...v, stock_quantity: num } : v)
+            variants: (p.variants ?? []).map(v => v.id === variant.id ? { ...v, stock_quantity: num } : v)
           };
         }
         return p;

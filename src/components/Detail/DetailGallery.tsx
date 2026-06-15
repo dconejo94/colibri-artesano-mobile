@@ -1,4 +1,4 @@
-// Galería de imágenes con imagen principal + miniaturas seleccionables.
+// Image gallery with a main image and selectable thumbnails.
 import { useState } from 'react';
 import { View, Image, ScrollView, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { useTheme } from '@/src/theme';
@@ -16,7 +16,7 @@ export default function DetailGallery({ images }: Props) {
 
   return (
     <View>
-      {/* Imagen principal */}
+      {/* Main image */}
       <Image
         source={{ uri: images[selectedIndex] }}
         style={[styles.mainImage, { width: screenWidth, height: mainHeight }]}
@@ -24,7 +24,7 @@ export default function DetailGallery({ images }: Props) {
         accessibilityLabel={`Imagen principal del producto, vista ${selectedIndex + 1} de ${images.length}`}
       />
 
-      {/* Miniaturas — solo aparecen si hay más de 1 imagen */}
+      {/* Thumbnails — only shown when more than 1 image exists */}
       {images.length > 1 && (
         <ScrollView
           horizontal
@@ -67,7 +67,7 @@ export default function DetailGallery({ images }: Props) {
 
 const styles = StyleSheet.create({
   mainImage: {
-    // width y height vienen como props calculadas del componente padre
+    // width and height come as calculated props from the parent component
   },
   thumbnailRow: {
     paddingVertical: 12,

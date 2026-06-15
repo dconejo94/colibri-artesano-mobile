@@ -36,7 +36,7 @@ export function ProductBottomSheet({ product, onClose, onAddToCart, onBuyNow }: 
       Animated.timing(sheetHeight, { toValue: 0, duration: 200, useNativeDriver: false })
         .start(() => setVisibleProduct(null));
     }
-  }, [product]);
+  }, [product, sheetHeight]);
 
   const panResponder = useRef(
     PanResponder.create({

@@ -94,7 +94,7 @@ export default function MyStoreScreen() {
               <Input label="Nombre" value={storeName} onChangeText={setStoreName} placeholder="Ej: Artesanias Chorotega" />
               <Input label="Descripción" value={storeDesc} onChangeText={setStoreDesc} placeholder="Describe tu tienda..." multiline />
               <View style={local.createActions}>
-                <Button title="Cancelar" variant="outline" onPress={() => setCreating(false)} />
+                <Button title="Cancelar" variant="ghost" onPress={() => setCreating(false)} />
                 <Button title="Crear" onPress={handleCreate} disabled={submitLoading || !storeName.trim()} />
               </View>
             </View>

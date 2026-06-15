@@ -115,7 +115,7 @@ export default function StoreOrdersScreen() {
                 disabled={isUpdating}
               />
             )}
-            <Button title="Cancelar" variant="outline" onPress={() => handleCancel(item)} disabled={isUpdating} />
+            <Button title="Cancelar" variant="ghost" onPress={() => handleCancel(item)} disabled={isUpdating} />
           </View>
         )}
       </View>
