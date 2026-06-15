@@ -8,24 +8,13 @@ import {
   Pressable,
   StyleSheet,
   Text,
-<<<<<<< HEAD
-  View
-=======
   View,
->>>>>>> origin/main
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-<<<<<<< HEAD
-=======
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter, usePathname } from 'expo-router';
-import { s, vs } from '@/utils/scale';
-import { useTheme } from '@/src/theme';
->>>>>>> origin/main
 
 // ─── Ancho del panel ─────────────────────────────────────────────────────────
 const DRAWER_WIDTH = s(280);
