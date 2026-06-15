@@ -46,57 +46,7 @@ export default function ProductListScreen() {
   useFocusEffect(useCallback(() => { fetchProducts(1); }, [fetchProducts]));
 
   const totalStock = (product: Product) =>
-<<<<<<< HEAD
-    product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0;
-
-  const handleStockDelta = async (product: Product, delta: number, variantId: string) => {
-    if (!product.variants || product.variants.length === 0) return;
-    const variant = product.variants.find(v => v.id === variantId);
-    if (!variant) return;
-    
-    const newStock = Math.max(0, variant.stock_quantity + delta);
-    try {
-      await updateProductVariant(product.id, variant.id, { stock_quantity: newStock });
-      setProducts(products.map(p => {
-        if (p.id === product.id) {
-          return {
-            ...p,
-            variants: (p.variants ?? []).map(v => v.id === variant.id ? { ...v, stock_quantity: newStock } : v)
-          };
-        }
-        return p;
-      }));
-    } catch {
-      Alert.alert("Error", "No se pudo actualizar el stock.");
-    }
-  };
-
-  const handleStockChange = async (product: Product, value: string, variantId: string) => {
-    if (!product.variants || product.variants.length === 0) return;
-    const variant = product.variants.find(v => v.id === variantId);
-    if (!variant) return;
-
-    const num = parseInt(value, 10);
-    if (isNaN(num) || num < 0) return;
-    
-    try {
-      await updateProductVariant(product.id, variant.id, { stock_quantity: num });
-      setProducts(products.map(p => {
-        if (p.id === product.id) {
-          return {
-            ...p,
-            variants: (p.variants ?? []).map(v => v.id === variant.id ? { ...v, stock_quantity: num } : v)
-          };
-        }
-        return p;
-      }));
-    } catch {
-      Alert.alert("Error", "No se pudo actualizar el stock.");
-    }
-  };
-=======
     product.variants?.reduce((sum: number, v: { stock_quantity: number }) => sum + v.stock_quantity, 0) || 0;
->>>>>>> 9a955da (Feature 27 Refactor Vendor Store UI)
 
   const addButton = (
     <TouchableOpacity
