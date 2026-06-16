@@ -261,7 +261,7 @@ const local = StyleSheet.create({
   itemsList: { gap: vs(8) },
   itemRow: { flexDirection: "row", alignItems: "center", gap: s(10) },
   qtyBadge: { paddingHorizontal: s(8), paddingVertical: vs(2), minWidth: ms(32), alignItems: "center" },
-  actions: { flexDirection: "row", gap: s(8), flexWrap: "wrap" },
+  actions: { flexDirection: "row", gap: s(8) },
   emptyIcon: { width: ms(96), height: ms(96), justifyContent: "center", alignItems: "center" },
   footer: { paddingVertical: vs(16) },
 });

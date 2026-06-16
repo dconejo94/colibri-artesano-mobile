@@ -1,14 +1,4 @@
-import { getStoreProducts, updateProductVariant } from "@/api/products";
-import Button from "@/components/ui/Button";
-import EmptyState from "@/components/ui/EmptyState";
-import SubHeader from "@/components/ui/SubHeader";
-import shared from "@/constants/shared-styles";
-import type { Product } from "@/types/store";
-import { formatPrice } from "@/utils/format";
-import { ms, s, vs } from "@/utils/scale";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,19 +6,24 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useColorScheme,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { s, vs, ms } from "@/utils/scale";
-import { formatPrice } from "@/utils/format";
+
 import { useTheme } from "@/src/theme";
-import { getStoreProducts } from "@/api/products";
-import type { Product } from "@/types/store";
-import SubHeader from "@/components/ui/SubHeader";
+
+import { getStoreProducts, updateProductVariant } from "@/api/products";
+
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import SubHeader from "@/components/ui/SubHeader";
+
+import type { Product } from "@/types/store";
+
+import { formatPrice } from "@/utils/format";
+import { ms, s, vs } from "@/utils/scale";
 
 export default function ProductListScreen() {
   const { colors, spacing, radii, shadows, text } = useTheme();

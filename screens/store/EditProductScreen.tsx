@@ -3,124 +3,383 @@ import {
   View,
   Text,
   ScrollView,
+  TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
   Alert,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ms, s } from "@/utils/scale";
+import { s, vs, ms } from "@/utils/scale";
+import { formatPrice } from "@/utils/format";
 import { useTheme } from "@/src/theme";
-import { getStore, updateStore } from "@/api/stores";
-import type { Store } from "@/types/store";
+import {
+  getProduct,
+  updateProduct,
+  addProductVariant,
+  updateProductVariant,
+  deleteProductVariant,
+  addProductImage,
+} from "@/api/products";
+import { getCategories } from "@/api/categories";
+import type { Product, ProductVariant, Category } from "@/types/store";
 import SubHeader from "@/components/ui/SubHeader";
+import CategoryPicker from "@/components/ui/CategoryPicker";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
-export default function EditStoreScreen() {
-  const { colors, spacing, radii, shadows, text } = useTheme();
+export default function EditProductScreen() {
+  const { colors, radii, shadows, spacing, text } = useTheme();
   const router = useRouter();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { id, storeId } = useLocalSearchParams<{ id: string; storeId: string }>();
 
-  const [store, setStore] = useState<Store | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [basePrice, setBasePrice] = useState("");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [showVariantForm, setShowVariantForm] = useState(false);
+  const [varName, setVarName] = useState("");
+  const [varValue, setVarValue] = useState("");
+  const [varPrice, setVarPrice] = useState("");
+  const [varStock, setVarStock] = useState("");
+  const [varSaving, setVarSaving] = useState(false);
+
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [editStock, setEditStock] = useState("");
+  const [stockSaving, setStockSaving] = useState(false);
+
+  const [showImageForm, setShowImageForm] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageSaving, setImageSaving] = useState(false);
 
   useEffect(() => {
-    if (!storeId) return;
+    if (!id) return;
     (async () => {
       setLoading(true);
       try {
-        const data = await getStore(storeId);
-        setStore(data);
-        setName(data.name);
-        setDescription(data.description);
-      } catch {
-        setError("No se pudo cargar la tienda.");
-      } finally {
+        const [prod, catRes] = await Promise.all([
+          getProduct(id),
+          getCategories(1, 50),
+        ]);
+        setProduct(prod);
+        setName(prod.name);
+        setDescription(prod.description);
+        setBasePrice(String(prod.base_price));
+        setCategoryId(prod.category_id);
+        setCategories(catRes.items);
+      } catch { Alert.alert("Error", "No se pudo cargar el producto."); } finally {
         setLoading(false);
       }
     })();
-  }, [storeId]);
+  }, [id]);
 
-  const handleSave = async () => {
-    if (!storeId || !name.trim()) return;
+  const handleSaveProduct = async () => {
+    if (!id || !name.trim() || !basePrice.trim()) return;
+    const price = parseFloat(basePrice);
+    if (isNaN(price) || price < 0) { setSaveError("Precio invalido."); return; }
     setSaving(true);
-    setError(null);
-    setSuccess(false);
+    setSaveError(null);
+    setSaveMsg(null);
     try {
-      const updated = await updateStore(storeId, {
+      const updated = await updateProduct(id, {
         name: name.trim(),
         description: description.trim(),
+        base_price: price,
+        category_id: categoryId ?? undefined,
       });
-      setStore(updated);
-      setSuccess(true);
+      setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
+      setSaveMsg("Producto actualizado");
     } catch {
-      setError("No se pudieron guardar los cambios.");
+      setSaveError("No se pudo actualizar.");
     } finally {
       setSaving(false);
     }
   };
 
-  const confirmSave = () => {
-    Alert.alert(
-      "Confirmar cambios",
-      "¿Deseas guardar los cambios de la tienda?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Guardar", onPress: handleSave },
-      ]
-    );
+  const confirmSaveProduct = () => {
+    Alert.alert("Confirmar", "¿Guardar los cambios del producto?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Guardar", onPress: handleSaveProduct },
+    ]);
   };
 
-  const hasChanges = store && (name !== store.name || description !== store.description);
+  const handleAddVariant = async () => {
+    if (!id || !varName.trim() || !varValue.trim()) return;
+    const priceMod = parseFloat(varPrice) || 0;
+    const stock = parseInt(varStock, 10) || 0;
+    setVarSaving(true);
+    try {
+      const variant = await addProductVariant(id, {
+        name: varName.trim(),
+        value: varValue.trim(),
+        price_modifier: priceMod,
+        stock_quantity: stock,
+      });
+      setProduct((prev) => prev ? { ...prev, variants: [...(prev.variants || []), variant] } : prev);
+      setVarName(""); setVarValue(""); setVarPrice(""); setVarStock("");
+      setShowVariantForm(false);
+    } catch { Alert.alert("Error", "No se pudo agregar la variante."); } finally {
+      setVarSaving(false);
+    }
+  };
+
+  const confirmAddVariant = () => {
+    Alert.alert("Confirmar", "¿Agregar nueva variante?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Agregar", onPress: handleAddVariant },
+    ]);
+  };
+
+  const handleUpdateStock = async (variant: ProductVariant) => {
+    if (!id) return;
+    const qty = parseInt(editStock, 10);
+    if (isNaN(qty) || qty < 0) return;
+    setStockSaving(true);
+    try {
+      const updated = await updateProductVariant(id, variant.id, { stock_quantity: qty });
+      setProduct((prev) => prev ? {
+        ...prev,
+        variants: (prev.variants || []).map((v) => v.id === variant.id ? updated : v),
+      } : prev);
+      setEditingVariantId(null);
+      setEditStock("");
+    } catch { Alert.alert("Error", "No se pudo actualizar el stock."); } finally {
+      setStockSaving(false);
+    }
+  };
+
+  const confirmSaveStock = (variant: ProductVariant) => {
+    Alert.alert("Confirmar", `¿Guardar cambios de stock para "${variant.value}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Guardar", onPress: () => handleUpdateStock(variant) },
+    ]);
+  };
+
+  const handleStockDelta = (delta: number) => {
+    const current = parseInt(editStock, 10) || 0;
+    setEditStock(String(Math.max(0, current + delta)));
+  };
+
+  const handleDeleteVariant = (variant: ProductVariant) => {
+    if (!id) return;
+    Alert.alert("Eliminar variante", `Eliminar "${variant.name}: ${variant.value}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar", style: "destructive", onPress: async () => {
+          try {
+            await deleteProductVariant(id, variant.id);
+            setProduct((prev) => prev ? {
+              ...prev,
+              variants: (prev.variants || []).filter((v) => v.id !== variant.id),
+            } : prev);
+          } catch { Alert.alert("Error", "No se pudo eliminar la variante."); }
+        },
+      },
+    ]);
+  };
+
+  const handleAddImage = async () => {
+    if (!id || !imageUrl.trim()) return;
+    setImageSaving(true);
+    try {
+      const img = await addProductImage(id, { image_url: imageUrl.trim(), is_primary: (product?.images?.length ?? 0) === 0 });
+      setProduct((prev) => prev ? { ...prev, images: [...(prev.images || []), img] } : prev);
+      setImageUrl("");
+      setShowImageForm(false);
+    } catch { Alert.alert("Error", "No se pudo agregar la imagen."); } finally {
+      setImageSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
-      <SubHeader title="Editar tienda" onBack={() => router.back()} />
+      <SubHeader title="Editar producto" onBack={() => router.back()} />
 
-      {loading ? (
-        <View style={local.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
-          <View style={[local.card, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>
-            <View style={local.iconRow}>
-              <MaterialIcons name="storefront" size={ms(40)} color={colors.primary} />
+      <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
+        {/* Product info section */}
+        <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
+          <Text style={[text.h3, { color: colors.primaryDeep }]}>Información del producto</Text>
+          <Input label="Nombre" value={name} onChangeText={(t) => { setName(t); setSaveMsg(null); }} placeholder="Nombre" />
+          <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSaveMsg(null); }} placeholder="Descripción" multiline />
+          <Input label="Precio base" value={basePrice} onChangeText={(t) => { setBasePrice(t); setSaveMsg(null); }} placeholder="25000" keyboardType="numeric" />
+
+          {categories.length > 0 && (
+            <CategoryPicker
+              categories={categories}
+              selectedId={categoryId}
+              onSelect={(id) => { setCategoryId(id); setSaveMsg(null); }}
+            />
+          )}
+
+          {saveError && <Text style={[text.body, { color: colors.errorText }]}>{saveError}</Text>}
+          {saveMsg && (
+            <View style={styles.successRow}>
+              <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
+              <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>{saveMsg}</Text>
             </View>
-            <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setSuccess(false); }} placeholder="Nombre" />
-            <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSuccess(false); }} placeholder="Describe tu tienda..." multiline />
+          )}
+          <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSaveProduct} disabled={saving || !name.trim()} />
+        </View>
 
-            {error && <Text style={[text.body, { color: colors.errorText }]}>{error}</Text>}
-            {success && (
-              <View style={local.successRow}>
-                <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
-                <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>Cambios guardados</Text>
-              </View>
-            )}
-
-            <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSave} disabled={saving || !hasChanges || !name.trim()} />
+        {/* Images section */}
+        <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
+          <View style={local.sectionHeader}>
+            <Text style={[text.h3, { color: colors.primaryDeep }]}>Imágenes</Text>
+            <TouchableOpacity onPress={() => setShowImageForm(!showImageForm)}>
+              <MaterialIcons name={showImageForm ? "close" : "add-circle"} size={ms(24)} color={colors.primary} />
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      )}
+          {(product?.images?.length ?? 0) === 0 && !showImageForm && (
+            <Text style={[text.body, local.emptyText, { color: colors.textSecondary }]}>Sin imágenes</Text>
+          )}
+          {(product?.images ?? []).map((img) => (
+            <View key={img.id} style={[local.imageRow, { backgroundColor: colors.bgSection }]}>
+              <MaterialIcons name="image" size={ms(20)} color={colors.primary} />
+              <Text style={[local.imageUrl, { color: colors.textSecondary }]} numberOfLines={1}>{img.image_url}</Text>
+              {img.is_primary && (
+                <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}><Text style={[local.primaryText, { color: colors.textOnPrimary }]}>Principal</Text></View>
+              )}
+            </View>
+          ))}
+          {showImageForm && (
+            <View style={local.inlineForm}>
+              <Input label="URL de imagen" value={imageUrl} onChangeText={setImageUrl} placeholder="https://..." />
+              <Button title={imageSaving ? "..." : "Agregar imagen"} onPress={handleAddImage} disabled={imageSaving || !imageUrl.trim()} />
+            </View>
+          )}
+        </View>
+
+        {/* Variants section */}
+        <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
+          <View style={local.sectionHeader}>
+            <Text style={[text.h3, { color: colors.primaryDeep }]}>Variantes y stock</Text>
+            <TouchableOpacity onPress={() => setShowVariantForm(!showVariantForm)}>
+              <MaterialIcons name={showVariantForm ? "close" : "add-circle"} size={ms(24)} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {(product?.variants?.length ?? 0) === 0 && !showVariantForm && (
+            <Text style={[text.body, local.emptyText, { color: colors.textSecondary }]}>Sin variantes</Text>
+          )}
+
+          {(product?.variants ?? []).map((v) => (
+            <View key={v.id} style={[local.variantCard, { backgroundColor: colors.bgSection }]}>
+              <View style={local.variantHeader}>
+                <View style={local.variantInfo}>
+                  <Text style={[local.variantName, { color: colors.textPrimary }]}>{v.name}: {v.value}</Text>
+                  <Text style={[local.variantMeta, { color: colors.textSecondary }]}>
+                    +{formatPrice(v.price_modifier)} | Stock: {v.stock_quantity}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDeleteVariant(v)} hitSlop={8}>
+                  <MaterialIcons name="delete-outline" size={ms(20)} color={colors.errorText} />
+                </TouchableOpacity>
+              </View>
+              {editingVariantId === v.id ? (
+                <View style={[local.stockEditRow, { borderTopColor: colors.border }]}>
+                  <View style={local.stepper}>
+                    <TouchableOpacity style={[local.circleBtn, { backgroundColor: colors.primary }]} onPress={() => handleStockDelta(-1)}>
+                      <MaterialIcons name="remove" size={ms(16)} color={colors.textOnPrimary} />
+                    </TouchableOpacity>
+                    <Input value={editStock} onChangeText={setEditStock} keyboardType="numeric" style={local.stockInput} />
+                    <TouchableOpacity style={[local.circleBtn, { backgroundColor: colors.primary }]} onPress={() => handleStockDelta(1)}>
+                      <MaterialIcons name="add" size={ms(16)} color={colors.textOnPrimary} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={local.stockEditActions}>
+                    <Button title={stockSaving ? "..." : "Guardar"} onPress={() => confirmSaveStock(v)} disabled={stockSaving} />
+                    <Button title="Cancelar" variant="ghost" onPress={() => setEditingVariantId(null)} />
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity onPress={() => { setEditingVariantId(v.id); setEditStock(String(v.stock_quantity)); }} style={local.editStockBtn}>
+                  <MaterialIcons name="edit" size={ms(14)} color={colors.primary} />
+                  <Text style={[local.editStockText, { color: colors.primary }]}>Editar stock</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+
+          {showVariantForm && (
+            <View style={[local.variantForm, { backgroundColor: colors.bgSection }]}>
+              <Text style={[local.formTitle, { color: colors.textPrimary }]}>Nueva variante</Text>
+              <Input label="Nombre (ej: Tamaño)" value={varName} onChangeText={setVarName} placeholder="Tamaño" />
+              <Input label="Valor (ej: Grande)" value={varValue} onChangeText={setVarValue} placeholder="Grande" />
+              <Input label="Modificador de precio" value={varPrice} onChangeText={setVarPrice} placeholder="5000" keyboardType="numeric" />
+              <Input label="Stock inicial" value={varStock} onChangeText={setVarStock} placeholder="10" keyboardType="numeric" />
+              <Button title={varSaving ? "Guardando..." : "Agregar variante"} onPress={confirmAddVariant} disabled={varSaving || !varName.trim() || !varValue.trim()} />
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1 },
+  wrapper: {
+    flex: 1,
+  },
+
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  section: {
+    padding: s(16),
+    gap: vs(12),
+    borderWidth: 0.5,
+  },
+
+  successRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: s(6),
+  },
 });
 
 const local = StyleSheet.create({
-  content: { padding: 16 },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  card: { padding: 20, gap: 16, borderWidth: 0.5 },
-  iconRow: { alignItems: "center" },
-  successRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  content: { padding: s(16), gap: vs(16), paddingBottom: vs(40) },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  emptyText: { textAlign: "center" },
+  imageRow: { flexDirection: "row", alignItems: "center", gap: s(8), borderRadius: ms(8), padding: s(10) },
+  imageUrl: { flex: 1, fontSize: ms(11) },
+  primaryBadge: { paddingHorizontal: s(8), paddingVertical: vs(2), borderRadius: ms(8) },
+  primaryText: { fontSize: ms(10), fontWeight: "600" },
+  inlineForm: { gap: vs(10) },
+  variantCard: { borderRadius: ms(10), padding: s(12), gap: vs(8) },
+  variantHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  variantInfo: { flex: 1, gap: vs(2) },
+  variantName: { fontSize: ms(13), fontWeight: "600" },
+  variantMeta: { fontSize: ms(11) },
+  stockEditRow: { gap: vs(8), marginTop: vs(8), paddingTop: vs(8), borderTopWidth: 1 },
+  stepper: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: s(16) },
+  circleBtn: { width: ms(32), height: ms(32), borderRadius: ms(16), justifyContent: "center", alignItems: "center" },
+  stockInput: { flex: 0, minWidth: ms(80), textAlign: "center" },
+  stockEditActions: { flexDirection: "row", justifyContent: "flex-end", gap: s(8) },
+  editStockBtn: { flexDirection: "row", alignItems: "center", gap: s(4) },
+  editStockText: { fontSize: ms(12), fontWeight: "600" },
+  variantForm: { borderRadius: ms(12), padding: s(16), gap: vs(12) },
+  formTitle: { fontSize: ms(14), fontWeight: "700" },
 });

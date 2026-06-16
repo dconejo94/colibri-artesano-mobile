@@ -3,6 +3,7 @@ import {
   View,
   ScrollView,
   StyleSheet,
+  Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -15,7 +16,6 @@ import SubHeader from "@/components/ui/SubHeader";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Text } from "react-native";
 
 export default function AddProductScreen() {
   const { colors, spacing, radii, shadows, text } = useTheme();
@@ -45,12 +45,13 @@ export default function AddProductScreen() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!storeId || !categoryId || !name.trim() || !basePrice.trim()) return;
+    if (!name.trim()) { setError("El nombre del producto es requerido."); return; }
+    if (!basePrice.trim()) { setError("El precio base es requerido."); return; }
     const price = parseFloat(basePrice);
-    if (isNaN(price) || price < 0) {
-      setError("El precio debe ser un número válido.");
-      return;
-    }
+    if (isNaN(price) || price < 0) { setError("El precio debe ser un número válido."); return; }
+    if (!categoryId) { setError("Debes seleccionar una categoría."); return; }
+    if (!storeId) return;
+
     setSaving(true);
     setError(null);
     try {
@@ -74,23 +75,25 @@ export default function AddProductScreen() {
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
         <View style={[local.card, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>
-          <Input label="Nombre del producto" value={name} onChangeText={setName} placeholder="Ej: Vasija de Barro" />
+          <Input label="Nombre del producto *" value={name} onChangeText={(t) => { setName(t); setError(null); }} placeholder="Ej: Vasija de Barro" />
           <Input label="Descripción" value={description} onChangeText={setDescription} placeholder="Describe tu producto..." multiline />
-          <Input label="Precio base (colones)" value={basePrice} onChangeText={setBasePrice} placeholder="25000" keyboardType="numeric" />
+          <Input label="Precio base *" value={basePrice} onChangeText={(t) => { setBasePrice(t); setError(null); }} placeholder="₡" keyboardType="numeric" />
 
           <CategoryPicker
             categories={categories}
             selectedId={categoryId}
-            onSelect={setCategoryId}
+            onSelect={(id) => { setCategoryId(id); setError(null); }}
             loading={catLoading}
           />
 
-          {error && <Text style={[text.body, { color: colors.errorText, marginVertical: spacing[2] }]}>{error}</Text>}
+          {error && (
+            <Text style={[text.body, { color: colors.errorText }]}>{error}</Text>
+          )}
 
           <Button
             title={saving ? "Guardando..." : "Crear producto"}
             onPress={handleSubmit}
-            disabled={saving || !name.trim() || !basePrice.trim() || !categoryId}
+            disabled={saving}
           />
         </View>
       </ScrollView>

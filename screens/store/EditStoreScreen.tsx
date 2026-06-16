@@ -29,7 +29,6 @@ export default function EditStoreScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
@@ -52,14 +51,14 @@ export default function EditStoreScreen() {
     if (!storeId || !name.trim()) return;
     setSaving(true);
     setError(null);
-    setSuccess(false);
     try {
-      const updated = await updateStore(storeId, {
+      await updateStore(storeId, {
         name: name.trim(),
         description: description.trim(),
       });
-      setStore(updated);
-      setSuccess(true);
+      Alert.alert("¡Listo!", "Los cambios de tu tienda fueron guardados.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
     } catch {
       setError("No se pudieron guardar los cambios.");
     } finally {
@@ -94,16 +93,10 @@ export default function EditStoreScreen() {
             <View style={local.iconRow}>
               <MaterialIcons name="storefront" size={ms(40)} color={colors.primary} />
             </View>
-            <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setSuccess(false); }} placeholder="Nombre" />
-            <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSuccess(false); }} placeholder="Describe tu tienda..." multiline />
+            <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setError(null); }} placeholder="Nombre" />
+            <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setError(null); }} placeholder="Describe tu tienda..." multiline />
 
             {error && <Text style={[text.body, { color: colors.errorText }]}>{error}</Text>}
-            {success && (
-              <View style={local.successRow}>
-                <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
-                <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>Cambios guardados</Text>
-              </View>
-            )}
 
             <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSave} disabled={saving || !hasChanges || !name.trim()} />
           </View>
@@ -118,9 +111,8 @@ const styles = StyleSheet.create({
 });
 
 const local = StyleSheet.create({
-  content: { padding: 16 },
+  content: { padding: s(16) },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  card: { padding: 20, gap: 16, borderWidth: 0.5 },
+  card: { padding: s(20), gap: s(16), borderWidth: 0.5 },
   iconRow: { alignItems: "center" },
-  successRow: { flexDirection: "row", alignItems: "center", gap: 6 },
 });
