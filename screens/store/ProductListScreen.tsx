@@ -14,7 +14,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useTheme } from "@/src/theme";
 
-import { getStoreProducts, updateProductVariant } from "@/api/products";
+import { getProduct, getStoreProducts, updateProductVariant } from "@/api/products";
 
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
@@ -35,15 +35,39 @@ export default function ProductListScreen() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
 
   const fetchProducts = useCallback(async (p = 1, append = false) => {
     if (!storeId) return;
     if (p === 1) setLoading(true); else setLoadingMore(true);
     try {
       const res = await getStoreProducts(storeId, p, 20);
-      setProducts(append ? (prev) => [...prev, ...res.items] : res.items);
+      setProducts((prev) => (append ? [...prev, ...res.items] : res.items));
       setTotal(res.total);
       setPage(p);
+
+      const stockEntries = await Promise.all(
+        res.items.map(async (product) => {
+          try {
+            const detail = await getProduct(product.id);
+            const stock = detail.variants?.reduce(
+              (sum, variant) => sum + (Number(variant.stock_quantity) || 0),
+              0,
+            ) ?? 0;
+            return [product.id, stock] as const;
+          } catch {
+            const stock = product.variants?.reduce(
+              (sum, variant) => sum + (Number(variant.stock_quantity) || 0),
+              0,
+            ) ?? 0;
+            return [product.id, stock] as const;
+          }
+        })
+      );
+      setStockByProductId((prev) => ({
+        ...prev,
+        ...Object.fromEntries(stockEntries),
+      }));
     } catch { /* silent */ } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -53,7 +77,7 @@ export default function ProductListScreen() {
   useFocusEffect(useCallback(() => { fetchProducts(1); }, [fetchProducts]));
 
   const totalStock = (product: Product) =>
-    product.variants?.reduce((sum: number, v: { stock_quantity: number }) => sum + v.stock_quantity, 0) || 0;
+    stockByProductId[product.id] ?? product.variants?.reduce((sum: number, v: { stock_quantity: number }) => sum + (Number(v.stock_quantity) || 0), 0) ?? 0;
 
   const addButton = (
     <TouchableOpacity

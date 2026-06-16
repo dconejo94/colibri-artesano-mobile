@@ -11,10 +11,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
+import { formatPrice } from "@/utils/format";
 import { OWNER_ID } from "@/constants/auth";
 import { useTheme } from "@/src/theme";
 import { getStoreByOwner, createStore } from "@/api/stores";
-import { getStoreProducts } from "@/api/products";
+import { getProduct, getStoreProducts } from "@/api/products";
 import { getStoreOrders } from "@/api/orders";
 import type { Store, Product, StoreOrder } from "@/types/store";
 import Header from "@/components/ui/Header";
@@ -23,7 +24,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
 export default function MyStoreScreen() {
-  const { colors, spacing, radii, shadows, text, isDark } = useTheme();
+  const { colors, spacing, radii, shadows, text } = useTheme();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
@@ -37,6 +38,7 @@ export default function MyStoreScreen() {
   const [storeName, setStoreName] = useState("");
   const [storeDesc, setStoreDesc] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -49,7 +51,28 @@ export default function MyStoreScreen() {
           getStoreProducts(fetched.id, 1, 5),
           getStoreOrders(fetched.id, 1, 5),
         ]);
-        setProducts(prodRes.items);
+        const detailedProducts = await Promise.all(
+          prodRes.items.map(async (product) => {
+            try {
+              return await getProduct(product.id);
+            } catch {
+              return product;
+            }
+          })
+        );
+
+        const nextStockByProductId = Object.fromEntries(
+          detailedProducts.map((product) => [
+            product.id,
+            (product.variants ?? []).reduce(
+              (sum, variant) => sum + (Number(variant.stock_quantity) || 0),
+              0
+            ),
+          ])
+        );
+
+        setProducts(detailedProducts);
+        setStockByProductId(nextStockByProductId);
         setTotalProducts(prodRes.total);
         setOrders(orderRes.items);
         setTotalPendingOrders(orderRes.total);
@@ -62,6 +85,16 @@ export default function MyStoreScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  const formatDateTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("es-CR", {
+      weekday: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  };
 
   const handleCreate = async () => {
     if (!storeName.trim()) return;
@@ -81,6 +114,7 @@ export default function MyStoreScreen() {
     }
   };
 
+  // ── No store yet ──────────────────────────────────────────────────────────
   if (!loading && !store && !error) {
     return (
       <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
@@ -112,9 +146,11 @@ export default function MyStoreScreen() {
     );
   }
 
+  // ── Main screen ───────────────────────────────────────────────────────────
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
       <Header onMenuPress={() => setMenuOpen(true)} />
+
       {loading ? (
         <View style={local.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -127,60 +163,126 @@ export default function MyStoreScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={local.content} showsVerticalScrollIndicator={false}>
-          {/* Tarjeta de la tienda */}
-          <View style={[local.storeCard, { backgroundColor: colors.bgSection, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
-            <View style={local.storeCardHeader}>
-              <MaterialIcons name="storefront" size={ms(36)} color={colors.primary} />
-              <View style={local.storeInfo}>
-                <Text style={[text.h2, { color: colors.primaryDeep }]} numberOfLines={1}>{store?.name}</Text>
-                <Text style={[text.body, { color: colors.textSecondary, marginTop: vs(2) }]} numberOfLines={2}>{store?.description || "Sin descripción"}</Text>
-              </View>
-              <TouchableOpacity onPress={() => router.push({ pathname: "/store/edit" as never, params: { storeId: store?.id } })} hitSlop={12}>
-                <MaterialIcons name="edit" size={ms(22)} color={colors.primary} />
-              </TouchableOpacity>
-            </View>
 
+          {/* ── Panel de Control ── */}
+          <View style={local.section}>
+            <Text style={[text.h2, { color: colors.primaryDeep }]}>Panel de Control</Text>
             <View style={local.statsRow}>
-              {[
-                { icon: "inventory-2" as const, label: "Productos", value: String(totalProducts) },
-                { icon: "local-shipping" as const, label: "Pendientes", value: String(totalPendingOrders) },
-              ].map((stat) => (
-                <View key={stat.label} style={[local.statItem, { backgroundColor: colors.bgCard, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5 }]}>
-                  <MaterialIcons name={stat.icon} size={ms(20)} color={colors.primary} />
-                  <Text style={[text.priceDetail, { color: colors.textPrimary, fontSize: ms(20) }]}>{stat.value}</Text>
-                  <Text style={[text.caption, { color: colors.textSecondary, textAlign: "center" }]}>{stat.label}</Text>
-                </View>
-              ))}
+              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
+                <MaterialIcons name="paid" size={ms(26)} color={colors.primary} />
+                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
+                  Ventas Totales
+                </Text>
+                <Text style={[text.h2, { color: colors.textPrimary, marginTop: vs(2) }]}>
+                  ₡285,000
+                </Text>
+              </View>
+
+              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
+                <MaterialIcons name="visibility" size={ms(26)} color={colors.primary} />
+                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
+                  Visitas Hoy
+                </Text>
+                <Text style={[text.h2, { color: colors.textPrimary, marginTop: vs(2) }]}>
+                  142
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Acciones Rápidas */}
-          <View style={[local.actionsSection, { paddingHorizontal: spacing[4] }]}>
-            <Text style={[text.h3, { color: colors.primaryDeep, marginBottom: spacing[3] }]}>Acciones rápidas</Text>
-            {([
-              [
-                { icon: "add-box" as const, label: "Agregar producto", route: "/store/products/add" as const },
-                { icon: "inventory" as const, label: "Mis productos", route: "/store/products" as const },
-              ],
-              [
-                { icon: "receipt-long" as const, label: "Pedidos", route: "/store/orders" as const },
-                { icon: "edit" as const, label: "Editar tienda", route: "/store/edit" as const },
-              ],
-            ]).map((row, rowIdx) => (
-              <View key={rowIdx} style={local.actionsRow}>
-                {row.map((action) => (
+          {/* ── Mis Productos ── */}
+          <View style={local.section}>
+            <View style={local.sectionHeaderRow}>
+              <Text style={[text.h2, { color: colors.primaryDeep }]}>Mis Productos</Text>
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: "/store/products" as never, params: { storeId: store?.id } })}
+                hitSlop={10}
+              >
+                <Text style={[text.label, { color: colors.primary }]}>Ver catálogo</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={local.productList}>
+              {products.slice(0, 5).map((product) => {
+                const stock = stockByProductId[product.id] ?? (product.variants ?? []).reduce(
+                  (sum, v) => sum + (Number(v.stock_quantity) || 0), 0
+                );
+                const isOut = stock <= 0;
+                return (
                   <TouchableOpacity
-                    key={action.label}
-                    style={[local.actionCard, { backgroundColor: colors.bgCard, borderRadius: radii.md, borderColor: colors.border, borderWidth: 0.5, ...shadows.sm }]}
-                    onPress={() => router.push({ pathname: action.route as never, params: { storeId: store?.id } })}
-                    activeOpacity={0.7}
+                    key={product.id}
+                    style={[local.productCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}
+                    onPress={() => router.push({ pathname: "/store/products/[id]" as never, params: { id: product.id, storeId: store?.id } })}
+                    activeOpacity={0.8}
                   >
-                    <MaterialIcons name={action.icon} size={ms(28)} color={colors.primary} />
-                    <Text style={[text.label, { color: colors.textPrimary, textAlign: "center" }]}>{action.label}</Text>
+                    <View style={[local.productThumb, { backgroundColor: colors.bgSection, borderRadius: radii.md }]}>
+                      <MaterialIcons name="inventory-2" size={ms(24)} color={colors.primarySoft} />
+                    </View>
+                    <View style={local.productInfo}>
+                      <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
+                        {product.name}
+                      </Text>
+                      <Text style={[text.caption, { color: colors.textSecondary }]} numberOfLines={1}>
+                        Stock:{" "}
+                        <Text style={{ color: isOut ? colors.errorText : colors.textPrimary, fontWeight: "700" }}>
+                          {isOut ? "Agotado" : `${stock} un.`}
+                        </Text>
+                        {" • "}{formatPrice(product.base_price)}
+                      </Text>
+                    </View>
+                    <MaterialIcons name="edit" size={ms(22)} color={colors.primary} />
                   </TouchableOpacity>
-                ))}
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={[local.addProductBtn, { backgroundColor: colors.primary, borderRadius: radii.lg }]}
+              onPress={() => router.push({ pathname: "/store/products/add" as never, params: { storeId: store?.id } })}
+              activeOpacity={0.85}
+            >
+              <MaterialIcons name="add" size={ms(22)} color={colors.textOnPrimary} />
+              <Text style={[text.h3, { color: colors.textOnPrimary }]}>Agregar Producto</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Pedidos Recientes ── */}
+          <View style={local.section}>
+            <Text style={[text.h2, { color: colors.primaryDeep }]}>Pedidos Recientes</Text>
+
+            {orders.length > 0 ? (
+              orders.slice(0, 5).map((order) => (
+                <TouchableOpacity
+                  key={order.id}
+                  style={[local.orderCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}
+                  onPress={() => router.push({ pathname: "/store/orders" as never, params: { storeId: store?.id } })}
+                  activeOpacity={0.8}
+                >
+                  <View style={[local.orderIcon, { backgroundColor: colors.bgSection, borderRadius: radii.md }]}>
+                    <MaterialIcons name="local-shipping" size={ms(22)} color={colors.primary} />
+                  </View>
+                  <View style={local.orderInfo}>
+                    <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
+                      Pedido #{String(order.order_id).slice(-4).toUpperCase()}
+                    </Text>
+                    <Text style={[text.caption, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {formatDateTime(order.created_at) || "Reciente"}
+                    </Text>
+                  </View>
+                  <View style={[local.statusPill, { backgroundColor: colors.bgSection, borderColor: colors.border, borderWidth: 0.5 }]}>
+                    <Text style={[text.caption, { color: colors.primaryDeep, fontWeight: "700", letterSpacing: 0.5 }]}>
+                      {String(order.seller_status || "PENDIENTE").toUpperCase()}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={[local.emptyRow, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
+                <Text style={[text.body, { color: colors.textSecondary, textAlign: "center" }]}>
+                  Todavía no hay pedidos recientes.
+                </Text>
               </View>
-            ))}
+            )}
           </View>
 
         </ScrollView>
@@ -195,50 +297,55 @@ const styles = StyleSheet.create({
 });
 
 const local = StyleSheet.create({
-  content: { paddingBottom: vs(32) },
+  content: { paddingVertical: vs(16), gap: vs(24) },
   centeredContent: { flexGrow: 1, justifyContent: "center", alignItems: "center", padding: s(24) },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: vs(12) },
   emptyState: { alignItems: "center", maxWidth: s(280) },
   cardForm: { width: "100%", padding: s(20), gap: vs(12), borderWidth: 0.5 },
   createActions: { flexDirection: "row", gap: s(12), justifyContent: "flex-end", marginTop: vs(8) },
 
-  // CORRECCIÓN: Eliminamos restricciones rígidas y aseguramos que crezca con minHeight si es necesario
-  storeCard: {
-    margin: s(16),
-    padding: s(16),
-    gap: vs(16),
-    borderWidth: 0.5,
-    height: "auto",             // Fuerza a que la altura sea dinámica
-    alignSelf: "stretch",       // Ocupa todo el ancho disponible del contenedor padre
-  },
-  storeCardHeader: {
+  // Sections
+  section: { paddingHorizontal: s(16), gap: vs(12) },
+  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+
+  // Panel stats
+  statsRow: { flexDirection: "row", gap: s(12) },
+  statCard: { flex: 1, padding: s(16), borderWidth: 0.5 },
+
+  // Products
+  productList: { gap: vs(10) },
+  productCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: s(12),
-    width: "100%"
+    padding: s(14),
+    borderWidth: 0.5,
   },
-  storeInfo: { flex: 1 },
-
-  // CORRECCIÓN: Controlamos que los elementos no se desborden horizontalmente
-  statsRow: {
+  productThumb: { width: ms(52), height: ms(52), justifyContent: "center", alignItems: "center", flexShrink: 0 },
+  productInfo: { flex: 1, minWidth: 0, gap: vs(3) },
+  addProductBtn: {
     flexDirection: "row",
-    gap: s(12),
-    width: "100%",
-    justifyContent: "space-between",
-    alignItems: "stretch"       // Hace que todas las tarjetas midan lo mismo de alto
-  },
-
-  // CORRECCIÓN: Controlamos el espacio interno para que no asfixie al texto
-  statItem: {
-    flex: 1,
-    paddingVertical: vs(12),    // Usamos padding vertical escalado explícito
-    paddingHorizontal: s(4),    // Menos padding horizontal para evitar que colapse el texto en pantallas angostas
     alignItems: "center",
     justifyContent: "center",
-    gap: vs(4)
+    gap: s(8),
+    paddingVertical: vs(14),
   },
 
-  actionsSection: { gap: vs(12) },
-  actionsRow: { flexDirection: "row", gap: s(12), marginBottom: vs(12) },
-  actionCard: { flex: 1, padding: s(16), alignItems: "center", gap: vs(8) },
+  // Orders
+  orderCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: s(12),
+    padding: s(14),
+    borderWidth: 0.5,
+  },
+  orderIcon: { width: ms(40), height: ms(40), justifyContent: "center", alignItems: "center", flexShrink: 0 },
+  orderInfo: { flex: 1, minWidth: 0, gap: vs(2) },
+  statusPill: {
+    paddingHorizontal: s(10),
+    paddingVertical: vs(6),
+    borderRadius: ms(999),
+    flexShrink: 0,
+  },
+  emptyRow: { padding: s(16), borderWidth: 0.5, alignItems: "center" },
 });
