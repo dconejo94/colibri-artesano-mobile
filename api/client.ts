@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Platform } from "react-native";
+import { DEV_AUTH_TOKEN } from "@/constants/auth";
 
 // Android emulator → 10.0.2.2, iOS simulator → localhost
 // Physical device → set EXPO_PUBLIC_API_URL in .env
@@ -11,6 +12,7 @@ const client = axios.create({
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
+    "Authorization": `Bearer ${DEV_AUTH_TOKEN}`,
   },
 });
 
