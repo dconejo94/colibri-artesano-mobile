@@ -13,7 +13,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice, translateStatus, statusColor } from "@/utils/format";
-import { OWNER_ID } from "@/constants/auth";
+import { useAuthStore } from "@/src/auth/authStore";
 import shared from "@/constants/shared-styles";
 import { getStoreByOwner, createStore } from "@/api/stores";
 import { getStoreProducts } from "@/api/products";
@@ -27,6 +27,7 @@ import Button from "@/components/ui/Button";
 export default function MyStoreScreen() {
   const isDark = useColorScheme() === "dark";
   const router = useRouter();
+  const userId = useAuthStore((s) => s.user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,10 +40,11 @@ export default function MyStoreScreen() {
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!userId) return;
     setLoading(true);
     setError(null);
     try {
-      const fetched = await getStoreByOwner(OWNER_ID);
+      const fetched = await getStoreByOwner(userId);
       setStore(fetched);
       if (fetched) {
         const [prodRes, orderRes] = await Promise.all([
@@ -57,16 +59,16 @@ export default function MyStoreScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   const handleCreate = async () => {
-    if (!storeName.trim()) return;
+    if (!storeName.trim() || !userId) return;
     setSubmitLoading(true);
     try {
       const created = await createStore({
-        owner_id: OWNER_ID,
+        owner_id: userId,
         name: storeName.trim(),
         description: storeDesc.trim(),
       });

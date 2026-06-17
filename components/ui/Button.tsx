@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost';
@@ -8,6 +8,7 @@ type Props = {
   onPress:   () => void;
   variant?:  Variant;
   disabled?: boolean;
+  loading?:  boolean;
 };
 
 export default function Button({
@@ -15,8 +16,10 @@ export default function Button({
   onPress,
   variant  = 'primary',
   disabled,
+  loading,
 }: Props) {
   const { colors, radii, text } = useTheme();
+  const isOff = disabled || loading;
 
   const variantStyles = {
     primary: {
@@ -47,16 +50,20 @@ export default function Button({
       style={[
         styles.button,
         { borderRadius: radii.md, ...variantStyles },
-        disabled && styles.disabled,
+        isOff && styles.disabled,
       ]}
       onPress={onPress}
-      disabled={disabled}
+      disabled={isOff}
       accessibilityLabel={title}
       accessibilityRole="button"
+      accessibilityState={{ disabled: isOff, busy: loading }}
     >
-      <Text style={[text.button, { color: textColor }]}>
-        {title}
-      </Text>
+      <View style={styles.content}>
+        {loading && <ActivityIndicator size="small" color={textColor} />}
+        <Text style={[text.button, { color: textColor }]}>
+          {loading ? 'Procesando…' : title}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -69,6 +76,12 @@ const styles = StyleSheet.create({
     justifyContent:    'center',
     height:            44,
     minWidth:          141,
+  },
+  content: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            8,
   },
   disabled: {
     opacity: 0.5,

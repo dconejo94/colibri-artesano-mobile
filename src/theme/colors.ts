@@ -63,10 +63,12 @@ const palette = {
 // Declared before lightColors so darkColors can reuse it as its type.
 export type AppColors = Record<string, string> & {
   bgPage: string; bgSection: string; bgCard: string; bgCardAlt: string; bgNavbar: string;
+  bgInput: string;
   textPrimary: string; textSecondary: string; textMuted: string; textOnPrimary: string;
   primary: string; primaryDeep: string; primarySoft: string;
   accent: string; accentSoft: string;
   border: string; borderFocus: string;
+  glassTint: string; glassBorder: string; glassShadow: string; inkShadow: string;
   btnPrimaryBg: string; btnPrimaryText: string;
   btnSecondaryBg: string; btnSecondaryText: string; btnSecondaryBorder: string;
   btnGhostText: string; btnGhostBorder: string;
@@ -86,6 +88,7 @@ const lightColors = {
   bgCard:    palette.white,          // #FFFFFF — product cards
   bgCardAlt: palette.beige400,       // #D4C9B8 — featured cards
   bgNavbar:  palette.beige100,       // #FAFAF7 — navigation bar
+  bgInput:   palette.beige100,       // #FAFAF7 — form inputs (warm, not rosy)
 
   // Text
   textPrimary:   palette.inkDark,    // #2C3830 — primary text
@@ -105,6 +108,12 @@ const lightColors = {
   // Borders
   border:       palette.beige500,    // #C4B89A — cards, dividers
   borderFocus:  palette.green600,    // #4A7C59 — active input, selected thumbnail
+
+  // Glass capsule (frosted glassmorphism over the auth background)
+  glassTint:   'rgba(250,250,247,0.72)', // warm linen wash
+  glassBorder: 'rgba(255,255,255,0.55)', // hairline highlight
+  glassShadow: 'rgba(44,56,48,0.16)',    // soft ink-green drop
+  inkShadow:   'rgba(44,56,48,0.12)',    // logo disc / chrome shadow
 
   // Buttons
   btnPrimaryBg:       palette.green600,  // #4A7C59
@@ -135,6 +144,7 @@ const darkColors: AppColors = {
   bgCard:    palette.greenNight3,    // #2A3028 — dark sage
   bgCardAlt: palette.greenNight3,
   bgNavbar:  palette.greenNight,
+  bgInput:   palette.greenNight2,    // #222820 — form inputs
 
   // Text — beige tones take over the ink role
   textPrimary:   palette.beige400,   // #D4C9B8 — replaces inkDark
@@ -154,6 +164,12 @@ const darkColors: AppColors = {
   // Borders
   border:      palette.greenNight4,  // #3A4438 — dark green border
   borderFocus: palette.green500,     // #6FA882 — light green focus
+
+  // Glass capsule — deep night-green wash
+  glassTint:   'rgba(26,31,28,0.70)',
+  glassBorder: 'rgba(255,255,255,0.12)',
+  glassShadow: 'rgba(0,0,0,0.5)',
+  inkShadow:   'rgba(0,0,0,0.45)',
 
   // Buttons
   btnPrimaryBg:       palette.green500,
