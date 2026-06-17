@@ -66,6 +66,9 @@ export default function EditProductScreen() {
   const [imageUrl, setImageUrl] = useState("");
   const [imageSaving, setImageSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<
+    { type: "product" } | { type: "variant"; variant: ProductVariant }
+  >({ type: "product" });
 
   useEffect(() => {
     if (!id) return;
@@ -82,7 +85,9 @@ export default function EditProductScreen() {
         setBasePrice(String(prod.base_price));
         setCategoryId(prod.category_id);
         setCategories(catRes.items);
-      } catch { Alert.alert("Error", "No se pudo cargar el producto."); } finally {
+      } catch {
+        Alert.alert("Error", "No se pudo cargar el producto.");
+      } finally {
         setLoading(false);
       }
     })();
@@ -91,7 +96,7 @@ export default function EditProductScreen() {
   const handleSaveProduct = async () => {
     if (!id || !name.trim() || !basePrice.trim()) return;
     const price = parseFloat(basePrice);
-    if (isNaN(price) || price < 0) { setSaveError("Precio invalido."); return; }
+    if (isNaN(price) || price < 0) { setSaveError("Precio inválido."); return; }
     setSaving(true);
     setSaveError(null);
     setSaveMsg(null);
@@ -111,6 +116,8 @@ export default function EditProductScreen() {
     }
   };
 
+  const confirmSaveProduct = () => handleSaveProduct();
+
   const handleDeleteProduct = async () => {
     if (!id) return;
     try {
@@ -123,15 +130,30 @@ export default function EditProductScreen() {
   };
 
   const confirmDeleteProduct = () => {
+    setDeleteTarget({ type: "product" });
     setShowDeleteModal(true);
   };
 
-  const confirmSaveProduct = () => {
-    Alert.alert("Confirmar", "¿Guardar los cambios del producto?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Guardar", onPress: handleSaveProduct },
-    ]);
+  const handleDeleteVariantConfirmed = async (variant: ProductVariant) => {
+    if (!id) return;
+    try {
+      await deleteProductVariant(id, variant.id);
+      setProduct((prev) => prev ? {
+        ...prev,
+        variants: (prev.variants || []).filter((v) => v.id !== variant.id),
+      } : prev);
+      setShowDeleteModal(false);
+    } catch {
+      Alert.alert("Error", "No se pudo eliminar la variante.");
+    }
   };
+
+  const confirmDeleteVariant = (variant: ProductVariant) => {
+    setDeleteTarget({ type: "variant", variant });
+    setShowDeleteModal(true);
+  };
+
+  // ── Variants ────────────────────────────────────────────────────────────────
 
   const handleAddVariant = async () => {
     if (!id || !varName.trim() || !varValue.trim()) return;
@@ -148,16 +170,11 @@ export default function EditProductScreen() {
       setProduct((prev) => prev ? { ...prev, variants: [...(prev.variants || []), variant] } : prev);
       setVarName(""); setVarValue(""); setVarPrice(""); setVarStock("");
       setShowVariantForm(false);
-    } catch { Alert.alert("Error", "No se pudo agregar la variante."); } finally {
+    } catch {
+      Alert.alert("Error", "No se pudo agregar la variante.");
+    } finally {
       setVarSaving(false);
     }
-  };
-
-  const confirmAddVariant = () => {
-    Alert.alert("Confirmar", "¿Agregar nueva variante?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Agregar", onPress: handleAddVariant },
-    ]);
   };
 
   const handleUpdateStock = async (variant: ProductVariant) => {
@@ -173,53 +190,41 @@ export default function EditProductScreen() {
       } : prev);
       setEditingVariantId(null);
       setEditStock("");
-    } catch { Alert.alert("Error", "No se pudo actualizar el stock."); } finally {
+    } catch {
+      Alert.alert("Error", "No se pudo actualizar el stock.");
+    } finally {
       setStockSaving(false);
     }
   };
 
-  const confirmSaveStock = (variant: ProductVariant) => {
-    Alert.alert("Confirmar", `¿Guardar cambios de stock para "${variant.value}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Guardar", onPress: () => handleUpdateStock(variant) },
-    ]);
-  };
+  const confirmSaveStock = (variant: ProductVariant) => handleUpdateStock(variant);
 
   const handleStockDelta = (delta: number) => {
     const current = parseInt(editStock, 10) || 0;
     setEditStock(String(Math.max(0, current + delta)));
   };
 
-  const handleDeleteVariant = (variant: ProductVariant) => {
-    if (!id) return;
-    Alert.alert("Eliminar variante", `Eliminar "${variant.name}: ${variant.value}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar", style: "destructive", onPress: async () => {
-          try {
-            await deleteProductVariant(id, variant.id);
-            setProduct((prev) => prev ? {
-              ...prev,
-              variants: (prev.variants || []).filter((v) => v.id !== variant.id),
-            } : prev);
-          } catch { Alert.alert("Error", "No se pudo eliminar la variante."); }
-        },
-      },
-    ]);
-  };
+  // ── Images ──────────────────────────────────────────────────────────────────
 
   const handleAddImage = async () => {
     if (!id || !imageUrl.trim()) return;
     setImageSaving(true);
     try {
-      const img = await addProductImage(id, { image_url: imageUrl.trim(), is_primary: (product?.images?.length ?? 0) === 0 });
+      const img = await addProductImage(id, {
+        image_url: imageUrl.trim(),
+        is_primary: (product?.images?.length ?? 0) === 0,
+      });
       setProduct((prev) => prev ? { ...prev, images: [...(prev.images || []), img] } : prev);
       setImageUrl("");
       setShowImageForm(false);
-    } catch { Alert.alert("Error", "No se pudo agregar la imagen."); } finally {
+    } catch {
+      Alert.alert("Error", "No se pudo agregar la imagen.");
+    } finally {
       setImageSaving(false);
     }
   };
+
+  // ── Loading state ────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -231,17 +236,38 @@ export default function EditProductScreen() {
     );
   }
 
+  // ── Main render ──────────────────────────────────────────────────────────────
+
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
       <SubHeader title="Editar producto" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
-        {/* Product info section */}
+
+        {/* ── Información del producto ── */}
         <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
           <Text style={[text.h3, { color: colors.primaryDeep }]}>Información del producto</Text>
-          <Input label="Nombre" value={name} onChangeText={(t) => { setName(t); setSaveMsg(null); }} placeholder="Nombre" />
-          <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setSaveMsg(null); }} placeholder="Descripción" multiline />
-          <Input label="Precio base" value={basePrice} onChangeText={(t) => { setBasePrice(t); setSaveMsg(null); }} placeholder="25000" keyboardType="numeric" />
+
+          <Input
+            label="Nombre"
+            value={name}
+            onChangeText={(t) => { setName(t); setSaveMsg(null); setSaveError(null); }}
+            placeholder="Nombre"
+          />
+          <Input
+            label="Descripción"
+            value={description}
+            onChangeText={(t) => { setDescription(t); setSaveMsg(null); }}
+            placeholder="Descripción"
+            multiline
+          />
+          <Input
+            label="Precio base"
+            value={basePrice}
+            onChangeText={(t) => { setBasePrice(t); setSaveMsg(null); setSaveError(null); }}
+            placeholder="₡25.000"
+            keyboardType="numeric"
+          />
 
           {categories.length > 0 && (
             <CategoryPicker
@@ -251,23 +277,24 @@ export default function EditProductScreen() {
             />
           )}
 
-          {saveError && <Text style={[text.body, { color: colors.errorText }]}>{saveError}</Text>}
+          {saveError && (
+            <Text style={[text.body, { color: colors.errorText }]}>{saveError}</Text>
+          )}
           {saveMsg && (
             <View style={styles.successRow}>
               <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
               <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>{saveMsg}</Text>
             </View>
           )}
-          <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSaveProduct} disabled={saving || !name.trim()} />
+
+          <Button
+            title={saving ? "Guardando..." : "Guardar cambios"}
+            onPress={confirmSaveProduct}
+            disabled={saving || !name.trim()}
+          />
           <TouchableOpacity
             onPress={confirmDeleteProduct}
-            style={[
-              local.deleteProductBtn,
-              {
-                borderColor: colors.errorText,
-                backgroundColor: colors.bgSection,
-              },
-            ]}
+            style={[local.deleteProductBtn, { borderColor: colors.errorText, backgroundColor: colors.bgSection }]}
             activeOpacity={0.85}
           >
             <MaterialIcons name="delete-outline" size={ms(18)} color={colors.errorText} />
@@ -275,44 +302,55 @@ export default function EditProductScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Images section */}
+        {/* ── Imágenes ── */}
         <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
           <View style={local.sectionHeader}>
             <Text style={[text.h3, { color: colors.primaryDeep }]}>Imágenes</Text>
-            <TouchableOpacity onPress={() => setShowImageForm(!showImageForm)}>
+            <TouchableOpacity onPress={() => setShowImageForm(!showImageForm)} hitSlop={8}>
               <MaterialIcons name={showImageForm ? "close" : "add-circle"} size={ms(24)} color={colors.primary} />
             </TouchableOpacity>
           </View>
+
           {(product?.images?.length ?? 0) === 0 && !showImageForm && (
             <Text style={[text.body, local.emptyText, { color: colors.textSecondary }]}>Sin imágenes</Text>
           )}
+
           {(product?.images ?? []).map((img) => (
             <View key={img.id} style={[local.imageRow, { backgroundColor: colors.bgSection }]}>
               <MaterialIcons name="image" size={ms(20)} color={colors.primary} />
               <Text style={[local.imageUrl, { color: colors.textSecondary }]} numberOfLines={1}>{img.image_url}</Text>
               {img.is_primary && (
-                <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}><Text style={[local.primaryText, { color: colors.textOnPrimary }]}>Principal</Text></View>
+                <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={[local.primaryText, { color: colors.textOnPrimary }]}>Principal</Text>
+                </View>
               )}
             </View>
           ))}
+
           {showImageForm && (
             <View style={local.inlineForm}>
               <Input label="URL de imagen" value={imageUrl} onChangeText={setImageUrl} placeholder="https://..." />
-              <Button title={imageSaving ? "..." : "Agregar imagen"} onPress={handleAddImage} disabled={imageSaving || !imageUrl.trim()} />
+              <Button
+                title={imageSaving ? "Agregando..." : "Agregar imagen"}
+                onPress={handleAddImage}
+                disabled={imageSaving || !imageUrl.trim()}
+              />
             </View>
           )}
         </View>
 
-        {/* Variants section */}
+        {/* ── Variantes y stock ── */}
         <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
           <View style={local.sectionHeader}>
-            <Text style={[text.h3, { color: colors.primaryDeep }]}>Variantes y stock disponible</Text>
-            <TouchableOpacity onPress={() => setShowVariantForm(!showVariantForm)}>
+            <Text style={[text.h3, { color: colors.primaryDeep }]}>Variantes y stock</Text>
+            <TouchableOpacity onPress={() => setShowVariantForm(!showVariantForm)} hitSlop={8}>
               <MaterialIcons name={showVariantForm ? "close" : "add-circle"} size={ms(24)} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
-          <Text style={[text.caption, { color: colors.textSecondary }]}>Gestiona cada variante y su inventario desde una vista más compacta para móvil.</Text>
+          <Text style={[text.caption, { color: colors.textSecondary }]}>
+            Gestiona cada variante y su inventario.
+          </Text>
 
           {(product?.variants?.length ?? 0) === 0 && !showVariantForm && (
             <Text style={[text.body, local.emptyText, { color: colors.textSecondary }]}>Sin variantes</Text>
@@ -322,33 +360,54 @@ export default function EditProductScreen() {
             <View key={v.id} style={[local.variantCard, { backgroundColor: colors.bgSection }]}>
               <View style={[local.variantHeader, isCompact && local.variantHeaderCompact]}>
                 <View style={local.variantInfo}>
-                  <Text style={[local.variantName, { color: colors.textPrimary }]} numberOfLines={2}>{v.name}: {v.value}</Text>
+                  <Text style={[local.variantName, { color: colors.textPrimary }]} numberOfLines={2}>
+                    {v.name}: {v.value}
+                  </Text>
                   <Text style={[local.variantMeta, { color: colors.textSecondary }]} numberOfLines={2}>
                     +{formatPrice(v.price_modifier)} | Stock: {v.stock_quantity}
                   </Text>
                 </View>
-                <TouchableOpacity onPress={() => handleDeleteVariant(v)} hitSlop={8}>
+                <TouchableOpacity onPress={() => confirmDeleteVariant(v)} hitSlop={8}>
                   <MaterialIcons name="delete-outline" size={ms(20)} color={colors.errorText} />
                 </TouchableOpacity>
               </View>
+
               {editingVariantId === v.id ? (
-                <View style={[local.stockEditRow, { borderTopColor: colors.border }, isCompact && local.stockEditRowCompact]}> 
+                <View style={[local.stockEditRow, { borderTopColor: colors.border }, isCompact && local.stockEditRowCompact]}>
                   <View style={[local.stepper, isCompact && local.stepperCompact]}>
-                    <TouchableOpacity style={[local.circleBtn, { backgroundColor: colors.primary }]} onPress={() => handleStockDelta(-1)}>
+                    <TouchableOpacity
+                      style={[local.circleBtn, { backgroundColor: colors.primary }]}
+                      onPress={() => handleStockDelta(-1)}
+                    >
                       <MaterialIcons name="remove" size={ms(16)} color={colors.textOnPrimary} />
                     </TouchableOpacity>
-                    <Input value={editStock} onChangeText={setEditStock} keyboardType="numeric" style={local.stockInput} />
-                    <TouchableOpacity style={[local.circleBtn, { backgroundColor: colors.primary }]} onPress={() => handleStockDelta(1)}>
+                    <Input
+                      value={editStock}
+                      onChangeText={setEditStock}
+                      keyboardType="numeric"
+                      style={local.stockInput}
+                    />
+                    <TouchableOpacity
+                      style={[local.circleBtn, { backgroundColor: colors.primary }]}
+                      onPress={() => handleStockDelta(1)}
+                    >
                       <MaterialIcons name="add" size={ms(16)} color={colors.textOnPrimary} />
                     </TouchableOpacity>
                   </View>
                   <View style={[local.stockEditActions, isCompact && local.stockEditActionsCompact]}>
-                    <Button title={stockSaving ? "..." : "Guardar"} onPress={() => confirmSaveStock(v)} disabled={stockSaving} />
+                    <Button
+                      title={stockSaving ? "..." : "Guardar"}
+                      onPress={() => confirmSaveStock(v)}
+                      disabled={stockSaving}
+                    />
                     <Button title="Cancelar" variant="ghost" onPress={() => setEditingVariantId(null)} />
                   </View>
                 </View>
               ) : (
-                <TouchableOpacity onPress={() => { setEditingVariantId(v.id); setEditStock(String(v.stock_quantity)); }} style={local.editStockBtn}>
+                <TouchableOpacity
+                  onPress={() => { setEditingVariantId(v.id); setEditStock(String(v.stock_quantity)); }}
+                  style={local.editStockBtn}
+                >
                   <MaterialIcons name="edit" size={ms(14)} color={colors.primary} />
                   <Text style={[local.editStockText, { color: colors.primary }]}>Editar stock</Text>
                 </TouchableOpacity>
@@ -356,19 +415,38 @@ export default function EditProductScreen() {
             </View>
           ))}
 
+          {/* Formulario nueva variante — sin Alert intermedio */}
           {showVariantForm && (
             <View style={[local.variantForm, { backgroundColor: colors.bgSection }]}>
               <Text style={[local.formTitle, { color: colors.textPrimary }]}>Nueva variante</Text>
               <Input label="Nombre (ej: Tamaño)" value={varName} onChangeText={setVarName} placeholder="Tamaño" />
               <Input label="Valor (ej: Grande)" value={varValue} onChangeText={setVarValue} placeholder="Grande" />
-              <Input label="Modificador de precio" value={varPrice} onChangeText={setVarPrice} placeholder="5000" keyboardType="numeric" />
-              <Input label="Stock inicial" value={varStock} onChangeText={setVarStock} placeholder="10" keyboardType="numeric" />
-              <Button title={varSaving ? "Guardando..." : "Agregar variante"} onPress={confirmAddVariant} disabled={varSaving || !varName.trim() || !varValue.trim()} />
+              <Input
+                label="Modificador de precio"
+                value={varPrice}
+                onChangeText={setVarPrice}
+                placeholder="₡5.000"
+                keyboardType="numeric"
+              />
+              <Input
+                label="Stock inicial"
+                value={varStock}
+                onChangeText={setVarStock}
+                placeholder="10"
+                keyboardType="numeric"
+              />
+              <Button
+                title={varSaving ? "Guardando..." : "Agregar variante"}
+                onPress={handleAddVariant}
+                disabled={varSaving || !varName.trim() || !varValue.trim()}
+              />
             </View>
           )}
         </View>
+
       </ScrollView>
 
+      {/* ── Modal de confirmación de eliminación ── */}
       <Modal
         visible={showDeleteModal}
         transparent
@@ -376,13 +454,18 @@ export default function EditProductScreen() {
         onRequestClose={() => setShowDeleteModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.bgCard, borderColor: colors.border, ...shadows.sm }]}> 
-            <View style={[styles.modalIcon, { backgroundColor: colors.errorBg }]}> 
+          <View style={[styles.modalCard, { backgroundColor: colors.bgCard, borderColor: colors.border, ...shadows.sm }]}>
+            <View style={[styles.modalIcon, { backgroundColor: colors.errorBg }]}>
               <MaterialIcons name="delete-outline" size={ms(24)} color={colors.errorText} />
             </View>
-            <Text style={[text.h3, { color: colors.primaryDeep, textAlign: "center" }]}>Eliminar producto</Text>
-            <Text style={[text.body, { color: colors.textSecondary, textAlign: "center" }]}>Esta acción eliminará el producto y sus variantes. No se puede deshacer.</Text>
-
+            <Text style={[text.h3, { color: colors.primaryDeep, textAlign: "center" }]}>
+              Eliminar {deleteTarget.type === "product" ? "producto" : "variante"}
+            </Text>
+            <Text style={[text.body, { color: colors.textSecondary, textAlign: "center" }]}>
+              {deleteTarget.type === "product"
+                ? "Esta acción eliminará el producto y todas sus variantes. No se puede deshacer."
+                : `Eliminarás la variante "${deleteTarget.variant.name}: ${deleteTarget.variant.value}". No se puede deshacer.`}
+            </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => setShowDeleteModal(false)}
@@ -391,9 +474,14 @@ export default function EditProductScreen() {
               >
                 <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]}>Cancelar</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                onPress={handleDeleteProduct}
+                onPress={() => {
+                  if (deleteTarget.type === "product") {
+                    void handleDeleteProduct();
+                  } else {
+                    void handleDeleteVariantConfirmed(deleteTarget.variant);
+                  }
+                }}
                 style={[styles.modalBtn, { backgroundColor: colors.errorBg, borderColor: colors.errorText }]}
                 activeOpacity={0.85}
               >
@@ -408,27 +496,10 @@ export default function EditProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
-
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  section: {
-    padding: s(16),
-    gap: vs(12),
-    borderWidth: 0.5,
-  },
-
-  successRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: s(6),
-  },
+  wrapper: { flex: 1 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  section: { padding: s(16), gap: vs(12), borderWidth: 0.5 },
+  successRow: { flexDirection: "row", alignItems: "center", gap: s(6) },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",
@@ -452,10 +523,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "center",
   },
-  modalActions: {
-    flexDirection: "row",
-    gap: s(10),
-  },
+  modalActions: { flexDirection: "row", gap: s(10) },
   modalBtn: {
     flex: 1,
     borderWidth: 1,

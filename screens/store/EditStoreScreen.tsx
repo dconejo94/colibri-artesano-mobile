@@ -5,7 +5,6 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -29,6 +28,7 @@ export default function EditStoreScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!storeId) return;
@@ -51,30 +51,19 @@ export default function EditStoreScreen() {
     if (!storeId || !name.trim()) return;
     setSaving(true);
     setError(null);
+    setSaveMsg(null);
     try {
-      await updateStore(storeId, {
+      const updated = await updateStore(storeId, {
         name: name.trim(),
         description: description.trim(),
       });
-      Alert.alert("¡Listo!", "Los cambios de tu tienda fueron guardados.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      setStore(updated);
+      setSaveMsg("Cambios guardados correctamente.");
     } catch {
       setError("No se pudieron guardar los cambios.");
     } finally {
       setSaving(false);
     }
-  };
-
-  const confirmSave = () => {
-    Alert.alert(
-      "Confirmar cambios",
-      "¿Deseas guardar los cambios de la tienda?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Guardar", onPress: handleSave },
-      ]
-    );
   };
 
   const hasChanges = store && (name !== store.name || description !== store.description);
@@ -93,12 +82,18 @@ export default function EditStoreScreen() {
             <View style={local.iconRow}>
               <MaterialIcons name="storefront" size={ms(40)} color={colors.primary} />
             </View>
-            <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setError(null); }} placeholder="Nombre" />
-            <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setError(null); }} placeholder="Describe tu tienda..." multiline />
+            <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setError(null); setSaveMsg(null); }} placeholder="Nombre" />
+            <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setError(null); setSaveMsg(null); }} placeholder="Describe tu tienda..." multiline />
 
             {error && <Text style={[text.body, { color: colors.errorText }]}>{error}</Text>}
+            {saveMsg && (
+              <View style={local.successRow}>
+                <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
+                <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>{saveMsg}</Text>
+              </View>
+            )}
 
-            <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={confirmSave} disabled={saving || !hasChanges || !name.trim()} />
+            <Button title={saving ? "Guardando..." : "Guardar cambios"} onPress={handleSave} disabled={saving || !hasChanges || !name.trim()} />
           </View>
         </ScrollView>
       )}
@@ -115,4 +110,5 @@ const local = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   card: { padding: s(20), gap: s(16), borderWidth: 0.5 },
   iconRow: { alignItems: "center" },
+  successRow: { flexDirection: "row", alignItems: "center", gap: s(6) },
 });

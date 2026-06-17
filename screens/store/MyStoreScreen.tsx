@@ -168,23 +168,40 @@ export default function MyStoreScreen() {
           <View style={local.section}>
             <Text style={[text.h2, { color: colors.primaryDeep }]}>Panel de Control</Text>
             <View style={local.statsRow}>
-              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
-                <MaterialIcons name="paid" size={ms(26)} color={colors.primary} />
-                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
-                  Ventas Totales
-                </Text>
-                <Text style={[text.h2, { color: colors.textPrimary, marginTop: vs(2) }]}>
-                  ₡285,000
-                </Text>
+              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}> 
+                <TouchableOpacity
+                  onPress={() => router.push({ pathname: "/store/edit" as never, params: { storeId: store?.id } })}
+                  hitSlop={10}
+                  accessibilityLabel="Editar mi tienda"
+                  accessibilityRole="button"
+                  style={local.storeEditBtn}
+                >
+                  <MaterialIcons name="edit" size={ms(22)} color={colors.primary} />
+                </TouchableOpacity>
+
+                <View style={local.storeCardContent}>
+                  <View style={local.storeIconWrap}>
+                    <MaterialIcons name="storefront" size={ms(26)} color={colors.primary} />
+                  </View>
+                  <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6), textAlign: "center" }]}> 
+                    Mi tienda
+                  </Text>
+                  <Text style={[text.label, { color: colors.textPrimary, marginTop: vs(2), textAlign: "center" }]} numberOfLines={1}>
+                    {store?.name || "Configurar tienda"}
+                  </Text>
+                  <Text style={[text.caption, { color: colors.textSecondary, marginTop: vs(2), textAlign: "center" }]} numberOfLines={2}>
+                    {store?.description || "Sin descripción"}
+                  </Text>
+                </View>
               </View>
 
-              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
-                <MaterialIcons name="visibility" size={ms(26)} color={colors.primary} />
-                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
-                  Visitas Hoy
+              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}> 
+                <MaterialIcons name="paid" size={ms(26)} color={colors.primary} />
+                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}> 
+                  Ventas Totales
                 </Text>
-                <Text style={[text.h2, { color: colors.textPrimary, marginTop: vs(2) }]}>
-                  142
+                <Text style={[text.h2, { color: colors.textPrimary, marginTop: vs(2) }]}> 
+                  ₡285,000
                 </Text>
               </View>
             </View>
@@ -309,8 +326,11 @@ const local = StyleSheet.create({
   sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
 
   // Panel stats
-  statsRow: { flexDirection: "row", gap: s(12) },
-  statCard: { flex: 1, padding: s(16), borderWidth: 0.5 },
+  statsRow: { flexDirection: "column", gap: s(12) },
+  statCard: { width: "100%", padding: s(16), borderWidth: 0.5, alignItems: "center", position: "relative" },
+  storeEditBtn: { position: "absolute", top: s(14), right: s(14), zIndex: 1 },
+  storeCardContent: { width: "100%", alignItems: "center" },
+  storeIconWrap: { width: ms(32), height: ms(32), justifyContent: "center", alignItems: "center" },
 
   // Products
   productList: { gap: vs(10) },
