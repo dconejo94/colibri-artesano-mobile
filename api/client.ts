@@ -1,8 +1,13 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosError,
+  InternalAxiosRequestConfig,
+  isAxiosError,
+} from "axios";
 import { Platform } from "react-native";
 
 import { useAuthStore } from "@/src/auth/authStore";
 import { getTokens, setAccessToken } from "@/src/auth/tokenStorage";
+import { SessionExpiredError } from "@/src/api/errors";
 import { refresh } from "./auth";
 
 // Android emulator → 10.0.2.2, iOS simulator → localhost
@@ -40,11 +45,20 @@ let refreshPromise: Promise<string> | null = null;
 
 async function refreshAccessToken(): Promise<string> {
   const stored = await getTokens();
-  if (!stored) throw new Error("No refresh token");
-  const { access_token } = await refresh(stored.refreshToken);
-  await setAccessToken(access_token);
-  useAuthStore.getState().setAccessToken(access_token);
-  return access_token;
+  if (!stored) throw new SessionExpiredError();
+  try {
+    const { access_token } = await refresh(stored.refreshToken);
+    await setAccessToken(access_token);
+    useAuthStore.getState().setAccessToken(access_token);
+    return access_token;
+  } catch (error) {
+    // Only a 401 means the refresh token itself is invalid/expired. Transient
+    // errors propagate as-is so the session is left intact for a retry.
+    if (isAxiosError(error) && error.response?.status === 401) {
+      throw new SessionExpiredError();
+    }
+    throw error;
+  }
 }
 
 client.interceptors.response.use(
@@ -68,7 +82,10 @@ client.interceptors.response.use(
       original.headers.Authorization = `Bearer ${token}`;
       return client(original);
     } catch (refreshError) {
-      await useAuthStore.getState().logout();
+      // Tear down the session only when it is genuinely dead, not on a blip.
+      if (refreshError instanceof SessionExpiredError) {
+        await useAuthStore.getState().logout();
+      }
       return Promise.reject(refreshError);
     } finally {
       refreshPromise = null;

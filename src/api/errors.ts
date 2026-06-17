@@ -10,6 +10,11 @@ export type ApiError = {
   fieldErrors?: Record<string, string>; // keyed by field name, for form inputs
 };
 
+// Thrown when the session is genuinely dead (no refresh token, or a 401 from
+// /auth/refresh). Signals the interceptor to log the user out, as opposed to a
+// transient failure (network/timeout/5xx) that must leave the session intact.
+export class SessionExpiredError extends Error {}
+
 const GENERIC = 'Algo salió mal. Intenta de nuevo.';
 const NETWORK = 'No se pudo conectar. Revisa tu conexión e intenta de nuevo.';
 
