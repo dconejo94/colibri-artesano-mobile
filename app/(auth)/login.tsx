@@ -78,7 +78,7 @@ export default function LoginScreen() {
           <TextLink align="right" onPress={() => {}}>
             ¿Olvidaste tu contraseña?
           </TextLink>
-          <Button title="Entrar" onPress={submit} disabled={submitting} />
+          <Button title="Entrar" onPress={submit} loading={submitting} />
         </View>
       </GlassCard>
       <FooterSwitch prompt="¿No tienes cuenta?" action="Regístrate" onPress={() => router.push('/register')} />

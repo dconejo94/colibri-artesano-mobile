@@ -180,7 +180,7 @@ export default function RegisterScreen() {
                 />
               )}
 
-              <Button title="Registrarme" onPress={submit} disabled={submitting} />
+              <Button title="Registrarme" onPress={submit} loading={submitting} />
             </View>
           </>
         )}
