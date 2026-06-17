@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import {
   DMSans_400Regular,
@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/lora';
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider } from '@/src/theme';
+import { useAuthStore } from '@/src/auth/authStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,6 +36,22 @@ const headerTheme = {
   },
 };
 
+function useAuthRedirect() {
+  const status = useAuthStore((s) => s.status);
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    const inAuthGroup = segments[0] === '(auth)';
+    if (status === 'anonymous' && !inAuthGroup) {
+      router.replace('/login');
+    } else if (status === 'authenticated' && inAuthGroup) {
+      router.replace('/');
+    }
+  }, [status, segments, router]);
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     DMSans_400Regular,
@@ -45,11 +62,20 @@ export default function RootLayout() {
     Lora_400Regular_Italic,
   });
 
-  useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  const status = useAuthStore((s) => s.status);
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    bootstrap();
+  }, [bootstrap]);
+
+  useEffect(() => {
+    if (fontsLoaded && status !== 'loading') SplashScreen.hideAsync();
+  }, [fontsLoaded, status]);
+
+  useAuthRedirect();
+
+  if (!fontsLoaded || status === 'loading') return null;
 
   return (
     <ThemeProvider>
@@ -66,4 +92,3 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
-
