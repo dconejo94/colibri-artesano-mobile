@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import {
@@ -64,13 +64,18 @@ export default function RootLayout() {
 
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const status = useAuthStore((s) => s.status);
+  const splashHidden = useRef(false);
 
   useEffect(() => {
     bootstrap();
   }, [bootstrap]);
 
+  // Hide the splash once; later status changes must not re-trigger hideAsync.
   useEffect(() => {
-    if (fontsLoaded && status !== 'loading') SplashScreen.hideAsync();
+    if (fontsLoaded && status !== 'loading' && !splashHidden.current) {
+      splashHidden.current = true;
+      SplashScreen.hideAsync().catch(() => {});
+    }
   }, [fontsLoaded, status]);
 
   useAuthRedirect();
