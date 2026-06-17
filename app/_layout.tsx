@@ -54,6 +54,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <Stack>
+        <Stack.Screen name="(auth)"             options={{ headerShown: false }} />
         <Stack.Screen name="index"              options={{ headerShown: false }} />
         <Stack.Screen name="productos"          options={{ headerShown: false }} />
         <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
