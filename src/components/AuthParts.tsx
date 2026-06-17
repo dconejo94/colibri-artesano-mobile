@@ -76,6 +76,54 @@ export function FooterSwitch({
   );
 }
 
+export function RoleCard({
+  selected,
+  onSelect,
+  icon,
+  title,
+  desc,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  icon: 'buyer' | 'vendor';
+  title: string;
+  desc: string;
+}) {
+  const { colors, fonts, isDark } = useTheme();
+  const tint = selected
+    ? isDark
+      ? 'rgba(111,168,130,0.16)'
+      : 'rgba(74,124,89,0.10)'
+    : colors.bgInput;
+  const iconBoxBg = selected ? colors.primary : isDark ? '#2E352C' : '#ECE6DA';
+  const iconColor = selected ? colors.btnPrimaryText : colors.textSecondary;
+
+  return (
+    <Pressable
+      onPress={onSelect}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      style={[styles.role, { backgroundColor: tint, borderColor: selected ? colors.primary : colors.border }]}
+    >
+      <View style={[styles.roleIcon, { backgroundColor: iconBoxBg }]}>
+        <MaterialIcons name={icon === 'vendor' ? 'storefront' : 'shopping-bag'} size={20} color={iconColor} />
+      </View>
+      <View style={styles.roleText}>
+        <Text style={[styles.roleTitle, { fontFamily: fonts.serifSemi, color: colors.primaryDeep }]}>{title}</Text>
+        <Text style={[styles.roleDesc, { fontFamily: fonts.sanRegular, color: colors.textSecondary }]}>{desc}</Text>
+      </View>
+      <View
+        style={[
+          styles.radio,
+          { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : 'transparent' },
+        ]}
+      >
+        {selected && <MaterialIcons name="check" size={14} color={colors.btnPrimaryText} />}
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   title: {
     fontSize: 24,
@@ -117,5 +165,41 @@ const styles = StyleSheet.create({
   },
   footerAction: {
     fontSize: 14,
+  },
+  role: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  roleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleText: {
+    flex: 1,
+  },
+  roleTitle: {
+    fontSize: 17,
+    lineHeight: 19,
+  },
+  roleDesc: {
+    fontSize: 13,
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
