@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ms, s } from "@/utils/scale";
 import { useTheme } from "@/src/theme";
@@ -70,6 +70,7 @@ export default function EditStoreScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+      <Stack.Screen options={{ headerShown: false }} />
       <SubHeader title="Editar tienda" onBack={() => router.back()} />
 
       {loading ? (

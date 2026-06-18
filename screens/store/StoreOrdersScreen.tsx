@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useRouter, useLocalSearchParams, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice, translateStatus, statusColor } from "@/utils/format";
@@ -201,6 +201,7 @@ export default function StoreOrdersScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={[local.wrapper, { backgroundColor: colors.bgPage }]}>
+      <Stack.Screen options={{ headerShown: false }} />
       <SubHeader title="Pedidos recibidos" onBack={() => router.back()} />
 
       {loading ? (

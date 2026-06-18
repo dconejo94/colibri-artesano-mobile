@@ -8,12 +8,12 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
-import { OWNER_ID } from "@/constants/auth";
 import { useTheme } from "@/src/theme";
+import { useAuthStore } from "@/src/auth/authStore";
 import { getStoreByOwner, createStore } from "@/api/stores";
 import { getProduct, getStoreProducts } from "@/api/products";
 import { getStoreOrders } from "@/api/orders";
@@ -25,6 +25,7 @@ import Button from "@/components/ui/Button";
 
 export default function MyStoreScreen() {
   const { colors, spacing, radii, shadows, text } = useTheme();
+  const user = useAuthStore((s) => s.user);
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
@@ -41,10 +42,11 @@ export default function MyStoreScreen() {
   const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
 
   const loadData = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const fetched = await getStoreByOwner(OWNER_ID);
+      const fetched = await getStoreByOwner(user.id);
       setStore(fetched);
       if (fetched) {
         const [prodRes, orderRes] = await Promise.all([
@@ -97,11 +99,11 @@ export default function MyStoreScreen() {
   };
 
   const handleCreate = async () => {
-    if (!storeName.trim()) return;
+    if (!storeName.trim() || !user) return;
     setSubmitLoading(true);
     try {
       const created = await createStore({
-        owner_id: OWNER_ID,
+        owner_id: user.id,
         name: storeName.trim(),
         description: storeDesc.trim(),
       });
@@ -118,6 +120,7 @@ export default function MyStoreScreen() {
   if (!loading && !store && !error) {
     return (
       <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <Header onMenuPress={() => setMenuOpen(true)} />
         <ScrollView contentContainerStyle={local.centeredContent}>
           {creating ? (
@@ -149,6 +152,7 @@ export default function MyStoreScreen() {
   // ── Main screen ───────────────────────────────────────────────────────────
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+      <Stack.Screen options={{ headerShown: false }} />
       <Header onMenuPress={() => setMenuOpen(true)} />
 
       {loading ? (

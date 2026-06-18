@@ -6,7 +6,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { s, vs } from "@/utils/scale";
 import { useTheme } from "@/src/theme";
 import { createProduct } from "@/api/products";
@@ -71,7 +71,8 @@ export default function AddProductScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
-      <SubHeader title="Agregar producto" onBack={() => router.back()} />
+      <Stack.Screen options={{ headerShown: false }} />
+      <SubHeader title="Nuevo producto" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
         <View style={[local.card, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>

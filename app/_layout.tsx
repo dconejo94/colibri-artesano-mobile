@@ -89,7 +89,7 @@ export default function RootLayout() {
         <Stack.Screen name="index"              options={{ headerShown: false }} />
         <Stack.Screen name="productos"          options={{ headerShown: false }} />
         <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
-        <Stack.Screen name="tienda"             options={{ title: 'Mi Tienda',  ...headerTheme }} />
+        <Stack.Screen name="store"              options={{ headerShown: false }} />
         <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />
         <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
         <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />

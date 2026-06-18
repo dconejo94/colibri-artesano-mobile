@@ -11,7 +11,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
@@ -240,7 +240,8 @@ export default function EditProductScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
-      <SubHeader title="Editar producto" onBack={() => router.back()} />
+      <Stack.Screen options={{ headerShown: false }} />
+      <SubHeader title="Editar Producto" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
 

@@ -9,6 +9,7 @@ import { useAuthStore } from "@/src/auth/authStore";
 import { getTokens, setAccessToken } from "@/src/auth/tokenStorage";
 import { SessionExpiredError } from "@/src/api/errors";
 import { refresh } from "./auth";
+import { DEV_AUTH_TOKEN } from "@/constants/auth";
 
 // Android emulator → 10.0.2.2, iOS simulator → localhost
 // Physical device → set EXPO_PUBLIC_API_URL in .env
