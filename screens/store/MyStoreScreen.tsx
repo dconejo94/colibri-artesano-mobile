@@ -15,7 +15,7 @@ import { formatPrice } from "@/utils/format";
 import { useTheme } from "@/src/theme";
 import { useAuthStore } from "@/src/auth/authStore";
 import { getStoreByOwner, createStore } from "@/api/stores";
-import { getProduct, getStoreProducts } from "@/api/products";
+import { getStoreProducts } from "@/api/products";
 import { getStoreOrders } from "@/api/orders";
 import type { Store, Product, StoreOrder } from "@/types/store";
 import Header from "@/components/ui/Header";
@@ -31,15 +31,13 @@ export default function MyStoreScreen() {
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<StoreOrder[]>([]);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [totalPendingOrders, setTotalPendingOrders] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [storeName, setStoreName] = useState("");
   const [storeDesc, setStoreDesc] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -53,31 +51,8 @@ export default function MyStoreScreen() {
           getStoreProducts(fetched.id, 1, 5),
           getStoreOrders(fetched.id, 1, 5),
         ]);
-        const detailedProducts = await Promise.all(
-          prodRes.items.map(async (product) => {
-            try {
-              return await getProduct(product.id);
-            } catch {
-              return product;
-            }
-          })
-        );
-
-        const nextStockByProductId = Object.fromEntries(
-          detailedProducts.map((product) => [
-            product.id,
-            (product.variants ?? []).reduce(
-              (sum, variant) => sum + (Number(variant.stock_quantity) || 0),
-              0
-            ),
-          ])
-        );
-
-        setProducts(detailedProducts);
-        setStockByProductId(nextStockByProductId);
-        setTotalProducts(prodRes.total);
+        setProducts(prodRes.items);
         setOrders(orderRes.items);
-        setTotalPendingOrders(orderRes.total);
       }
     } catch {
       setError("No se pudo cargar la tienda. Revisa tu conexión.");
@@ -204,8 +179,8 @@ export default function MyStoreScreen() {
                 <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}> 
                   Ventas Totales
                 </Text>
-                <Text style={[text.h2, { color: colors.textPrimary, marginTop: vs(2) }]}> 
-                  ₡285,000
+                <Text style={[text.h3, { color: colors.textSecondary, marginTop: vs(2), fontStyle: "italic" }]}> 
+                  Próximamente
                 </Text>
               </View>
             </View>
@@ -225,10 +200,6 @@ export default function MyStoreScreen() {
 
             <View style={local.productList}>
               {products.slice(0, 5).map((product) => {
-                const stock = stockByProductId[product.id] ?? (product.variants ?? []).reduce(
-                  (sum, v) => sum + (Number(v.stock_quantity) || 0), 0
-                );
-                const isOut = stock <= 0;
                 return (
                   <TouchableOpacity
                     key={product.id}
@@ -243,12 +214,8 @@ export default function MyStoreScreen() {
                       <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
                         {product.name}
                       </Text>
-                      <Text style={[text.caption, { color: colors.textSecondary }]} numberOfLines={1}>
-                        Stock:{" "}
-                        <Text style={{ color: isOut ? colors.errorText : colors.textPrimary, fontWeight: "700" }}>
-                          {isOut ? "Agotado" : `${stock} un.`}
-                        </Text>
-                        {" • "}{formatPrice(product.base_price)}
+                      <Text style={[text.caption, { color: colors.textSecondary, fontWeight: "600" }]} numberOfLines={1}>
+                        {formatPrice(product.base_price)}
                       </Text>
                     </View>
                     <MaterialIcons name="edit" size={ms(22)} color={colors.primary} />
