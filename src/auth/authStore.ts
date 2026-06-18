@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import * as authApi from '@/api/auth';
 import type { AuthTokens, LoginPayload, RegisterPayload } from '@/api/auth';
 import type { User } from '@/types/user';
-import { clearTokens, getTokens, setTokens } from './tokenStorage';
+import { clearTokens, getTokens, setTokens, setLogoutHandler, setTokenRefreshHandler } from './tokenStorage';
 
 // Global auth state — the single source of truth for the logged-in user and
 // tokens. Auth endpoints return tokens only, so we fetch GET /users/me after
@@ -87,3 +87,6 @@ export const useAuthStore = create<AuthState>((set) => {
     setAccessToken: (accessToken) => set({ accessToken }),
   };
 });
+
+setLogoutHandler(() => useAuthStore.getState().logout());
+setTokenRefreshHandler((token) => useAuthStore.getState().setAccessToken(token));

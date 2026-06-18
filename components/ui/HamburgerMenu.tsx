@@ -46,7 +46,7 @@ function toDisplayUser(user: User | null) {
 const NAV_ITEMS = [
   { label: 'Inicio',     icon: 'home'           as const, href: '/'          },
   { label: 'Productos',  icon: 'eco'            as const, href: '/productos'  },
-  { label: 'Mi Tienda',  icon: 'storefront'     as const, href: '/tienda'    },
+  { label: 'Mi Tienda',  icon: 'storefront'     as const, href: '/store'    },
   { label: 'Eventos',    icon: 'event'          as const, href: '/eventos'   },
   { label: 'Carrito',    icon: 'shopping-cart'  as const, href: '/carrito'   },
   { label: 'Favoritos',  icon: 'favorite'       as const, href: '/favoritos' },

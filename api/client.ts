@@ -5,8 +5,7 @@ import axios, {
 } from "axios";
 import { Platform } from "react-native";
 
-import { useAuthStore } from "@/src/auth/authStore";
-import { getTokens, setAccessToken } from "@/src/auth/tokenStorage";
+import { getTokens, setAccessToken, getInMemoryAccessToken, triggerLogout, triggerTokenRefresh } from "@/src/auth/tokenStorage";
 import { SessionExpiredError } from "@/src/api/errors";
 import { refresh } from "./auth";
 
@@ -30,7 +29,7 @@ function isAuthEndpoint(url?: string): boolean {
 
 // Request: attach the in-memory access token to every authenticated call.
 client.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
+  const token = getInMemoryAccessToken();
   if (token && !isAuthEndpoint(config.url)) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -49,7 +48,7 @@ async function refreshAccessToken(): Promise<string> {
   try {
     const { access_token } = await refresh(stored.refreshToken);
     await setAccessToken(access_token);
-    useAuthStore.getState().setAccessToken(access_token);
+    triggerTokenRefresh(access_token);
     return access_token;
   } catch (error) {
     // Only a 401 means the refresh token itself is invalid/expired. Transient
@@ -84,7 +83,7 @@ client.interceptors.response.use(
     } catch (refreshError) {
       // Tear down the session only when it is genuinely dead, not on a blip.
       if (refreshError instanceof SessionExpiredError) {
-        await useAuthStore.getState().logout();
+        await triggerLogout();
       }
       return Promise.reject(refreshError);
     } finally {

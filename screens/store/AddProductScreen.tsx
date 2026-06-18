@@ -3,12 +3,12 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  useColorScheme,
+  Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { s, vs } from "@/utils/scale";
-import shared from "@/constants/shared-styles";
+import { useTheme } from "@/src/theme";
 import { createProduct } from "@/api/products";
 import { getCategories } from "@/api/categories";
 import type { Category } from "@/types/store";
@@ -16,10 +16,9 @@ import SubHeader from "@/components/ui/SubHeader";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Text } from "react-native";
 
 export default function AddProductScreen() {
-  const isDark = useColorScheme() === "dark";
+  const { colors, spacing, radii, shadows, text } = useTheme();
   const router = useRouter();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
 
@@ -46,12 +45,13 @@ export default function AddProductScreen() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!storeId || !categoryId || !name.trim() || !basePrice.trim()) return;
+    if (!name.trim()) { setError("El nombre del producto es requerido."); return; }
+    if (!basePrice.trim()) { setError("El precio base es requerido."); return; }
     const price = parseFloat(basePrice);
-    if (isNaN(price) || price < 0) {
-      setError("El precio debe ser un numero valido.");
-      return;
-    }
+    if (isNaN(price) || price < 0) { setError("El precio debe ser un número válido."); return; }
+    if (!categoryId) { setError("Debes seleccionar una categoría."); return; }
+    if (!storeId) return;
+
     setSaving(true);
     setError(null);
     try {
@@ -70,28 +70,31 @@ export default function AddProductScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={[shared.wrapper, isDark && shared.wrapperDark]}>
-      <SubHeader title="Agregar producto" onBack={() => router.back()} />
+    <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SubHeader title="Nuevo producto" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
-        <View style={[shared.card, isDark && shared.cardDark]}>
-          <Input label="Nombre del producto" value={name} onChangeText={setName} placeholder="Ej: Vasija de Barro" />
+        <View style={[local.card, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>
+          <Input label="Nombre del producto *" value={name} onChangeText={(t) => { setName(t); setError(null); }} placeholder="Ej: Vasija de Barro" />
           <Input label="Descripción" value={description} onChangeText={setDescription} placeholder="Describe tu producto..." multiline />
-          <Input label="Precio base (colones)" value={basePrice} onChangeText={setBasePrice} placeholder="25000" keyboardType="numeric" />
+          <Input label="Precio base *" value={basePrice} onChangeText={(t) => { setBasePrice(t); setError(null); }} placeholder="₡" keyboardType="numeric" />
 
           <CategoryPicker
             categories={categories}
             selectedId={categoryId}
-            onSelect={setCategoryId}
+            onSelect={(id) => { setCategoryId(id); setError(null); }}
             loading={catLoading}
           />
 
-          {error && <Text style={shared.errorText}>{error}</Text>}
+          {error && (
+            <Text style={[text.body, { color: colors.errorText }]}>{error}</Text>
+          )}
 
           <Button
             title={saving ? "Guardando..." : "Crear producto"}
             onPress={handleSubmit}
-            disabled={saving || !name.trim() || !basePrice.trim() || !categoryId}
+            disabled={saving}
           />
         </View>
       </ScrollView>
@@ -99,6 +102,11 @@ export default function AddProductScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+});
+
 const local = StyleSheet.create({
   content: { padding: s(16), paddingBottom: vs(40) },
+  card: { padding: s(20), gap: vs(16), borderWidth: 0.5 },
 });
