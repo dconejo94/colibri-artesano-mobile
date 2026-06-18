@@ -1,4 +1,6 @@
 import { useTheme } from '@/src/theme';
+import { useAuthStore } from '@/src/auth/authStore';
+import type { User } from '@/types/user';
 import { s, vs } from '@/utils/scale';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { usePathname, useRouter } from 'expo-router';
@@ -20,12 +22,23 @@ import Animated, {
 const DRAWER_WIDTH = s(280);
 const ANIM_DURATION = 280;
 
-// ─── Datos del usuario (Contexto auth lo pasan las pantallas) ───────
-type User = {
-  initials:  string;
-  name:      string;
-  role?:     string;
-  location?: string;
+const ROLE_LABELS: Record<User['role'], string> = {
+  buyer:  'Comprador',
+  vendor: 'Vendedor',
+};
+
+// Derive the avatar/name/role shown in the drawer from the authenticated user.
+function toDisplayUser(user: User | null) {
+  if (!user) return { initials: '?', name: 'Usuario', role: undefined as string | undefined };
+  const name = user.name?.trim() || user.email.split('@')[0];
+  const initials =
+    name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase() || '?';
+  return { initials, name, role: ROLE_LABELS[user.role] };
 }
 
 // ─── Items de navegación ─────────────────────────────────────────────────────
@@ -42,17 +55,13 @@ const NAV_ITEMS = [
 type Props = {
   isOpen:  boolean;
   onClose: () => void;
-  user?:   User;
 };
 
-export default function HamburgerMenu({ isOpen, onClose, user }: Props) {
+export default function HamburgerMenu({ isOpen, onClose }: Props) {
   const { colors, spacing, radii, text } = useTheme();
-  const displayUser = user ?? {
-    initials: '?',
-    name:     'Usuario',
-    role:     undefined,
-    location: undefined,
-  }
+  const user     = useAuthStore((state) => state.user);
+  const logout   = useAuthStore((state) => state.logout);
+  const displayUser = toDisplayUser(user);
   const router   = useRouter();
   const pathname = usePathname();
 
@@ -80,6 +89,13 @@ export default function HamburgerMenu({ isOpen, onClose, user }: Props) {
     onClose();
     // Pequeño delay para dejar que la animación de cierre empiece
     setTimeout(() => router.push(href as any), 80);
+  };
+
+  // Logs out: useAuthRedirect in _layout handles the redirect to /login once
+  // the status flips to 'anonymous'.
+  const handleLogout = () => {
+    onClose();
+    logout();
   };
 
   return (
@@ -134,7 +150,7 @@ export default function HamburgerMenu({ isOpen, onClose, user }: Props) {
               {displayUser.name}
             </Text>
             <Text style={[text.label, { color: colors.textSecondary, marginTop: 2 }]}>
-              {[displayUser.role, displayUser.location].filter(Boolean).join ('•')} 
+              {displayUser.role}
             </Text>
           </View>
         </View>
@@ -199,6 +215,44 @@ export default function HamburgerMenu({ isOpen, onClose, user }: Props) {
               </Pressable>
             );
           })}
+        </View>
+
+        {/* ── Log out ───────────────────────────────────────────────────── */}
+        <View style={{ paddingHorizontal: spacing[4] }}>
+          <View
+            style={[
+              styles.divider,
+              { backgroundColor: colors.border, marginBottom: vs(8) },
+            ]}
+          />
+          <Pressable
+            style={({ pressed }) => [
+              styles.navItem,
+              {
+                backgroundColor:   pressed ? colors.errorBg : 'transparent',
+                borderRadius:      radii.md,
+                paddingVertical:   vs(14),
+                paddingHorizontal: spacing[4],
+              },
+            ]}
+            onPress={handleLogout}
+            accessibilityLabel="Cerrar sesión"
+            accessibilityRole="button"
+          >
+            <MaterialIcons name="logout" size={22} color={colors.errorText} />
+            <Text
+              style={[
+                text.body,
+                {
+                  color:      colors.errorText,
+                  fontFamily: 'DMSans_500Medium',
+                  marginLeft: spacing[3],
+                },
+              ]}
+            >
+              Cerrar sesión
+            </Text>
+          </Pressable>
         </View>
       </Animated.View>
     </Modal>
