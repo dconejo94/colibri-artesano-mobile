@@ -1,52 +1,36 @@
-import { ThemedText } from "@/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/src/theme";
 import { ms, s, vs } from "@/utils/scale";
 import { useState } from "react";
-import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = { description: string };
 
 export function ProductDescription({ description }: Props) {
-  const isDark = useColorScheme() === "dark";
-  const C = isDark ? Colors.dark : Colors.light;
+  const { colors, text } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <View style={[styles.box, { backgroundColor: C.contentBg }]}>
-      <ThemedText
-        type="defaultSemiBold"
-        style={styles.title}
-        lightColor={C.textDescription}
-        darkColor={C.textDescription}
-      >
+    <View style={[styles.box, { backgroundColor: colors.bgSection }]}>
+      <Text style={[text.label, { color: colors.textPrimary, fontWeight: "600" }]}>
         Descripción
-      </ThemedText>
+      </Text>
 
-      <ThemedText
-        style={styles.body}
-        lightColor={C.textDescription}
-        darkColor={C.textDescription}
+      <Text
+        style={[text.body, { color: colors.textPrimary, opacity: 0.85 }]}
         numberOfLines={expanded ? undefined : 4}
       >
         {description}
-      </ThemedText>
+      </Text>
 
       <Pressable onPress={() => setExpanded(!expanded)}>
-        <ThemedText
-          style={styles.link}
-          lightColor={C.linkDescription}
-          darkColor={C.linkDescription}
-        >
+        <Text style={[text.label, { color: colors.primary, fontWeight: "600" }]}>
           {expanded ? "Ver menos" : "Ver más"}
-        </ThemedText>
+        </Text>
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  box:   { borderRadius: ms(14), padding: s(14), gap: vs(6) },
-  title: { fontSize: ms(15) },
-  body:  { fontSize: ms(13), lineHeight: ms(20), opacity: 0.85 },
-  link:  { fontSize: ms(13), fontWeight: "600" },
+  box: { borderRadius: ms(14), padding: s(14), gap: vs(6) },
 });

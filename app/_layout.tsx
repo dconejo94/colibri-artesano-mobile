@@ -12,7 +12,7 @@ import {
   Lora_400Regular_Italic,
 } from '@expo-google-fonts/lora';
 import * as SplashScreen from 'expo-splash-screen';
-import { ThemeProvider } from '@/src/theme';
+import { ThemeProvider, fonts } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,7 +30,7 @@ const headerTheme = {
   headerStyle: { backgroundColor: C.bgNavbar },
   headerTintColor: C.primary,
   headerTitleStyle: {
-    fontFamily: 'DMSans_500Medium',
+    fontFamily: fonts.sanMedium,
     color: C.textPrimary,
     fontSize: 16,
   },

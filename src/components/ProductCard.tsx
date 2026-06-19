@@ -1,6 +1,6 @@
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useTheme } from '@/src/theme';
+import { fonts, useTheme } from '@/src/theme';
 import StatusBadge, { type BadgeStatus } from './StatusBadge';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -101,7 +101,7 @@ export default function ProductCard({ product, onPress, onObtain, width }: Props
               text.body,
               {
                 color:      colors.primary,
-                fontFamily: 'Lora_400Regular_Italic',
+                fontFamily: fonts.serifItalic,
                 fontSize:   13,
                 marginTop:  4,
                 lineHeight: 18,
@@ -132,7 +132,7 @@ export default function ProductCard({ product, onPress, onObtain, width }: Props
 
           <View style={{ flex: 1 }}>
             <Text
-              style={[text.label, { color: colors.textPrimary, fontFamily: 'DMSans_700Bold' }]}
+              style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]}
               numberOfLines={1}
             >
               {product.artisan}
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize:   13,
-    fontFamily: 'DMSans_700Bold',
+    fontFamily: fonts.sanBold,
   },
   divider: {
     height: 0.5,

@@ -1,4 +1,4 @@
-import { useTheme } from '@/src/theme';
+import { fonts, useTheme } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
 import type { User } from '@/types/user';
 import { s, vs } from '@/utils/scale';
@@ -204,8 +204,8 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
                     {
                       color:      isActive ? colors.primary : colors.textPrimary,
                       fontFamily: isActive
-                        ? 'DMSans_500Medium'
-                        : 'DMSans_400Regular',
+                        ? fonts.sanMedium
+                        : fonts.sanRegular,
                       marginLeft: spacing[3],
                     },
                   ]}
@@ -245,7 +245,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
                 text.body,
                 {
                   color:      colors.errorText,
-                  fontFamily: 'DMSans_500Medium',
+                  fontFamily: fonts.sanMedium,
                   marginLeft: spacing[3],
                 },
               ]}

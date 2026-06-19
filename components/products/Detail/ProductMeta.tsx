@@ -1,7 +1,7 @@
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/src/theme";
 import { ms, s, vs } from "@/utils/scale";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   price: number | null;
@@ -13,38 +13,37 @@ type Props = {
 };
 
 export function ProductMeta({ price, rating, reviewCount, stock, qty, onQtyChange }: Props) {
-  const isDark = useColorScheme() === "dark";
-  const C = isDark ? Colors.dark : Colors.light;
+  const { colors } = useTheme();
 
   return (
     <View style={styles.container}>
       <View style={styles.priceRow}>
         <View>
-          <Text style={[styles.priceCurrency, { color: C.brand }]}>CRC</Text>
-          <Text style={[styles.priceAmount, { color: C.text }]}>
+          <Text style={[styles.priceCurrency, { color: colors.primary }]}>CRC</Text>
+          <Text style={[styles.priceAmount, { color: colors.textPrimary }]}>
             {price != null ? `₡${price.toLocaleString("es-CR")}` : "—"}
           </Text>
         </View>
 
-        <View style={[styles.qtyControl, { backgroundColor: C.surfaceAlt }]}>
+        <View style={[styles.qtyControl, { backgroundColor: colors.bgSection }]}>
           <TouchableOpacity hitSlop={8} onPress={() => onQtyChange(Math.max(1, qty - 1))}>
-            <MaterialIcons name="remove" size={ms(18)} color={C.brand} />
+            <MaterialIcons name="remove" size={ms(18)} color={colors.primary} />
           </TouchableOpacity>
-          <Text style={[styles.qtyValue, { color: C.text }]}>{qty}</Text>
+          <Text style={[styles.qtyValue, { color: colors.textPrimary }]}>{qty}</Text>
           <TouchableOpacity hitSlop={8} onPress={() => onQtyChange(qty + 1)}>
-            <MaterialIcons name="add" size={ms(18)} color={C.brand} />
+            <MaterialIcons name="add" size={ms(18)} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.ratingRow}>
-        <MaterialIcons name="star" size={ms(15)} color={C.star} />
-        <Text style={[styles.ratingValue, { color: C.brand }]}>{rating.toFixed(1)}</Text>
-        <Text style={[styles.ratingMeta, { color: C.text }]}>
+        <MaterialIcons name="star" size={ms(15)} color={colors.star} />
+        <Text style={[styles.ratingValue, { color: colors.primary }]}>{rating.toFixed(1)}</Text>
+        <Text style={[styles.ratingMeta, { color: colors.textPrimary }]}>
           · {reviewCount} reseñas
         </Text>
       </View>
-      <Text style={[styles.ratingMeta, { color: C.text }]}>{stock} disponibles</Text>
+      <Text style={[styles.ratingMeta, { color: colors.textPrimary }]}>{stock} disponibles</Text>
     </View>
   );
 }

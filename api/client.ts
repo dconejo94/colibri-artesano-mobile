@@ -7,7 +7,6 @@ import { Platform } from "react-native";
 
 import { getTokens, setAccessToken, getInMemoryAccessToken, triggerLogout, triggerTokenRefresh } from "@/src/auth/tokenStorage";
 import { SessionExpiredError } from "@/src/api/errors";
-import { refresh } from "./auth";
 
 // Android emulator → 10.0.2.2, iOS simulator → localhost
 // Physical device → set EXPO_PUBLIC_API_URL in .env
@@ -46,10 +45,16 @@ async function refreshAccessToken(): Promise<string> {
   const stored = await getTokens();
   if (!stored) throw new SessionExpiredError();
   try {
-    const { access_token } = await refresh(stored.refreshToken);
-    await setAccessToken(access_token);
-    triggerTokenRefresh(access_token);
-    return access_token;
+    // Inline the refresh call here using the raw axios instance to avoid
+    // a circular dependency with api/auth.ts (which imports this client).
+    const { data } = await axios.post<{ access_token: string; token_type: string }>(
+      `${API_URL}/api/v1/auth/refresh`,
+      { refresh_token: stored.refreshToken },
+      { headers: { "Content-Type": "application/json" } },
+    );
+    await setAccessToken(data.access_token);
+    triggerTokenRefresh(data.access_token);
+    return data.access_token;
   } catch (error) {
     // Only a 401 means the refresh token itself is invalid/expired. Transient
     // errors propagate as-is so the session is left intact for a retry.
