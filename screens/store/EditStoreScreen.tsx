@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ms, s } from "@/utils/scale";
-import { useTheme } from "@/src/theme";
+import { useTheme, fonts } from "@/src/theme";
 import { getStore, updateStore } from "@/api/stores";
 import type { Store } from "@/types/store";
 import SubHeader from "@/components/ui/SubHeader";
@@ -90,7 +90,7 @@ export default function EditStoreScreen() {
             {saveMsg && (
               <View style={local.successRow}>
                 <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
-                <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>{saveMsg}</Text>
+                <Text style={[text.label, { color: colors.successText, fontFamily: fonts.sanBold }]}>{saveMsg}</Text>
               </View>
             )}
 

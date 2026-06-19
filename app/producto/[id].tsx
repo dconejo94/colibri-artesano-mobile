@@ -6,7 +6,7 @@ import { useProductDetail } from '@/src/hooks/useProductDetail';
 
 export default function ProductoRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { colors, text, spacing } = useTheme();
+  const { colors, text, spacing, fonts } = useTheme();
 
   const { product, isLoading, isError } = useProductDetail(id);
 
@@ -38,7 +38,7 @@ export default function ProductoRoute() {
           headerStyle:     { backgroundColor: colors.bgNavbar },
           headerTintColor: colors.primary,
           headerTitleStyle: {
-            fontFamily: 'DMSans_500Medium',
+            fontFamily: fonts.sanMedium,
             color:      colors.textPrimary,
             fontSize:   15,
           },

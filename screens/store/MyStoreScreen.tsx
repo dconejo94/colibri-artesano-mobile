@@ -12,7 +12,7 @@ import { useFocusEffect, useRouter, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
-import { useTheme } from "@/src/theme";
+import { useTheme, fonts } from "@/src/theme";
 import { useAuthStore } from "@/src/auth/authStore";
 import { getStoreByOwner, createStore } from "@/api/stores";
 import { getStoreProducts } from "@/api/products";
@@ -165,7 +165,7 @@ export default function MyStoreScreen() {
                   <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6), textAlign: "center" }]}> 
                     Mi tienda
                   </Text>
-                  <Text style={[text.label, { color: colors.textPrimary, marginTop: vs(2), textAlign: "center" }]} numberOfLines={1}>
+                  <Text style={[text.productName, { color: colors.textPrimary, marginTop: vs(2), textAlign: "center" }]} numberOfLines={1}>
                     {store?.name || "Configurar tienda"}
                   </Text>
                   <Text style={[text.caption, { color: colors.textSecondary, marginTop: vs(2), textAlign: "center" }]} numberOfLines={2}>
@@ -211,10 +211,10 @@ export default function MyStoreScreen() {
                       <MaterialIcons name="inventory-2" size={ms(24)} color={colors.primarySoft} />
                     </View>
                     <View style={local.productInfo}>
-                      <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
+                      <Text style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]} numberOfLines={1}>
                         {product.name}
                       </Text>
-                      <Text style={[text.caption, { color: colors.textSecondary, fontWeight: "600" }]} numberOfLines={1}>
+                      <Text style={[text.caption, { color: colors.primary, fontFamily: fonts.sanBold }]} numberOfLines={1}>
                         {formatPrice(product.base_price)}
                       </Text>
                     </View>
@@ -230,7 +230,7 @@ export default function MyStoreScreen() {
               activeOpacity={0.85}
             >
               <MaterialIcons name="add" size={ms(22)} color={colors.textOnPrimary} />
-              <Text style={[text.h3, { color: colors.textOnPrimary }]}>Agregar Producto</Text>
+              <Text style={[text.button, { color: colors.textOnPrimary }]}>Agregar Producto</Text>
             </TouchableOpacity>
           </View>
 
@@ -250,7 +250,7 @@ export default function MyStoreScreen() {
                     <MaterialIcons name="local-shipping" size={ms(22)} color={colors.primary} />
                   </View>
                   <View style={local.orderInfo}>
-                    <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
+                    <Text style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]} numberOfLines={1}>
                       Pedido #{String(order.order_id).slice(-4).toUpperCase()}
                     </Text>
                     <Text style={[text.caption, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -258,7 +258,7 @@ export default function MyStoreScreen() {
                     </Text>
                   </View>
                   <View style={[local.statusPill, { backgroundColor: colors.bgSection, borderColor: colors.border, borderWidth: 0.5 }]}>
-                    <Text style={[text.caption, { color: colors.primaryDeep, fontWeight: "700", letterSpacing: 0.5 }]}>
+                    <Text style={[text.caption, { color: colors.primaryDeep, fontFamily: fonts.sanBold, letterSpacing: 0.5 }]}>
                       {String(order.seller_status || "PENDIENTE").toUpperCase()}
                     </Text>
                   </View>

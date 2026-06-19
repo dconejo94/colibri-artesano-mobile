@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
-import { useTheme } from "@/src/theme";
+import { useTheme, fonts } from "@/src/theme";
 import client from "@/api/client";
 import {
   getProduct,
@@ -284,7 +284,7 @@ export default function EditProductScreen() {
           {saveMsg && (
             <View style={styles.successRow}>
               <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
-              <Text style={[text.body, { color: colors.successText, fontWeight: "600" }]}>{saveMsg}</Text>
+              <Text style={[text.label, { color: colors.successText, fontFamily: fonts.sanBold }]}>{saveMsg}</Text>
             </View>
           )}
 
@@ -299,7 +299,7 @@ export default function EditProductScreen() {
             activeOpacity={0.85}
           >
             <MaterialIcons name="delete-outline" size={ms(18)} color={colors.errorText} />
-            <Text style={[text.label, { color: colors.errorText, fontWeight: "700" }]}>Eliminar producto</Text>
+            <Text style={[text.button, { color: colors.errorText }]}>Eliminar producto</Text>
           </TouchableOpacity>
         </View>
 
@@ -361,10 +361,10 @@ export default function EditProductScreen() {
             <View key={v.id} style={[local.variantCard, { backgroundColor: colors.bgSection }]}>
               <View style={[local.variantHeader, isCompact && local.variantHeaderCompact]}>
                 <View style={local.variantInfo}>
-                  <Text style={[local.variantName, { color: colors.textPrimary }]} numberOfLines={2}>
+                  <Text style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]} numberOfLines={2}>
                     {v.name}: {v.value}
                   </Text>
-                  <Text style={[local.variantMeta, { color: colors.textSecondary }]} numberOfLines={2}>
+                  <Text style={[text.caption, { color: colors.textSecondary }]} numberOfLines={2}>
                     +{formatPrice(v.price_modifier)} | Stock: {v.stock_quantity}
                   </Text>
                 </View>
@@ -410,7 +410,7 @@ export default function EditProductScreen() {
                   style={local.editStockBtn}
                 >
                   <MaterialIcons name="edit" size={ms(14)} color={colors.primary} />
-                  <Text style={[local.editStockText, { color: colors.primary }]}>Editar stock</Text>
+                  <Text style={[text.label, { color: colors.primary }]}>Editar stock</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -419,7 +419,7 @@ export default function EditProductScreen() {
           {/* Formulario nueva variante — sin Alert intermedio */}
           {showVariantForm && (
             <View style={[local.variantForm, { backgroundColor: colors.bgSection }]}>
-              <Text style={[local.formTitle, { color: colors.textPrimary }]}>Nueva variante</Text>
+              <Text style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]}>Nueva variante</Text>
               <Input label="Nombre (ej: Tamaño)" value={varName} onChangeText={setVarName} placeholder="Tamaño" />
               <Input label="Valor (ej: Grande)" value={varValue} onChangeText={setVarValue} placeholder="Grande" />
               <Input
@@ -473,7 +473,7 @@ export default function EditProductScreen() {
                 style={[styles.modalBtn, { backgroundColor: colors.bgSection, borderColor: colors.border }]}
                 activeOpacity={0.85}
               >
-                <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]}>Cancelar</Text>
+                <Text style={[text.button, { color: colors.textPrimary }]}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
@@ -486,7 +486,7 @@ export default function EditProductScreen() {
                 style={[styles.modalBtn, { backgroundColor: colors.errorBg, borderColor: colors.errorText }]}
                 activeOpacity={0.85}
               >
-                <Text style={[text.label, { color: colors.errorText, fontWeight: "700" }]}>Eliminar</Text>
+                <Text style={[text.button, { color: colors.errorText }]}>Eliminar</Text>
               </TouchableOpacity>
             </View>
           </View>

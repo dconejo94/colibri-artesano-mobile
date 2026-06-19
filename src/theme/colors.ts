@@ -76,6 +76,9 @@ export type AppColors = Record<string, string> & {
   warningBg: string; warningText: string;
   errorBg: string; errorText: string;
   infoBg: string; infoText: string;
+  // UI chrome
+  star: string;   // rating star fill
+  handle: string; // bottom-sheet drag handle
 };
 
 // Layer 2: semantic tokens — Light mode
@@ -133,6 +136,10 @@ const lightColors = {
   errorText:   palette.errorText,
   infoBg:      palette.infoBg,
   infoText:    palette.infoText,
+
+  // UI chrome
+  star:   '#F5C842', // rating stars
+  handle: '#D0D0D0', // bottom-sheet drag pill
 } satisfies AppColors;
 
 // Layer 2: semantic tokens — Dark mode
@@ -189,6 +196,10 @@ const darkColors: AppColors = {
   errorText:   palette.errorTxtDk,
   infoBg:      palette.infoBgDk,
   infoText:    palette.infoTxtDk,
+
+  // UI chrome
+  star:   '#F5C842', // rating stars (same in dark mode)
+  handle: '#444444', // bottom-sheet drag pill
 };
 
 export { lightColors, darkColors };
