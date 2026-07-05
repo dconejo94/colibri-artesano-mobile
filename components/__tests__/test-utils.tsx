@@ -5,7 +5,7 @@ function AllTheProviders({ children }: { children: React.ReactNode }) {
   return <ThemeProvider>{children}</ThemeProvider>;
 }
 
-export function renderWithProviders(
+export async function renderWithProviders(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, "wrapper">
 ) {
