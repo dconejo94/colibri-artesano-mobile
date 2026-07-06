@@ -14,8 +14,4 @@ module.exports = {
     "**/__tests__/**/*.test.ts?(x)",
     "**/?(*.)+(test|spec).ts?(x)",
   ],
-
-  transformIgnorePatterns: [
-    "node_modules/(?!(jest-)?react-native|@react-native|expo(nent)?|@expo(nent)?/.*|expo-.*|@react-navigation/.*)"
-  ],
 };
