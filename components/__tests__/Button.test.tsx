@@ -11,7 +11,7 @@ describe("Button", () => {
   it("calls onPress when tapped", async () => {
     const onPress = jest.fn();
     await renderWithProviders(<Button title="Guardar" onPress={onPress} />);
-    fireEvent.press(screen.getByRole("button"));
+    await fireEvent.press(screen.getByRole("button"));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
@@ -37,7 +37,7 @@ describe("Button", () => {
     );
     const button = screen.getByRole("button");
     expect(button.props.accessibilityState.disabled).toBe(true);
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
   });
 
@@ -50,7 +50,7 @@ describe("Button", () => {
     expect(screen.queryByText("Guardar")).toBeNull();
     const button = screen.getByRole("button");
     expect(button.props.accessibilityState.busy).toBe(true);
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
   });
 });

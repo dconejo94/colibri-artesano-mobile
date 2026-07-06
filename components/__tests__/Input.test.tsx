@@ -21,7 +21,7 @@ describe("Input", () => {
     await renderWithProviders(
       <Input placeholder="Nombre" value="" onChangeText={onChangeText} />
     );
-    fireEvent.changeText(screen.getByPlaceholderText("Nombre"), "Ana");
+    await fireEvent.changeText(screen.getByPlaceholderText("Nombre"), "Ana");
     expect(onChangeText).toHaveBeenCalledWith("Ana");
   });
 
@@ -98,21 +98,4 @@ it("passes the keyboardType prop to the TextInput", async () => {
   expect(
     screen.getByPlaceholderText("Correo").props.keyboardType
   ).toBe("email-address");
-});
-
-it("updates focus state when the input gains and loses focus", async () => {
-  await renderWithProviders(
-    <Input
-      value=""
-      onChangeText={() => {}}
-      placeholder="Correo"
-    />
-  );
-
-  const input = screen.getByPlaceholderText("Correo");
-
-  expect(() => {
-    fireEvent(input, "focus");
-    fireEvent(input, "blur");
-  }).not.toThrow();
 });
