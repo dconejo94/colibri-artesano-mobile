@@ -26,10 +26,13 @@ jobs:
       
       - name: Run Linter Validations
         run: bun run lint
-      
+
       - name: Run Typecheck Validations
         run: bun run typecheck
-
+        
+      - name: Run Tests
+        run: bun run test --ci --coverage
+      
       - name: Expo Doctor
         run: bunx expo-doctor
 
