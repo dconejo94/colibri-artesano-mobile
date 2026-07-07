@@ -4,6 +4,7 @@ import axios, {
   isAxiosError,
 } from "axios";
 import { Platform } from "react-native";
+import Toast from "react-native-toast-message";
 
 import { getTokens, setAccessToken, getInMemoryAccessToken, triggerLogout, triggerTokenRefresh } from "@/src/auth/tokenStorage";
 import { SessionExpiredError } from "@/src/api/errors";
@@ -89,7 +90,6 @@ client.interceptors.response.use(
     const isMutation = original?.method != null &&
       ["post", "put", "patch", "delete"].includes(original.method.toLowerCase());
     if ((isNetworkError || is5xx) && isMutation) {
-      const Toast = require("react-native-toast-message").default;
       Toast.show({
         type: "error",
         text1: isNetworkError ? "Error de red" : "Error del servidor",

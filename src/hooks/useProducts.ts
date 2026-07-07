@@ -64,6 +64,10 @@ export function useProducts(options: { limit?: number; page?: number } = {}) {
     }
   };
 
-  return { products, isLoading, error, fetchNextPage, hasNextPage, refetch: () => fetchProducts(1) };
+  // Retries whichever page is currently targeted (`page` is bumped optimistically
+  // in fetchNextPage before the request resolves, so on failure it already points
+  // at the failed page — reusing it here resumes pagination instead of discarding
+  // already-loaded pages).
+  return { products, isLoading, error, fetchNextPage, hasNextPage, refetch: () => fetchProducts(page) };
 }
 

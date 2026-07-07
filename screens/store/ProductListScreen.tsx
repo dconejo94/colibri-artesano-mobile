@@ -157,9 +157,10 @@ export default function ProductListScreen() {
       ) : (
         <>
           {/* Ya hay productos en pantalla: si falla, por ejemplo, la paginación,
-              se avisa arriba sin taparlos. */}
+              se avisa arriba sin taparlos. Reintenta la página que falló
+              (page + 1, con append) en vez de reemplazar lo ya cargado. */}
           {error && (
-            <ErrorBanner error={error} onRetry={() => fetchProducts(1)} />
+            <ErrorBanner error={error} onRetry={() => fetchProducts(page + 1, true)} />
           )}
           <FlatList
             data={products}
