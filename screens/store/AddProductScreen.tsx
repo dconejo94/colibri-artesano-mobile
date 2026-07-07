@@ -60,9 +60,11 @@ export default function AddProductScreen() {
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next[key];
+      // Only dismiss the "Revisa los datos ingresados." banner once every
+      // field error it summarizes has actually been resolved.
+      if (Object.keys(next).length === 0) setError(null);
       return next;
     });
-    setError(null);
   };
 
   const handleSubmit = async () => {

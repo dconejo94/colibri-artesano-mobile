@@ -232,8 +232,10 @@ export default function StoreOrdersScreen() {
         </View>
       ) : (
         <>
-          {/* Error de paginación: ya hay pedidos en pantalla, no tapamos la lista */}
-          <ErrorBanner error={error} onRetry={() => fetchOrders(page)} onDismiss={() => setError(null)} />
+          {/* Error de paginación: ya hay pedidos en pantalla, no tapamos la lista.
+              Reintenta la página que falló (page + 1, con append) en vez de
+              reemplazar lo ya cargado. */}
+          <ErrorBanner error={error} onRetry={() => fetchOrders(page + 1, true)} onDismiss={() => setError(null)} />
           <FlatList
             data={orders}
             keyExtractor={(item) => item.id}

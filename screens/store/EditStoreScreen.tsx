@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,6 @@ import ErrorBanner from "@/src/components/ErrorBanner";
 import SubHeader from "@/components/ui/SubHeader";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { useCallback } from "react";
 
 export default function EditStoreScreen() {
   const { colors, spacing, radii, shadows, text } = useTheme();
