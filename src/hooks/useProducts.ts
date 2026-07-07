@@ -2,17 +2,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { getProducts } from '@/api/products';
 import { Product as UIProduct } from '@/src/components/ProductCard';
 import { Product as BackendProduct } from '@/types/store';
+import { normalizeError, type ApiError } from '@/src/api/errors';
 
 export function useProducts(options: { limit?: number; page?: number } = {}) {
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
   const [page, setPage] = useState(options.page || 1);
   const [hasNextPage, setHasNextPage] = useState(true);
 
   const fetchProducts = useCallback(async (currentPage: number) => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await getProducts(currentPage, options.limit || 20);
       
       const uiProducts: UIProduct[] = response.items.map((p: BackendProduct) => {
@@ -44,10 +46,9 @@ export function useProducts(options: { limit?: number; page?: number } = {}) {
       }
       
       setHasNextPage(response.page * response.limit < response.total);
-      setIsError(false);
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
-      setIsError(true);
+      setError(null);
+    } catch (err) {
+      setError(normalizeError(err));
     } finally {
       setIsLoading(false);
     }
@@ -63,5 +64,6 @@ export function useProducts(options: { limit?: number; page?: number } = {}) {
     }
   };
 
-  return { products, isLoading, isError, fetchNextPage, hasNextPage };
+  return { products, isLoading, error, fetchNextPage, hasNextPage, refetch: () => fetchProducts(1) };
 }
+

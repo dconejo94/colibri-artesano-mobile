@@ -14,6 +14,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider, fonts } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
+import AppToast from '@/src/components/AppToast';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -74,7 +75,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded && status !== 'loading' && !splashHidden.current) {
       splashHidden.current = true;
-      SplashScreen.hideAsync().catch(() => {});
+      SplashScreen.hideAsync().catch(() => { });
     }
   }, [fontsLoaded, status]);
 
@@ -85,15 +86,16 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <Stack>
-        <Stack.Screen name="(auth)"             options={{ headerShown: false }} />
-        <Stack.Screen name="index"              options={{ headerShown: false }} />
-        <Stack.Screen name="productos"          options={{ headerShown: false }} />
-        <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
-        <Stack.Screen name="store"              options={{ headerShown: false }} />
-        <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />
-        <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
-        <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="productos" options={{ headerShown: false }} />
+        <Stack.Screen name="producto/[id]" options={{ ...headerTheme }} />
+        <Stack.Screen name="store" options={{ headerShown: false }} />
+        <Stack.Screen name="eventos" options={{ title: 'Eventos', ...headerTheme }} />
+        <Stack.Screen name="carrito" options={{ title: 'Carrito', ...headerTheme }} />
+        <Stack.Screen name="favoritos" options={{ title: 'Favoritos', ...headerTheme }} />
       </Stack>
+      <AppToast />
     </ThemeProvider>
   );
 }

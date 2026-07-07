@@ -13,9 +13,12 @@ import { ms, s } from "@/utils/scale";
 import { useTheme, fonts } from "@/src/theme";
 import { getStore, updateStore } from "@/api/stores";
 import type { Store } from "@/types/store";
+import { normalizeError, type ApiError } from "@/src/api/errors";
+import ErrorBanner from "@/src/components/ErrorBanner";
 import SubHeader from "@/components/ui/SubHeader";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { useCallback } from "react";
 
 export default function EditStoreScreen() {
   const { colors, spacing, radii, shadows, text } = useTheme();
@@ -27,25 +30,30 @@ export default function EditStoreScreen() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchStore = useCallback(async () => {
     if (!storeId) return;
-    (async () => {
-      setLoading(true);
-      try {
-        const data = await getStore(storeId);
-        setStore(data);
-        setName(data.name);
-        setDescription(data.description);
-      } catch {
-        setError("No se pudo cargar la tienda.");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getStore(storeId);
+      setStore(data);
+      setName(data.name);
+      setDescription(data.description);
+    } catch (err) {
+      // GET: sin toast del interceptor (solo dispara para mutaciones), así
+      // que acá siempre queremos mostrar el ErrorBanner, transitorio o no.
+      setError(normalizeError(err));
+    } finally {
+      setLoading(false);
+    }
   }, [storeId]);
+
+  useEffect(() => {
+    fetchStore();
+  }, [fetchStore]);
 
   const handleSave = async () => {
     if (!storeId || !name.trim()) return;
@@ -59,8 +67,16 @@ export default function EditStoreScreen() {
       });
       setStore(updated);
       setSaveMsg("Cambios guardados correctamente.");
-    } catch {
-      setError("No se pudieron guardar los cambios.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      const isTransient = apiErr.status === null || apiErr.status >= 500;
+
+      // PATCH: red/5xx ya los avisa el toast global del interceptor
+      // (client.ts, solo dispara para mutaciones). Mostrar también el
+      // banner acá sería un aviso duplicado del mismo error.
+      if (!isTransient) {
+        setError(apiErr);
+      }
     } finally {
       setSaving(false);
     }
@@ -77,16 +93,22 @@ export default function EditStoreScreen() {
         <View style={local.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
+      ) : error && !store ? (
+        // Falló la carga inicial: sin `store` no hay nada que editar, así que
+        // no tiene sentido mostrar el formulario vacío/roto debajo del banner.
+        <ErrorBanner error={error} onRetry={fetchStore} variant="centered" />
       ) : (
         <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
           <View style={[local.card, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>
             <View style={local.iconRow}>
               <MaterialIcons name="storefront" size={ms(40)} color={colors.primary} />
             </View>
+            {/* A esta altura `store` ya está garantizado: esto es un error de
+                guardado, no de carga, así que va compacto y sin retry. */}
+            <ErrorBanner error={error} onDismiss={() => setError(null)} />
             <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setError(null); setSaveMsg(null); }} placeholder="Nombre" />
             <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setError(null); setSaveMsg(null); }} placeholder="Describe tu tienda..." multiline />
 
-            {error && <Text style={[text.body, { color: colors.errorText }]}>{error}</Text>}
             {saveMsg && (
               <View style={local.successRow}>
                 <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />
