@@ -34,6 +34,11 @@ import CategoryPicker from "@/components/ui/CategoryPicker";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
+// Red/5xx en mutaciones ya los avisa el toast global del interceptor
+// (client.ts). Mostrar además un Alert/ErrorBanner con el mismo mensaje
+// sería un aviso duplicado, así que estos handlers lo filtran acá.
+const isTransientError = (err: ApiError) => err.status === null || err.status >= 500;
+
 export default function EditProductScreen() {
   const { colors, radii, shadows, spacing, text } = useTheme();
   const { width } = useWindowDimensions();
@@ -119,7 +124,10 @@ export default function EditProductScreen() {
       setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
       setSaveMsg("Producto actualizado");
     } catch (err) {
-      setSaveError(normalizeError(err));
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        setSaveError(apiErr);
+      }
     } finally {
       setSaving(false);
     }
@@ -134,7 +142,10 @@ export default function EditProductScreen() {
       setShowDeleteModal(false);
       router.replace({ pathname: "/store/products" as never, params: { storeId } });
     } catch (err) {
-      Alert.alert("Error", normalizeError(err).message);
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     }
   };
 
@@ -153,7 +164,10 @@ export default function EditProductScreen() {
       } : prev);
       setShowDeleteModal(false);
     } catch (err) {
-      Alert.alert("Error", normalizeError(err).message);
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     }
   };
 
@@ -180,7 +194,10 @@ export default function EditProductScreen() {
       setVarName(""); setVarValue(""); setVarPrice(""); setVarStock("");
       setShowVariantForm(false);
     } catch (err) {
-      Alert.alert("Error", normalizeError(err).message);
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     } finally {
       setVarSaving(false);
     }
@@ -200,7 +217,10 @@ export default function EditProductScreen() {
       setEditingVariantId(null);
       setEditStock("");
     } catch (err) {
-      Alert.alert("Error", normalizeError(err).message);
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     } finally {
       setStockSaving(false);
     }
@@ -227,7 +247,10 @@ export default function EditProductScreen() {
       setImageUrl("");
       setShowImageForm(false);
     } catch (err) {
-      Alert.alert("Error", normalizeError(err).message);
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     } finally {
       setImageSaving(false);
     }

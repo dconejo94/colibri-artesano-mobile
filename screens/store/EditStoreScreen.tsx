@@ -43,6 +43,8 @@ export default function EditStoreScreen() {
       setName(data.name);
       setDescription(data.description);
     } catch (err) {
+      // GET: sin toast del interceptor (solo dispara para mutaciones), así
+      // que acá siempre queremos mostrar el ErrorBanner, transitorio o no.
       setError(normalizeError(err));
     } finally {
       setLoading(false);
@@ -66,7 +68,15 @@ export default function EditStoreScreen() {
       setStore(updated);
       setSaveMsg("Cambios guardados correctamente.");
     } catch (err) {
-      setError(normalizeError(err));
+      const apiErr = normalizeError(err);
+      const isTransient = apiErr.status === null || apiErr.status >= 500;
+
+      // PATCH: red/5xx ya los avisa el toast global del interceptor
+      // (client.ts, solo dispara para mutaciones). Mostrar también el
+      // banner acá sería un aviso duplicado del mismo error.
+      if (!isTransient) {
+        setError(apiErr);
+      }
     } finally {
       setSaving(false);
     }

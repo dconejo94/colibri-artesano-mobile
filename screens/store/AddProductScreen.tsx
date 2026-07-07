@@ -96,9 +96,16 @@ export default function AddProductScreen() {
       router.back();
     } catch (err) {
       const apiErr = normalizeError(err);
-      setError(apiErr);
-      if (apiErr.fieldErrors) {
-        setFieldErrors(apiErr.fieldErrors);
+      const isTransient = apiErr.status === null || apiErr.status >= 500;
+
+      // Red/5xx ya los avisa el toast global del interceptor (client.ts,
+      // solo dispara para mutaciones). Mostrar también el banner acá sería
+      // un aviso duplicado del mismo error.
+      if (!isTransient) {
+        setError(apiErr);
+        if (apiErr.fieldErrors) {
+          setFieldErrors(apiErr.fieldErrors);
+        }
       }
     } finally {
       setSaving(false);
