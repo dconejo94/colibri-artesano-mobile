@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "@jest/globals";
 import { normalizeError } from "../errors";
 
 // Helper to construct a mock Axios error
@@ -39,7 +39,7 @@ describe("normalizeError", () => {
     ];
     const error = createAxiosError(422, { detail });
     const result = normalizeError(error);
-    
+
     expect(result.status).toBe(422);
     expect(result.message).toBe("Revisa los datos ingresados.");
     expect(result.fieldErrors).toBeDefined();
