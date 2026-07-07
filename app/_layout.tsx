@@ -14,6 +14,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider, fonts } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
+import Toast from 'react-native-toast-message';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -94,6 +95,7 @@ export default function RootLayout() {
         <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
         <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />
       </Stack>
+      <Toast />
     </ThemeProvider>
   );
 }

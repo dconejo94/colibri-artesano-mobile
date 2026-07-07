@@ -80,10 +80,25 @@ export default function RegisterScreen() {
       });
       router.replace('/');
     } catch (e) {
-      const { status, message } = normalizeError(e);
-      setErrors({
-        form: status === 409 ? 'Ese correo ya está registrado. Inicia sesión.' : message,
-      });
+      const err = normalizeError(e);
+      const isTransient = err.status === null || err.status >= 500;
+      
+      const nextErrors: Errors = {};
+      if (!isTransient) {
+        nextErrors.form = err.status === 409 ? 'Ese correo ya está registrado. Inicia sesión.' : err.message;
+        if (err.fieldErrors) {
+          Object.assign(nextErrors, err.fieldErrors);
+          if (err.fieldErrors.store_name) {
+            nextErrors.store = err.fieldErrors.store_name;
+          }
+        }
+      }
+      setErrors(nextErrors);
+
+      // If we got validation errors on Step 1 fields, go back to Step 1 to show them
+      if (err.fieldErrors && (err.fieldErrors.name || err.fieldErrors.email || err.fieldErrors.password)) {
+        setStep(1);
+      }
     } finally {
       setSubmitting(false);
     }

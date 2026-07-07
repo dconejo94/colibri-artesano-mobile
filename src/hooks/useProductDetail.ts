@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { getProduct } from '@/api/products';
 import { ProductDetail as UIProductDetail } from '@/screens/ProductDetailScreen';
 import { Product as BackendProduct } from '@/types/store';
+import { normalizeError, type ApiError } from '@/src/api/errors';
 
 export function useProductDetail(id: string) {
   const [product, setProduct] = useState<UIProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -15,7 +17,7 @@ export function useProductDetail(id: string) {
     const fetchProduct = async () => {
       try {
         setIsLoading(true);
-        setIsError(false);
+        setError(null);
         const data: BackendProduct = await getProduct(id);
         
         if (!isMounted) return;
@@ -44,8 +46,7 @@ export function useProductDetail(id: string) {
         
         setProduct(mapped);
       } catch (err) {
-        console.error('Failed to fetch product details:', err);
-        if (isMounted) setIsError(true);
+        if (isMounted) setError(normalizeError(err));
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -53,7 +54,10 @@ export function useProductDetail(id: string) {
 
     fetchProduct();
     return () => { isMounted = false; };
-  }, [id]);
+  }, [id, retryCount]);
 
-  return { product, isLoading, isError };
+  const refetch = () => setRetryCount((prev) => prev + 1);
+
+  return { product, isLoading, error, refetch };
 }
+

@@ -37,10 +37,17 @@ export default function LoginScreen() {
       await login({ email: email.trim(), password });
       router.replace('/');
     } catch (e) {
-      const { status, message } = normalizeError(e);
-      setErrors({
-        form: status === 401 ? 'Correo o contraseña incorrectos. Inténtalo de nuevo.' : message,
-      });
+      const err = normalizeError(e);
+      const isTransient = err.status === null || err.status >= 500;
+      
+      const nextErrors: Errors = {};
+      if (!isTransient) {
+        nextErrors.form = err.status === 401 ? 'Correo o contraseña incorrectos. Inténtalo de nuevo.' : err.message;
+        if (err.fieldErrors) {
+          Object.assign(nextErrors, err.fieldErrors);
+        }
+      }
+      setErrors(nextErrors);
     } finally {
       setSubmitting(false);
     }

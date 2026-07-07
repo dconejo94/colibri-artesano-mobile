@@ -9,29 +9,33 @@ import {
   DetailActionBar,
 } from '@/src/components/Detail';
 import { type BadgeStatus } from '@/src/components/StatusBadge';
+import ErrorBanner from '@/src/components/ErrorBanner';
+import { type ApiError } from '@/src/api/errors';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 export interface ProductDetail {
-  id:          string;
-  name:        string;
-  artisan:     string;
+  id: string;
+  name: string;
+  artisan: string;
   artisanBio?: string;
-  price:       number;
-  currency:    string;
-  images:      string[];
-  status:      BadgeStatus;
-  category:    string;
+  price: number;
+  currency: string;
+  images: string[];
+  status: BadgeStatus;
+  category: string;
   description: string;
-  materials?:  string[];
+  materials?: string[];
   dimensions?: string;
-  leadTime?:   string;
+  leadTime?: string;
 }
 
 interface Props {
-  product:     ProductDetail;
+  product: ProductDetail | null;
+  error?: ApiError | null;
+  onRetry?: () => void;
   onAddToCart: (id: string) => void;
-  onBuyNow:    (id: string) => void;
-  onBack?:     () => void;
+  onBuyNow: (id: string) => void;
+  onBack?: () => void;
 }
 
 // ─── Pantalla ─────────────────────────────────────────────────────────────────
@@ -42,10 +46,29 @@ interface Props {
 //   headerTitleStyle: { fontFamily: 'DMSans_500Medium' }
 export default function ProductDetailScreen({
   product,
+  error,
+  onRetry,
   onAddToCart,
   onBuyNow,
 }: Props) {
   const { colors, spacing } = useTheme();
+
+  // Sin producto (falló la carga, sin red, etc.): no tiene sentido renderizar
+  // la galería/header/action bar vacíos, así que reemplazamos todo el contenido.
+  if (!product) {
+    return (
+      <SafeAreaView
+        edges={['top']}
+        style={[styles.screen, { backgroundColor: colors.bgPage }]}
+      >
+        <ErrorBanner
+          error={error ?? { status: 0, message: 'No se pudo cargar el producto.' }}
+          onRetry={onRetry}
+          variant="centered"
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     // SafeAreaView solo cubre top — la action bar maneja su propio bottom
@@ -107,7 +130,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   divider: {
-    height:        0.5,
+    height: 0.5,
     marginVertical: 16,
   },
 });

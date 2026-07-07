@@ -1,4 +1,4 @@
-import ErrorState from '@/components/ui/ErrorState';
+import ErrorBanner from '@/src/components/ErrorBanner';
 import HamburgerMenu from '@/components/ui/HamburgerMenu';
 import Header from '@/components/ui/Header';
 import LoadingState from '@/components/ui/LoadingState';
@@ -14,7 +14,7 @@ export default function ProductListScreen() {
   const { colors, text } = useTheme();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { products, isLoading, isError, fetchNextPage, hasNextPage } = useProducts({ limit: 10 });
+  const { products, isLoading, error, fetchNextPage, hasNextPage, refetch } = useProducts({ limit: 10 });
 
   const handleObtain = (id: string) => {
     router.push(`/producto/${id}` as any);
@@ -23,12 +23,18 @@ export default function ProductListScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPage }}>
       <Header onMenuPress={() => setMenuOpen(true)} />
-      
+
       <View style={{ flex: 1 }}>
+        {/* Banner compacto: solo cuando ya hay productos en pantalla (ej. falló la siguiente página) */}
+        {error && products.length > 0 && (
+          <ErrorBanner error={error} onRetry={refetch} />
+        )}
+
         {isLoading && products.length === 0 ? (
-          <LoadingState message="Cargando productos..."/>
-        ) : isError ? (
-          <ErrorState message="Error al cargar los productos."/>
+          <LoadingState message="Cargando productos..." />
+        ) : error && products.length === 0 ? (
+          // Estado a pantalla completa: ícono + mensaje + botón Reintentar centrados
+          <ErrorBanner error={error} onRetry={refetch} variant="centered" />
         ) : (
           <ProductList
             products={products}
@@ -42,7 +48,7 @@ export default function ProductListScreen() {
           />
         )}
       </View>
-      
+
       <HamburgerMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </SafeAreaView>
   );
