@@ -37,9 +37,9 @@ import CategoryPicker from "@/components/ui/CategoryPicker";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
-// Red/5xx en mutaciones ya los avisa el toast global del interceptor
-// (client.ts). Mostrar además un Alert/ErrorBanner con el mismo mensaje
-// sería un aviso duplicado, así que estos handlers lo filtran acá.
+// Network/5xx errors on mutations are already surfaced by the interceptor's
+// global toast (client.ts). Also showing an Alert/ErrorBanner with the same
+// message would be a duplicate notice, so these handlers filter it out here.
 const isTransientError = (err: ApiError) => err.status === null || err.status >= 500;
 
 export default function EditProductScreen() {
@@ -165,6 +165,9 @@ export default function EditProductScreen() {
         ...prev,
         variants: (prev.variants || []).filter((v) => v.id !== variant.id),
       } : prev);
+      // Clear the selection if it pointed at the deleted variant, otherwise a
+      // later image upload would target a variant id that no longer exists.
+      setSelectedVariantId((cur) => (cur === variant.id ? null : cur));
       setShowDeleteModal(false);
     } catch (err) {
       const apiErr = normalizeError(err);
@@ -294,9 +297,10 @@ export default function EditProductScreen() {
       setShowImageForm(false);
     } catch (err) {
       const apiErr = normalizeError(err);
-      if (!isTransientError(apiErr)) {
-        Alert.alert("Error", apiErr.message);
-      }
+      // The blob upload uses fetch (not axios), so its failures never reach the
+      // axios toast interceptor — always surface an alert here so the user is
+      // not left with a stopped spinner and no feedback.
+      Alert.alert("Error", apiErr.message || "No se pudo subir la imagen.");
     } finally {
       setImageSaving(false);
     }
@@ -315,8 +319,8 @@ export default function EditProductScreen() {
   }
 
   // ── Load error state ─────────────────────────────────────────────────────────
-  // Si falló la carga, el producto (y las categorías) no están disponibles, así
-  // que no tiene sentido mostrar el formulario de edición vacío/roto debajo.
+  // If the load failed, the product (and categories) are unavailable, so there's
+  // no point showing the empty/broken edit form below.
 
   if (loadError || !product) {
     return (
@@ -341,7 +345,7 @@ export default function EditProductScreen() {
 
       <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
 
-        {/* ── Información del producto ── */}
+        {/* ── Product information ── */}
         <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
           <Text style={[text.h3, { color: colors.primaryDeep }]}>Información del producto</Text>
 
@@ -397,7 +401,7 @@ export default function EditProductScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ── Imágenes ── */}
+        {/* ── Images ── */}
         <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
           <View style={local.sectionHeader}>
             <Text style={[text.h3, { color: colors.primaryDeep }]}>Imágenes</Text>
@@ -464,7 +468,7 @@ export default function EditProductScreen() {
           )}
         </View>
 
-        {/* ── Variantes y stock ── */}
+        {/* ── Variants and stock ── */}
         <View style={[styles.section, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg, ...shadows.sm }]}>
           <View style={local.sectionHeader}>
             <Text style={[text.h3, { color: colors.primaryDeep }]}>Variantes y stock</Text>
@@ -540,7 +544,7 @@ export default function EditProductScreen() {
             </View>
           ))}
 
-          {/* Formulario nueva variante — sin Alert intermedio */}
+          {/* New variant form — no intermediate Alert */}
           {showVariantForm && (
             <View style={[local.variantForm, { backgroundColor: colors.bgSection }]}>
               <Text style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]}>Nueva variante</Text>
@@ -571,7 +575,7 @@ export default function EditProductScreen() {
 
       </ScrollView>
 
-      {/* ── Modal de confirmación de eliminación ── */}
+      {/* ── Delete confirmation modal ── */}
       <Modal
         visible={showDeleteModal}
         transparent
