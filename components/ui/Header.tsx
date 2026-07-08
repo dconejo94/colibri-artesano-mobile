@@ -1,17 +1,22 @@
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '@/src/theme';
 
 type Props = {
   onMenuPress?: () => void;
+  onNotificationsPress?: () => void;
+  onCartPress?: () => void;
+  unreadCount?: number;
+  cartCount?: number;
 };
 
 // Logos en dos variantes — se cambia la fuente según isDark
 const LOGO_LIGHT = require('@/assets/images/light_mode_logo.png');
 const LOGO_DARK  = require('@/assets/images/dark_mode_logo.png');
 
-export default function Header({ onMenuPress }: Props) {
+export default function Header({ onMenuPress, onNotificationsPress, onCartPress, unreadCount, cartCount }: Props) {
   const { colors, spacing, isDark } = useTheme();
+  const hasRightIcons = !!onNotificationsPress || !!onCartPress;
 
   return (
     <View
@@ -46,8 +51,45 @@ export default function Header({ onMenuPress }: Props) {
         accessibilityLabel="Logo de El Colibrí Artesano"
       />
 
-      {/* Espaciador para mantener el logo visualmente centrado */}
-      <View style={styles.spacer} />
+      {/* Notificaciones + carrito (opcional, retrocompatible) o espaciador */}
+      {hasRightIcons ? (
+        <View style={styles.rightIcons}>
+          {onNotificationsPress && (
+            <TouchableOpacity
+              onPress={onNotificationsPress}
+              accessibilityLabel="Notificaciones"
+              accessibilityRole="button"
+              style={styles.iconButton}
+            >
+              <MaterialIcons name="notifications-none" size={24} color={colors.primary} />
+              {!!unreadCount && (
+                <View style={[styles.badge, { backgroundColor: colors.errorText }]}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+          {onCartPress && (
+            <TouchableOpacity
+              onPress={onCartPress}
+              accessibilityLabel="Carrito"
+              accessibilityRole="button"
+              style={styles.iconButton}
+            >
+              <MaterialIcons name="shopping-cart" size={22} color={colors.primary} />
+              {!!cartCount && (
+                <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.badgeText, { color: colors.textOnPrimary }]}>
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <View style={styles.spacer} />
+      )}
     </View>
   );
 }
@@ -66,5 +108,32 @@ const styles = StyleSheet.create({
   },
   spacer: {
     width: 28,
+  },
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  iconButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });

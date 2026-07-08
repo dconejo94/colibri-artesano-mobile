@@ -14,9 +14,9 @@ import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
 import { useTheme, fonts } from "@/src/theme";
 import { useAuthStore } from "@/src/auth/authStore";
-import { getStoreByOwner, createStore } from "@/api/stores";
+import { getStoreByOwner, createStore, getStoreProfile } from "@/api/stores";
 import { getStoreProducts } from "@/api/products";
-import { getStoreOrders } from "@/api/orders";
+import { getStoreOrders, getStoreSalesSummary } from "@/api/orders";
 import type { Store, Product, StoreOrder } from "@/types/store";
 import { normalizeError, type ApiError } from "@/src/api/errors";
 import ErrorBanner from "@/src/components/ErrorBanner";
@@ -33,6 +33,8 @@ export default function MyStoreScreen() {
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<StoreOrder[]>([]);
+  const [salesSummary, setSalesSummary] = useState<{total_sales: number, total_orders: number} | null>(null);
+  const [profile, setProfile] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
@@ -49,12 +51,16 @@ export default function MyStoreScreen() {
       const fetched = await getStoreByOwner(user.id);
       setStore(fetched);
       if (fetched) {
-        const [prodRes, orderRes] = await Promise.all([
+        const [prodRes, orderRes, salesRes, profileRes] = await Promise.all([
           getStoreProducts(fetched.id, 1, 5),
           getStoreOrders(fetched.id, 1, 5),
+          getStoreSalesSummary(fetched.id).catch(() => null),
+          getStoreProfile(fetched.id).catch(() => null),
         ]);
         setProducts(prodRes.items);
         setOrders(orderRes.items);
+        if (salesRes) setSalesSummary(salesRes);
+        if (profileRes) setProfile(profileRes);
       }
     } catch (err) {
       setError(normalizeError(err));
@@ -173,14 +179,26 @@ export default function MyStoreScreen() {
                 </View>
               </View>
 
-              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
-                <MaterialIcons name="paid" size={ms(26)} color={colors.primary} />
-                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
-                  Ventas Totales
-                </Text>
-                <Text style={[text.h3, { color: colors.textSecondary, marginTop: vs(2), fontStyle: "italic" }]}>
-                  Próximamente
-                </Text>
+              <View style={local.statsGridRow}>
+                <View style={[local.statSquare, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
+                  <MaterialIcons name="paid" size={ms(26)} color={colors.primary} />
+                  <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
+                    Ventas
+                  </Text>
+                  <Text style={[text.h3, { color: colors.primaryDeep, marginTop: vs(2) }]}>
+                    {salesSummary ? formatPrice(salesSummary.total_sales) : "₡0"}
+                  </Text>
+                </View>
+
+                <View style={[local.statSquare, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
+                  <MaterialIcons name="people" size={ms(26)} color={colors.primary} />
+                  <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
+                    Seguidores
+                  </Text>
+                  <Text style={[text.h3, { color: colors.primaryDeep, marginTop: vs(2) }]}>
+                    {profile ? profile.followers_count : 0}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -297,7 +315,9 @@ const local = StyleSheet.create({
 
   // Panel stats
   statsRow: { flexDirection: "column", gap: s(12) },
+  statsGridRow: { flexDirection: "row", gap: s(12) },
   statCard: { width: "100%", padding: s(16), borderWidth: 0.5, alignItems: "center", position: "relative" },
+  statSquare: { flex: 1, padding: s(16), borderWidth: 0.5, alignItems: "center", justifyContent: "center" },
   storeEditBtn: { position: "absolute", top: s(14), right: s(14), zIndex: 1 },
   storeCardContent: { width: "100%", alignItems: "center" },
   storeIconWrap: { width: ms(32), height: ms(32), justifyContent: "center", alignItems: "center" },

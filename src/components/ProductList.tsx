@@ -13,8 +13,11 @@ interface Props {
   products:        Product[];
   onSelectProduct: (id: string) => void;
   onObtainProduct: (id: string) => void;  // botón "Obtener" en cada card
+  onArtisanPress?: (storeId: string) => void;
+  onFavoriteToggle?: (id: string, isFavorite: boolean) => void;
   isLoading?:      boolean;
   title?:          string;
+  titleSuffix?:    string;  // ej. "12 piezas", mostrado a la derecha del título
   numColumns?:     number;
   onEndReached?:   () => void;
 }
@@ -23,8 +26,11 @@ export default function ProductList({
   products,
   onSelectProduct,
   onObtainProduct,
+  onArtisanPress,
+  onFavoriteToggle,
   isLoading  = false,
   title,
+  titleSuffix,
   numColumns = 1,   // default 1 para el diseño rico de card
   onEndReached,
 }: Props) {
@@ -36,11 +42,16 @@ export default function ProductList({
   const cardWidth =
     (screenWidth - HORIZONTAL_PADDING - GAP * (numColumns - 1)) / numColumns;
 
-  // Header con título + underline de acento
+  // Header con título + underline de acento, y conteo opcional a la derecha
   const ListHeader = title ? (
-    <View style={[styles.titleRow, { marginBottom: spacing[5] }]}>
-      <Text style={[text.h2, { color: colors.primaryDeep }]}>{title}</Text>
-      <View style={[styles.titleUnderline, { backgroundColor: colors.accent }]} />
+    <View style={[styles.titleHeaderRow, { marginBottom: spacing[5] }]}>
+      <View>
+        <Text style={[text.h2, { color: colors.primaryDeep }]}>{title}</Text>
+        <View style={[styles.titleUnderline, { backgroundColor: colors.accent }]} />
+      </View>
+      {!!titleSuffix && (
+        <Text style={[text.caption, { color: colors.textMuted }]}>{titleSuffix}</Text>
+      )}
     </View>
   ) : null;
 
@@ -79,6 +90,8 @@ export default function ProductList({
           product={item}
           onPress={onSelectProduct}
           onObtain={onObtainProduct}
+          onArtisanPress={onArtisanPress}
+          onFavoriteToggle={onFavoriteToggle}
           width={cardWidth}
         />
       )}
@@ -91,7 +104,10 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     flexGrow:   1,
   },
-  titleRow: {
+  titleHeaderRow: {
+    flexDirection:  'row',
+    alignItems:     'flex-end',
+    justifyContent: 'space-between',
     gap: 8,
   },
   titleUnderline: {
