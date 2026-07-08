@@ -9,29 +9,37 @@ import {
   DetailActionBar,
 } from '@/src/components/Detail';
 import { type BadgeStatus } from '@/src/components/StatusBadge';
+import type { ProductVariant } from '@/types/store';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 export interface ProductDetail {
-  id:          string;
-  name:        string;
-  artisan:     string;
+  id: string;
+  name: string;
+  artisan: string;
   artisanBio?: string;
-  price:       number;
-  currency:    string;
-  images:      string[];
-  status:      BadgeStatus;
-  category:    string;
+  price: number;
+  currency: string;
+  images: string[];
+  status: BadgeStatus;
+  category: string;
   description: string;
-  materials?:  string[];
+  materials?: string[];
   dimensions?: string;
-  leadTime?:   string;
+  leadTime?: string;
+  variants: ProductVariant[];
 }
 
 interface Props {
-  product:     ProductDetail;
-  onAddToCart: (id: string) => void;
-  onBuyNow:    (id: string) => void;
-  onBack?:     () => void;
+  product: ProductDetail;
+  onAddToCart: (
+    productId: string,
+    variantId?: string
+  ) => void;
+  onBuyNow: (
+    productId: string,
+    variantId?: string
+  ) => void;
+  onBack?: () => void;
 }
 
 // ─── Pantalla ─────────────────────────────────────────────────────────────────
@@ -46,7 +54,7 @@ export default function ProductDetailScreen({
   onBuyNow,
 }: Props) {
   const { colors, spacing } = useTheme();
-
+  const defaultVariantId = product.variants?.[0]?.id;
   return (
     // SafeAreaView solo cubre top — la action bar maneja su propio bottom
     <SafeAreaView
@@ -95,8 +103,18 @@ export default function ProductDetailScreen({
       <DetailActionBar
         productId={product.id}
         status={product.status}
-        onBuyNow={onBuyNow}
-        onAddToCart={onAddToCart}
+        onBuyNow={() =>
+          onBuyNow(
+            product.id,
+            defaultVariantId
+          )
+        }
+        onAddToCart={() =>
+          onAddToCart(
+            product.id,
+            defaultVariantId
+          )
+        }
       />
     </SafeAreaView>
   );

@@ -15,6 +15,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider, fonts } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
 
+import { StripeProvider } from "@stripe/stripe-react-native";
+
 SplashScreen.preventAutoHideAsync();
 
 // Static color tokens for Stack screen options (cannot use hooks here)
@@ -83,17 +85,22 @@ export default function RootLayout() {
   if (!fontsLoaded || status === 'loading') return null;
 
   return (
-    <ThemeProvider>
-      <Stack>
-        <Stack.Screen name="(auth)"             options={{ headerShown: false }} />
-        <Stack.Screen name="index"              options={{ headerShown: false }} />
-        <Stack.Screen name="productos"          options={{ headerShown: false }} />
-        <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
-        <Stack.Screen name="store"              options={{ headerShown: false }} />
-        <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />
-        <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
-        <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />
-      </Stack>
-    </ThemeProvider>
+    <StripeProvider
+      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+    >
+      <ThemeProvider>
+        <Stack>
+          <Stack.Screen name="(auth)"             options={{ headerShown: false }} />
+          <Stack.Screen name="index"              options={{ headerShown: false }} />
+          <Stack.Screen name="productos"          options={{ headerShown: false }} />
+          <Stack.Screen name="producto/[id]"      options={{ ...headerTheme }} />
+          <Stack.Screen name="store"              options={{ headerShown: false }} />
+          <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />
+          <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
+          <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />
+          <Stack.Screen name="checkout/index"     options={{ headerShown: false }}/>
+        </Stack>
+      </ThemeProvider>
+    </StripeProvider>
   );
 }
