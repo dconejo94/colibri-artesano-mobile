@@ -20,7 +20,6 @@ import { StripeProvider } from "@stripe/stripe-react-native";
 
 SplashScreen.preventAutoHideAsync();
 
-// Static color tokens for Stack screen options (cannot use hooks here)
 const C = {
   primary: '#4A7C59',
   primaryDeep: '#3A5E47',
@@ -73,7 +72,6 @@ export default function RootLayout() {
     bootstrap();
   }, [bootstrap]);
 
-  // Hide the splash once; later status changes must not re-trigger hideAsync.
   useEffect(() => {
     if (fontsLoaded && status !== 'loading' && !splashHidden.current) {
       splashHidden.current = true;
@@ -100,9 +98,9 @@ export default function RootLayout() {
           <Stack.Screen name="eventos" options={{ title: 'Eventos', ...headerTheme }} />
           <Stack.Screen name="carrito" options={{ title: 'Carrito', ...headerTheme }} />
           <Stack.Screen name="favoritos" options={{ title: 'Favoritos', ...headerTheme }} />
-          <Stack.Screen name="checkout/index"                      options={{ headerShown: false }} />
+          <Stack.Screen name="checkout/index" options={{ headerShown: false }} />
         </Stack>
-      <AppToast />
+        <AppToast />
       </ThemeProvider>
     </StripeProvider>
   );

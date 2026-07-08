@@ -26,36 +26,21 @@ export interface ProductDetail {
   category: string;
   description: string;
   materials?: string[];
-  materials?: string[];
   dimensions?: string;
   leadTime?: string;
+  variants?: ProductVariant[];
 }
 
 interface Props {
   product: ProductDetail | null;
   error?: ApiError | null;
   onRetry?: () => void;
-  onAddToCart: (id: string) => void;
-  onBuyNow: (id: string) => void;
-  onBack?: () => void;
-  product: ProductDetail;
-  onAddToCart: (
-    productId: string,
-    variantId?: string
-  ) => void;
-  onBuyNow: (
-    productId: string,
-    variantId?: string
-  ) => void;
+  onAddToCart: (productId: string, variantId?: string) => void;
+  onBuyNow: (productId: string, variantId?: string) => void;
   onBack?: () => void;
 }
 
 // ─── Pantalla ─────────────────────────────────────────────────────────────────
-// No incluye header de navegación propio — React Navigation lo maneja.
-// Configurá el header en tu Stack.Screen options:
-//   headerStyle:      { backgroundColor: colors.bgNavbar }
-//   headerTintColor:  colors.primary
-//   headerTitleStyle: { fontFamily: 'DMSans_500Medium' }
 export default function ProductDetailScreen({
   product,
   error,
@@ -65,8 +50,6 @@ export default function ProductDetailScreen({
 }: Props) {
   const { colors, spacing } = useTheme();
 
-  // Sin producto (falló la carga, sin red, etc.): no tiene sentido renderizar
-  // la galería/header/action bar vacíos, así que reemplazamos todo el contenido.
   if (!product) {
     return (
       <SafeAreaView
@@ -81,22 +64,14 @@ export default function ProductDetailScreen({
       </SafeAreaView>
     );
   }
+
   const defaultVariantId = product.variants?.[0]?.id;
+
   return (
-    // SafeAreaView solo cubre top — la action bar maneja su propio bottom
-    <SafeAreaView
-      edges={['top']}
-      style={[styles.screen, { backgroundColor: colors.bgPage }]}
-    >
-      {/* ScrollView + action bar son hijos directos para que la barra quede sticky */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: spacing[10] }}
-      >
-        {/* Galería de imágenes */}
+    <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.bgPage }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing[10] }}>
         <DetailGallery images={product.images} />
 
-        {/* Nombre, artesano, precio, badge */}
         <DetailHeader
           name={product.name}
           artisan={product.artisan}
@@ -106,10 +81,8 @@ export default function ProductDetailScreen({
           category={product.category}
         />
 
-        {/* Separador */}
         <View style={[styles.divider, { backgroundColor: colors.border, marginHorizontal: spacing[4] }]} />
 
-        {/* Descripción y ficha técnica */}
         <DetailInfo
           description={product.description}
           materials={product.materials}
@@ -117,42 +90,22 @@ export default function ProductDetailScreen({
           leadTime={product.leadTime}
         />
 
-        {/* Bio del artesano — solo si está presente */}
         {product.artisanBio && (
-          <DetailArtisanBio
-            artisan={product.artisan}
-            artisanBio={product.artisanBio}
-          />
+          <DetailArtisanBio artisan={product.artisan} artisanBio={product.artisanBio} />
         )}
       </ScrollView>
 
-      {/* Barra de acciones — sticky en el fondo */}
       <DetailActionBar
         productId={product.id}
         status={product.status}
-        onBuyNow={() =>
-          onBuyNow(
-            product.id,
-            defaultVariantId
-          )
-        }
-        onAddToCart={() =>
-          onAddToCart(
-            product.id,
-            defaultVariantId
-          )
-        }
+        onBuyNow={() => onBuyNow(product.id, defaultVariantId)}
+        onAddToCart={() => onAddToCart(product.id, defaultVariantId)}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  divider: {
-    height: 0.5,
-    marginVertical: 16,
-  },
+  screen: { flex: 1 },
+  divider: { height: 0.5, marginVertical: 16 },
 });
