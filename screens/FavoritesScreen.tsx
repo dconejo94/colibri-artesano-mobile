@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFavoriteProducts } from '@/api/users';
 import type { Product } from '@/types/store';
 import { normalizeError, type ApiError } from '@/src/api/errors';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, Stack } from 'expo-router';
 import { resolveProductImage } from '@/utils/resolveProductImage';
 
 export default function FavoritesScreen() {
@@ -72,6 +72,7 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPage }}>
+      <Stack.Screen options={{ headerShown: false }} />
       <Header onMenuPress={() => setMenuOpen(true)} />
 
       <View style={{ flex: 1 }}>

@@ -16,7 +16,7 @@ import { useTheme, fonts } from '@/src/theme';
 import { getFollowedStores } from '@/api/users';
 import type { Store } from '@/types/store';
 import { normalizeError, type ApiError } from '@/src/api/errors';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, Stack } from 'expo-router';
 import { s, vs, ms } from '@/utils/scale';
 
 export default function FollowedStoresScreen() {
@@ -76,6 +76,7 @@ export default function FollowedStoresScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPage }}>
+      <Stack.Screen options={{ headerShown: false }} />
       <Header onMenuPress={() => setMenuOpen(true)} />
 
       <View style={{ flex: 1 }}>
