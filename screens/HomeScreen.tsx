@@ -64,7 +64,7 @@ export default function HomeScreen() {
       )}
 
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[8] }} showsVerticalScrollIndicator={false}>
-        {/* ── Productos ── */}
+        {/* ── Products ── */}
         <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[5] }}>
           <SectionHeader title="Productos" onSeeAll={() => router.push('/productos' as any)} />
 
@@ -85,7 +85,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ── Eventos próximos ── */}
+        {/* ── Upcoming events ── */}
         <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[6] }}>
           <SectionHeader title="Eventos próximos" onSeeAll={() => router.push('/eventos' as any)} />
 

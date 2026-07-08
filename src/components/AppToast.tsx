@@ -41,10 +41,10 @@ function ToastBanner({
     );
 }
 
-// Reemplaza el <Toast /> por defecto de react-native-toast-message con una
-// versión que toma sus colores de src/theme/colors.ts, así hereda modo
-// claro/oscuro y coincide visualmente con ErrorBanner (mismo par bg/text por
-// tipo de estado).
+// Replaces the default <Toast /> from react-native-toast-message with a
+// version that pulls its colors from src/theme/colors.ts, so it inherits
+// light/dark mode and matches ErrorBanner visually (same bg/text pair per
+// status type).
 export default function AppToast() {
     const { colors, fonts, radii } = useTheme();
 

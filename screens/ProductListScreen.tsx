@@ -66,7 +66,7 @@ export default function ProductListScreen() {
       <Header onMenuPress={() => setMenuOpen(true)} />
 
       <View style={{ flex: 1 }}>
-        {/* Filtros */}
+        {/* Filters */}
         <View style={[styles.filtersContainer, { backgroundColor: colors.bgSection, borderBottomColor: colors.border }]}>
           <View style={styles.searchRow}>
             <View style={[styles.searchBar, { backgroundColor: colors.bgInput, borderColor: colors.border, borderRadius: radii.md }]}>
@@ -121,7 +121,7 @@ export default function ProductListScreen() {
             </View>
           )}
         </View>
-        {/* Banner compacto: solo cuando ya hay productos en pantalla (ej. falló la siguiente página) */}
+        {/* Compact banner: only when products are already on screen (e.g. the next page failed) */}
         {error && products.length > 0 && (
           <ErrorBanner error={error} onRetry={refetch} />
         )}
@@ -129,7 +129,7 @@ export default function ProductListScreen() {
         {isLoading && products.length === 0 ? (
           <LoadingState message="Cargando productos..." />
         ) : error && products.length === 0 ? (
-          // Estado a pantalla completa: ícono + mensaje + botón Reintentar centrados
+          // Full-screen state: centered icon + message + retry button
           <ErrorBanner error={error} onRetry={refetch} variant="centered" />
         ) : (
           <ProductList

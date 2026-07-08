@@ -5,38 +5,38 @@ import { fonts, useTheme } from '@/src/theme';
 import { favoriteProduct, unfavoriteProduct } from '@/api/products';
 import StatusBadge, { type BadgeStatus } from './StatusBadge';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 export interface Product {
   id:               string;
   name:             string;
   artisan:          string;
-  storeId?:         string;   // habilita el link "ver tienda" en el nombre del artesano
+  storeId?:         string;   // enables the "view store" link on the artisan's name
   price:            number;
   currency:         string;
   imageUri:         string;
   status:           BadgeStatus;
   category:         string;
-  shortDescription?: string;  // subtítulo italic bajo el nombre
+  shortDescription?: string;  // italic subtitle under the name
   isFavorite?:      boolean;
 }
 
 interface Props {
   product:  Product;
   onPress:  (id: string) => void;
-  onObtain: (id: string) => void;  // botón "Obtener"
+  onObtain: (id: string) => void;  // "Obtener" button
   onArtisanPress?: (storeId: string) => void;
-  onFavoriteToggle?: (id: string, isFavorite: boolean) => void;  // avisa al padre tras confirmar en el backend (ej. para sacarlo de una lista de favoritos)
+  onFavoriteToggle?: (id: string, isFavorite: boolean) => void;  // notifies the parent after backend confirmation (e.g. to remove it from a favorites list)
   width?:   number;
 }
 
-// ─── Utilidad: iniciales del artesano ────────────────────────────────────────
+// ─── Utility: artisan initials ────────────────────────────────────────
 function getInitials(name: string): string {
   const words = name.trim().split(/\s+/);
   if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
 }
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// ─── Component ──────────────────────────────────────────────────────────────
 export default function ProductCard({ product, onPress, onObtain, onArtisanPress, onFavoriteToggle, width }: Props) {
   const { colors, spacing, radii, shadows, text } = useTheme();
   const [isFav, setIsFav] = useState(!!product.isFavorite);
@@ -72,7 +72,7 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
       accessibilityLabel={`${product.name} por ${product.artisan}, ${priceFormatted}`}
       accessibilityRole="button"
     >
-      {/* ── Imagen + overlays ───────────────────────────────────────────────── */}
+      {/* ── Image + overlays ───────────────────────────────────────────────── */}
       <View style={{ borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg, overflow: 'hidden' }}>
         <Image
           source={{ uri: product.imageUri }}
@@ -81,12 +81,12 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
           accessibilityLabel={`Foto de ${product.name}`}
         />
 
-        {/* Badge de estado — top left */}
+        {/* Status badge — top left */}
         <View style={styles.badgeOverlay}>
           <StatusBadge status={product.status} />
         </View>
 
-        {/* Corazón — top right */}
+        {/* Heart — top right */}
         <Pressable
           style={[styles.heartBtn, { backgroundColor: colors.bgCard }]}
           onPress={async () => {
@@ -113,10 +113,10 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
         </Pressable>
       </View>
 
-      {/* ── Sección de información ─────────────────────────────────────────── */}
+      {/* ── Information section ─────────────────────────────────────────── */}
       <View style={[styles.info, { padding: spacing[4] }]}>
 
-        {/* Nombre del producto */}
+        {/* Product name */}
         <Text
           style={[text.productName, { color: colors.textPrimary }]}
           numberOfLines={2}
@@ -124,7 +124,7 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
           {product.name}
         </Text>
 
-        {/* Descripción corta en itálica verde — solo si está presente */}
+        {/* Short description in green italics — only if present */}
         {product.shortDescription && (
           <Text
             style={[
@@ -143,9 +143,9 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
           </Text>
         )}
 
-        {/* Fila del artesano: avatar + nombre + categoría */}
+        {/* Artisan row: avatar + name + category */}
         <View style={[styles.artisanRow, { marginTop: spacing[3] }]}>
-          {/* Avatar circular con iniciales */}
+          {/* Circular avatar with initials */}
           <View
             style={[
               styles.avatar,
@@ -183,10 +183,10 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
           </Pressable>
         </View>
 
-        {/* Separador */}
+        {/* Divider */}
         <View style={[styles.divider, { backgroundColor: colors.border, marginVertical: spacing[3] }]} />
 
-        {/* Precio + botón Obtener */}
+        {/* Price + Obtener button */}
         <View style={styles.bottomRow}>
           <Text style={[text.priceDetail, { color: colors.primary, fontSize: 18 }]}>
             {priceFormatted}
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width:       '100%',
-    aspectRatio: 4 / 3,  // ligeramente más ancho que alto — como en la imagen de referencia
+    aspectRatio: 4 / 3,  // slightly wider than tall — like the reference image
   },
   badgeOverlay: {
     position: 'absolute',
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     borderRadius:   17,
     alignItems:     'center',
     justifyContent: 'center',
-    // sombra suave para que el círculo se lea sobre cualquier imagen
+    // soft shadow so the circle stays legible over any image
     shadowColor:    '#2C3830',
     shadowOffset:   { width: 0, height: 1 },
     shadowOpacity:  0.1,

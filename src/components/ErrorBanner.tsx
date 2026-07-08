@@ -9,12 +9,12 @@ export type ErrorBannerProps = {
   onRetry?: () => void;
   onDismiss?: () => void;
   /**
-   * 'compact' (default): banner delgado con botón de cerrar, pensado para
-   *   mostrarse arriba de contenido que ya existe (ej. falló paginar pero
-   *   ya hay productos en pantalla).
-   * 'centered': estado de error a pantalla completa (ícono grande + mensaje
-   *   + botón Reintentar centrados), pensado para reemplazar el contenido
-   *   cuando no hay nada que mostrar.
+   * 'compact' (default): thin banner with a close button, meant to be shown
+   *   above existing content (e.g. pagination failed but there are already
+   *   products on screen).
+   * 'centered': full-screen error state (large icon + message + centered
+   *   Retry button), meant to replace the content when there is nothing to
+   *   show.
    */
   variant?: 'compact' | 'centered';
 };

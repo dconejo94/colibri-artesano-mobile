@@ -42,8 +42,8 @@ export default function EditStoreScreen() {
       setName(data.name);
       setDescription(data.description);
     } catch (err) {
-      // GET: sin toast del interceptor (solo dispara para mutaciones), así
-      // que acá siempre queremos mostrar el ErrorBanner, transitorio o no.
+      // GET: no interceptor toast (it only fires for mutations), so here we
+      // always want to show the ErrorBanner, transient or not.
       setError(normalizeError(err));
     } finally {
       setLoading(false);
@@ -70,9 +70,9 @@ export default function EditStoreScreen() {
       const apiErr = normalizeError(err);
       const isTransient = apiErr.status === null || apiErr.status >= 500;
 
-      // PATCH: red/5xx ya los avisa el toast global del interceptor
-      // (client.ts, solo dispara para mutaciones). Mostrar también el
-      // banner acá sería un aviso duplicado del mismo error.
+      // PATCH: network/5xx errors are already surfaced by the interceptor's
+      // global toast (client.ts, only fires for mutations). Also showing the
+      // banner here would be a duplicate notice for the same error.
       if (!isTransient) {
         setError(apiErr);
       }
@@ -93,8 +93,8 @@ export default function EditStoreScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error && !store ? (
-        // Falló la carga inicial: sin `store` no hay nada que editar, así que
-        // no tiene sentido mostrar el formulario vacío/roto debajo del banner.
+        // Initial load failed: without `store` there's nothing to edit, so
+        // there's no point showing the empty/broken form below the banner.
         <ErrorBanner error={error} onRetry={fetchStore} variant="centered" />
       ) : (
         <ScrollView contentContainerStyle={local.content} keyboardShouldPersistTaps="handled">
@@ -102,8 +102,8 @@ export default function EditStoreScreen() {
             <View style={local.iconRow}>
               <MaterialIcons name="storefront" size={ms(40)} color={colors.primary} />
             </View>
-            {/* A esta altura `store` ya está garantizado: esto es un error de
-                guardado, no de carga, así que va compacto y sin retry. */}
+            {/* By this point `store` is guaranteed: this is a save error, not a
+                load error, so it's compact and without retry. */}
             <ErrorBanner error={error} onDismiss={() => setError(null)} />
             <Input label="Nombre de la tienda" value={name} onChangeText={(t) => { setName(t); setError(null); setSaveMsg(null); }} placeholder="Nombre" />
             <Input label="Descripción" value={description} onChangeText={(t) => { setDescription(t); setError(null); setSaveMsg(null); }} placeholder="Describe tu tienda..." multiline />

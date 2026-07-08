@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getProducts } from '@/api/products';
 import { Product as UIProduct } from '@/src/components/ProductCard';
 import { Product as BackendProduct } from '@/types/store';
@@ -18,25 +18,33 @@ export function useProducts(options: {
   const [error, setError] = useState<ApiError | null>(null);
   const [page, setPage] = useState(options.page || 1);
   const [hasNextPage, setHasNextPage] = useState(true);
+  // Monotonic id of the latest request; responses from older requests (stale
+  // filters or an out-of-order page) are ignored so they can't corrupt state.
+  const requestId = useRef(0);
 
   // Reset page and products when filters change
   useEffect(() => {
+    requestId.current += 1;
     setPage(1);
     setProducts([]);
   }, [options.search, options.categoryId, options.minPrice, options.maxPrice]);
 
   const fetchProducts = useCallback(async (currentPage: number) => {
+    const myRequest = ++requestId.current;
     try {
       setIsLoading(true);
       setError(null);
       const response = await getProducts(
-        currentPage, 
+        currentPage,
         options.limit || 20,
         options.search,
         options.categoryId,
         options.minPrice,
         options.maxPrice
       );
+
+      // A newer request started while this one was in flight — drop this result.
+      if (myRequest !== requestId.current) return;
 
       const uiProducts: UIProduct[] = response.items.map((p: BackendProduct) => {
         // Cover image — resolved from variants[].images[]
@@ -72,9 +80,10 @@ export function useProducts(options: {
       setHasNextPage(response.page * response.limit < response.total);
       setError(null);
     } catch (err) {
-      setError(normalizeError(err));
+      if (myRequest === requestId.current) setError(normalizeError(err));
     } finally {
-      setIsLoading(false);
+      // Only the latest request owns the loading flag.
+      if (myRequest === requestId.current) setIsLoading(false);
     }
   }, [options.limit, options.search, options.categoryId, options.minPrice, options.maxPrice]);
 

@@ -52,11 +52,12 @@ export default function StoreOrdersScreen() {
     setError(null);
     try {
       if (p === 1) {
-        // Fetch summary only on the first page
-        const summary = await getStoreSalesSummary(storeId);
+        // Fetch summary only on the first page. Its failure must not hide the
+        // orders list, so swallow it independently of the orders request.
+        const summary = await getStoreSalesSummary(storeId).catch(() => null);
         setSalesSummary(summary);
       }
-      
+
       const res = await getStoreOrders(storeId, p, 15);
       setOrders(append ? (prev) => [...prev, ...res.items] : res.items);
       setTotal(res.total);
@@ -210,8 +211,8 @@ export default function StoreOrdersScreen() {
     );
   };
 
-  // Error en la carga inicial: no hay pedidos que mostrar, así que no tiene
-  // sentido dejar el estado vacío debajo (se confundiría con "no hay pedidos").
+  // Initial load error: there are no orders to show, so there's no point
+  // leaving the empty state below (it would be confused with "no orders").
   const hasInitialError = !!error && orders.length === 0;
 
   const ListHeader = () => (
