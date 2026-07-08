@@ -70,6 +70,15 @@ export default function FavoritesScreen() {
     router.push(`/producto/${id}` as any);
   };
 
+  const handleFavoriteToggle = (id: string, isFavorite: boolean) => {
+    // This screen only ever lists favorites, so an unfavorite here means the
+    // row no longer belongs — drop it instead of leaving a stale heart icon
+    // until the next fetch.
+    if (isFavorite) return;
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setTotal((prev) => Math.max(0, prev - 1));
+  };
+
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPage }}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -90,6 +99,7 @@ export default function FavoritesScreen() {
             onSelectProduct={handleObtain}
             onObtainProduct={handleObtain}
             onArtisanPress={(storeId) => router.push(`/tienda/${storeId}` as any)}
+            onFavoriteToggle={handleFavoriteToggle}
             title="Mis Favoritos"
             numColumns={1}
             onEndReached={fetchNextPage}

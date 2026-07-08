@@ -20,14 +20,16 @@ export default function ProductoRoute() {
       const cart = await addToCart({ product_id: productId, variant_id: variantId, quantity: 1 });
       useCartStore.getState().setFromCart(cart);
       Toast.show({ type: 'success', text1: 'Añadido al carrito' });
+      return true;
     } catch (err) {
       Toast.show({ type: 'error', text1: 'No se pudo añadir al carrito', text2: normalizeError(err).message });
+      return false;
     }
   };
 
   const handleBuyNow = async (productId: string, variantId: string | null) => {
-    await handleAddToCart(productId, variantId);
-    router.push('/carrito' as any);
+    const added = await handleAddToCart(productId, variantId);
+    if (added) router.push('/carrito' as any);
   };
 
   return (

@@ -14,6 +14,7 @@ interface Props {
   onSelectProduct: (id: string) => void;
   onObtainProduct: (id: string) => void;  // botón "Obtener" en cada card
   onArtisanPress?: (storeId: string) => void;
+  onFavoriteToggle?: (id: string, isFavorite: boolean) => void;
   isLoading?:      boolean;
   title?:          string;
   titleSuffix?:    string;  // ej. "12 piezas", mostrado a la derecha del título
@@ -26,6 +27,7 @@ export default function ProductList({
   onSelectProduct,
   onObtainProduct,
   onArtisanPress,
+  onFavoriteToggle,
   isLoading  = false,
   title,
   titleSuffix,
@@ -89,6 +91,7 @@ export default function ProductList({
           onPress={onSelectProduct}
           onObtain={onObtainProduct}
           onArtisanPress={onArtisanPress}
+          onFavoriteToggle={onFavoriteToggle}
           width={cardWidth}
         />
       )}

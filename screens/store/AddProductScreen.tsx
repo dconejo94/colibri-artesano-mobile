@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import Toast from "react-native-toast-message";
 import { s, vs } from "@/utils/scale";
 import { useTheme } from "@/src/theme";
 import { createProduct, addProductVariant } from "@/api/products";
@@ -97,12 +98,25 @@ export default function AddProductScreen() {
       });
 
       // Auto-create a default variant so the product is buyable immediately.
-      await addProductVariant(createdProduct.id, {
-        name: "Variante",
-        value: "Única",
-        price_modifier: 0,
-        stock_quantity: 1,
-      });
+      // This is a separate try/catch: the product itself was already created
+      // successfully by this point, so a failure here must NOT surface as a
+      // generic "creation failed" error (that would invite the vendor to
+      // resubmit the form and create a duplicate product). Instead we still
+      // navigate to EditProductScreen, where a variant can be added manually.
+      try {
+        await addProductVariant(createdProduct.id, {
+          name: "Variante",
+          value: "Única",
+          price_modifier: 0,
+          stock_quantity: 1,
+        });
+      } catch {
+        Toast.show({
+          type: "error",
+          text1: "Producto creado, pero falló la variante inicial",
+          text2: "Agrega una variante manualmente desde esta pantalla.",
+        });
+      }
 
       // Navigate to EditProductScreen so vendor can add images and adjust variants
       router.replace({

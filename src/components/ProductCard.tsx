@@ -1,7 +1,8 @@
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { fonts, useTheme } from '@/src/theme';
+import { favoriteProduct, unfavoriteProduct } from '@/api/products';
 import StatusBadge, { type BadgeStatus } from './StatusBadge';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -24,6 +25,7 @@ interface Props {
   onPress:  (id: string) => void;
   onObtain: (id: string) => void;  // botón "Obtener"
   onArtisanPress?: (storeId: string) => void;
+  onFavoriteToggle?: (id: string, isFavorite: boolean) => void;  // avisa al padre tras confirmar en el backend (ej. para sacarlo de una lista de favoritos)
   width?:   number;
 }
 
@@ -35,9 +37,16 @@ function getInitials(name: string): string {
 }
 
 // ─── Componente ──────────────────────────────────────────────────────────────
-export default function ProductCard({ product, onPress, onObtain, onArtisanPress, width }: Props) {
+export default function ProductCard({ product, onPress, onObtain, onArtisanPress, onFavoriteToggle, width }: Props) {
   const { colors, spacing, radii, shadows, text } = useTheme();
   const [isFav, setIsFav] = useState(!!product.isFavorite);
+
+  // Re-sync when the underlying product identity/flag changes (e.g. the list
+  // refetched) — a bare useState initializer would otherwise leave `isFav`
+  // stuck at whatever it was on first mount.
+  useEffect(() => {
+    setIsFav(!!product.isFavorite);
+  }, [product.id, product.isFavorite]);
 
   const safeCurrency = product.currency || 'CRC';
   const priceFormatted = new Intl.NumberFormat(
@@ -85,13 +94,14 @@ export default function ProductCard({ product, onPress, onObtain, onArtisanPress
             setIsFav(nextVal);
             try {
               if (nextVal) {
-                const { favoriteProduct } = await import('@/api/products');
                 await favoriteProduct(product.id);
               } else {
-                const { unfavoriteProduct } = await import('@/api/products');
                 await unfavoriteProduct(product.id);
               }
-            } catch (e) {
+              // Only tell the parent once the backend confirms — e.g. so a
+              // favorites list removes the row after an unfavorite, not before.
+              onFavoriteToggle?.(product.id, nextVal);
+            } catch {
               setIsFav(!nextVal); // revert on error
             }
           }}
