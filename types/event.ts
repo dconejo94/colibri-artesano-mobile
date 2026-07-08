@@ -27,6 +27,7 @@ export type EventParticipant = {
   id: string;
   event_id: string;
   store_id: string;
+  store_name: string;
   status: ParticipationStatus;
   requested_by: string;
   reviewed_by: string | null;

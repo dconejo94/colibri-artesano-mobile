@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, type ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -9,16 +9,17 @@ import HamburgerMenu from '@/components/ui/HamburgerMenu';
 import LoadingState from '@/components/ui/LoadingState';
 import ErrorBanner from '@/src/components/ErrorBanner';
 import SearchBar from '@/src/components/SearchBar';
-import ProductCard from '@/src/components/ProductCard';
+import ProductCard, { type Product as ProductCardData } from '@/src/components/ProductCard';
 
 import { useSearch } from '@/src/hooks/useSearch';
-import { SearchScope } from '@/api/search';
+import type { SearchScope } from '@/types/search';
+import type { Product, Store, Category } from '@/types/store';
 import { useTheme, fonts } from '@/src/theme';
 import { s, vs, ms } from '@/utils/scale';
 import { resolveProductImage } from '@/utils/resolveProductImage';
 
 // Inline StoreCard for search results
-const StoreCard = ({ store, onPress }: { store: any, onPress: () => void }) => {
+const StoreCard = ({ store, onPress }: { store: Store; onPress: () => void }) => {
   const { colors, radii, shadows, text } = useTheme();
   return (
     <TouchableOpacity
@@ -43,7 +44,7 @@ const StoreCard = ({ store, onPress }: { store: any, onPress: () => void }) => {
 };
 
 // Inline CategoryChip
-const CategoryChip = ({ category, onPress }: { category: any, onPress: () => void }) => {
+const CategoryChip = ({ category, onPress }: { category: Category; onPress: () => void }) => {
   const { colors, radii, text } = useTheme();
   return (
     <TouchableOpacity
@@ -57,6 +58,24 @@ const CategoryChip = ({ category, onPress }: { category: any, onPress: () => voi
     </TouchableOpacity>
   );
 };
+
+function mapProduct(p: Product): ProductCardData {
+  const isAvailable =
+    p.is_active && (!(p.variants?.length ?? 0) || (p.variants ?? []).some((v) => v.stock_quantity > 0));
+  return {
+    id: p.id,
+    name: p.name,
+    artisan: p.store?.name || 'Tienda',
+    storeId: p.store?.id,
+    price: Number(p.base_price) || 0,
+    currency: 'CRC',
+    imageUri: resolveProductImage(p),
+    status: isAvailable ? 'available' : 'sold_out',
+    category: p.category?.name ?? '',
+    shortDescription: p.description?.substring(0, 50),
+    isFavorite: false,
+  };
+}
 
 export default function SearchResultsScreen() {
   const { colors, text, spacing } = useTheme();
@@ -85,28 +104,14 @@ export default function SearchResultsScreen() {
     }
   }, [initialQ, initialScope, performSearch, setQuery]);
 
-  // For infinite scroll
+  // For infinite scroll — categories aren't paginated, and 'all' only ever
+  // shows the first page of each section (see useSearch's performSearch).
   const fetchNextPage = () => {
-    if (scope === 'all' || scope === 'categories') return;
-    const paginated = results as any;
-    if (paginated && paginated.items && paginated.items.length < paginated.total) {
-      performSearch(query, scope, paginated.page + 1);
+    if (!results || results.scope === 'all' || results.scope === 'categories') return;
+    if (results.items.length < results.total) {
+      performSearch(query, results.scope, results.page + 1);
     }
   };
-
-  const mapProduct = (p: any) => ({
-    id: p.id,
-    name: p.name,
-    artisan: p.store?.name || 'Tienda',
-    storeId: p.store?.id,
-    price: Number(p.base_price) || 0,
-    currency: 'CRC',
-    imageUri: resolveProductImage(p),
-    status: (p.is_active && (!(p.variants?.length ?? 0) || (p.variants ?? []).some((v: any) => v.stock_quantity > 0))) ? 'available' : 'sold_out',
-    category: p.category?.name,
-    shortDescription: p.description?.substring(0, 50),
-    isFavorite: false,
-  });
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -121,12 +126,11 @@ export default function SearchResultsScreen() {
   );
 
   const renderAllScope = () => {
-    const allRes = results as any;
-    if (!allRes) return null;
+    if (!results || results.scope !== 'all') return null;
 
-    const hasProducts = allRes.products && allRes.products.length > 0;
-    const hasStores = allRes.stores && allRes.stores.length > 0;
-    const hasCategories = allRes.categories && allRes.categories.length > 0;
+    const hasProducts = results.products.length > 0;
+    const hasStores = results.stores.length > 0;
+    const hasCategories = results.categories.length > 0;
 
     if (!hasProducts && !hasStores && !hasCategories) {
       return renderEmptyState();
@@ -138,7 +142,7 @@ export default function SearchResultsScreen() {
           <View style={styles.section}>
             <Text style={[text.h3, { color: colors.primaryDeep, marginBottom: vs(12) }]}>Categorías</Text>
             <View style={styles.chipRow}>
-              {allRes.categories.map((c: any) => (
+              {results.categories.map((c) => (
                 <CategoryChip key={c.id} category={c} onPress={() => { setScope('products'); setQuery(c.name); performSearch(c.name, 'products', 1); }} />
               ))}
             </View>
@@ -148,9 +152,9 @@ export default function SearchResultsScreen() {
         {hasStores && (
           <View style={styles.section}>
             <Text style={[text.h3, { color: colors.primaryDeep, marginBottom: vs(12) }]}>Emprendedores</Text>
-            {allRes.stores.map((s: any) => (
-              <View key={s.id} style={{ marginBottom: vs(8) }}>
-                <StoreCard store={s} onPress={() => router.push(`/tienda/${s.id}` as any)} />
+            {results.stores.map((store) => (
+              <View key={store.id} style={{ marginBottom: vs(8) }}>
+                <StoreCard store={store} onPress={() => router.push(`/tienda/${store.id}` as any)} />
               </View>
             ))}
           </View>
@@ -160,10 +164,10 @@ export default function SearchResultsScreen() {
           <View style={styles.section}>
             <Text style={[text.h3, { color: colors.primaryDeep, marginBottom: vs(12) }]}>Productos</Text>
             <View style={styles.productGrid}>
-              {allRes.products.map((p: any) => (
+              {results.products.map((p) => (
                 <View key={p.id} style={{ width: '48%', marginBottom: vs(16) }}>
                   <ProductCard
-                    {...(mapProduct(p) as any)}
+                    product={mapProduct(p)}
                     onPress={() => router.push(`/producto/${p.id}` as any)}
                     onArtisanPress={() => router.push(`/tienda/${p.store?.id}` as any)}
                     onObtain={() => router.push(`/producto/${p.id}` as any)}
@@ -177,12 +181,16 @@ export default function SearchResultsScreen() {
     );
   };
 
-  const renderFlatList = (data: any[], renderItem: any, numColumns = 1) => {
+  function renderFlatList<T extends { id: string }>(
+    data: T[],
+    renderItem: ListRenderItem<T>,
+    numColumns = 1
+  ) {
     if (data.length === 0) return renderEmptyState();
     return (
       <FlatList
         data={data}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         numColumns={numColumns}
         contentContainerStyle={[styles.listContent, numColumns > 1 && { paddingHorizontal: spacing[4] }]}
@@ -191,7 +199,7 @@ export default function SearchResultsScreen() {
         onEndReachedThreshold={0.3}
       />
     );
-  };
+  }
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPage }}>
@@ -215,15 +223,15 @@ export default function SearchResultsScreen() {
               Descubre Colibrí Artesano
             </Text>
           </View>
-        ) : scope === 'all' ? (
+        ) : results.scope === 'all' ? (
           renderAllScope()
-        ) : scope === 'products' ? (
+        ) : results.scope === 'products' ? (
           renderFlatList(
-            (results as any).items || [],
-            ({ item }: { item: any }) => (
+            results.items,
+            ({ item }) => (
               <View style={{ width: '48%', marginBottom: vs(16) }}>
                 <ProductCard
-                  {...(mapProduct(item) as any)}
+                  product={mapProduct(item)}
                   onPress={() => router.push(`/producto/${item.id}` as any)}
                   onArtisanPress={() => router.push(`/tienda/${item.store?.id}` as any)}
                   onObtain={() => router.push(`/producto/${item.id}` as any)}
@@ -232,10 +240,10 @@ export default function SearchResultsScreen() {
             ),
             2
           )
-        ) : scope === 'stores' ? (
+        ) : results.scope === 'stores' ? (
           renderFlatList(
-            (results as any).items || [],
-            ({ item }: { item: any }) => (
+            results.items,
+            ({ item }) => (
               <View style={{ marginBottom: vs(12) }}>
                  <StoreCard store={item} onPress={() => router.push(`/tienda/${item.id}` as any)} />
               </View>
@@ -243,8 +251,8 @@ export default function SearchResultsScreen() {
           )
         ) : (
            renderFlatList(
-            results as any, // categories is not paginated
-            ({ item }: { item: any }) => (
+            results.items,
+            ({ item }) => (
               <View style={{ marginBottom: vs(8) }}>
                  <CategoryChip category={item} onPress={() => { setScope('products'); setQuery(item.name); performSearch(item.name, 'products', 1); }} />
               </View>

@@ -6,13 +6,10 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { useTheme } from "@/src/theme";
 import { getEvent, listParticipants, reviewParticipation } from "@/api/events";
-import { getStore } from "@/api/stores";
 import { normalizeError, type ApiError } from "@/src/api/errors";
 import ErrorBanner from "@/src/components/ErrorBanner";
 import SubHeader from "@/components/ui/SubHeader";
 import type { EventParticipant, ParticipationStatus } from "@/types/event";
-
-type Row = EventParticipant & { storeName: string };
 
 export default function EventParticipantsScreen() {
   const { colors, radii, text } = useTheme();
@@ -20,7 +17,7 @@ export default function EventParticipantsScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
 
   const [eventTitle, setEventTitle] = useState("");
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<EventParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
@@ -30,15 +27,11 @@ export default function EventParticipantsScreen() {
     setIsLoading(true);
     setError(null);
     try {
+      // The backend's ParticipantResponseDTO already includes store_name, so
+      // there's no need to look up each participant's store individually.
       const [event, participants] = await Promise.all([getEvent(eventId), listParticipants(eventId)]);
       setEventTitle(event.title);
-      const withNames = await Promise.all(
-        participants.map(async (p) => {
-          const store = await getStore(p.store_id).catch(() => null);
-          return { ...p, storeName: store?.name ?? "Tienda" };
-        })
-      );
-      setRows(withNames);
+      setRows(participants);
     } catch (err) {
       setError(normalizeError(err));
     } finally {
@@ -50,7 +43,7 @@ export default function EventParticipantsScreen() {
     fetchData();
   }, [fetchData]);
 
-  const handleReview = async (row: Row, status: ParticipationStatus) => {
+  const handleReview = async (row: EventParticipant, status: ParticipationStatus) => {
     if (!eventId) return;
     setReviewingId(row.id);
     try {
@@ -96,7 +89,7 @@ export default function EventParticipantsScreen() {
               <View style={[local.row, { backgroundColor: colors.bgCard, borderColor: colors.border, borderRadius: radii.lg }]}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={[text.label, { color: colors.textPrimary, fontWeight: "700" }]} numberOfLines={1}>
-                    {item.storeName}
+                    {item.store_name}
                   </Text>
                   <View style={[local.badge, { backgroundColor: meta, borderRadius: radii.full, marginTop: 5 }]}>
                     <Text style={[local.badgeText, { color: fg }]}>

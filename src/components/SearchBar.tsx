@@ -1,9 +1,14 @@
-import { useState, useRef } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text, FlatList, Keyboard } from 'react-native';
+import { useState } from 'react';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text, Keyboard } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useSearch } from '@/src/hooks/useSearch';
-import { SearchScope } from '@/api/search';
+import type {
+  SearchScope,
+  ProductAutocompleteResult,
+  StoreAutocompleteResult,
+} from '@/types/search';
+import type { Category } from '@/types/store';
 import { useTheme, fonts } from '@/src/theme';
 import { s, vs, ms } from '@/utils/scale';
 
@@ -11,6 +16,9 @@ type SearchBarProps = {
   scope?: SearchScope;
   locked?: boolean;
 };
+
+type SuggestionItem = ProductAutocompleteResult | StoreAutocompleteResult | Category;
+type SuggestionScope = Exclude<SearchScope, 'all'>;
 
 const SCOPES: { id: SearchScope; label: string }[] = [
   { id: 'all', label: 'Todo' },
@@ -40,10 +48,10 @@ export default function SearchBar({ scope = 'all', locked = false }: SearchBarPr
     }
   };
 
-  const handleSelectSuggestion = (item: any, typeScope: SearchScope) => {
+  const handleSelectSuggestion = (item: SuggestionItem, typeScope: SuggestionScope) => {
     Keyboard.dismiss();
     setIsFocused(false);
-    
+
     if (typeScope === 'products') {
       setQuery(item.name);
       router.push(`/producto/${item.id}` as any);
@@ -57,7 +65,7 @@ export default function SearchBar({ scope = 'all', locked = false }: SearchBarPr
     }
   };
 
-  const renderSuggestionItem = (item: any, typeScope: SearchScope) => (
+  const renderSuggestionItem = (item: SuggestionItem, typeScope: SuggestionScope) => (
     <TouchableOpacity
       style={styles.suggestionItem}
       onPress={() => handleSelectSuggestion(item, typeScope)}
@@ -69,9 +77,11 @@ export default function SearchBar({ scope = 'all', locked = false }: SearchBarPr
     </TouchableOpacity>
   );
 
-  const hasSuggestions = suggestions && (!Array.isArray(suggestions) 
-    ? (suggestions.products?.length || suggestions.stores?.length || suggestions.categories?.length)
-    : suggestions.length > 0);
+  const hasSuggestions = !!suggestions && (
+    suggestions.scope === 'all'
+      ? suggestions.products.length > 0 || suggestions.stores.length > 0 || suggestions.categories.length > 0
+      : suggestions.items.length > 0
+  );
 
   return (
     <View style={styles.container}>
@@ -114,22 +124,21 @@ export default function SearchBar({ scope = 'all', locked = false }: SearchBarPr
         </View>
       )}
 
-      {isFocused && hasSuggestions && (
+      {isFocused && hasSuggestions && suggestions && (
         <View style={[styles.dropdown, { backgroundColor: colors.bgCard, borderRadius: radii.md, ...shadows.md }]}>
-          {Array.isArray(suggestions) ? (
-            // Specific scope
-            suggestions.map((item, idx) => (
-              <View key={item.id || idx}>
-                {renderSuggestionItem(item, currentScope)}
+          {suggestions.scope === 'all' ? (
+            <>
+              {suggestions.products.map((item) => <View key={`p_${item.id}`}>{renderSuggestionItem(item, 'products')}</View>)}
+              {suggestions.stores.map((item) => <View key={`s_${item.id}`}>{renderSuggestionItem(item, 'stores')}</View>)}
+              {suggestions.categories.map((item) => <View key={`c_${item.id}`}>{renderSuggestionItem(item, 'categories')}</View>)}
+            </>
+          ) : (
+            // Single scope — items are already the right shape for that scope.
+            suggestions.items.map((item) => (
+              <View key={item.id}>
+                {renderSuggestionItem(item, suggestions.scope)}
               </View>
             ))
-          ) : (
-            // All scope
-            <>
-              {suggestions.products?.map((item: any) => <View key={`p_${item.id}`}>{renderSuggestionItem(item, 'products')}</View>)}
-              {suggestions.stores?.map((item: any) => <View key={`s_${item.id}`}>{renderSuggestionItem(item, 'stores')}</View>)}
-              {suggestions.categories?.map((item: any) => <View key={`c_${item.id}`}>{renderSuggestionItem(item, 'categories')}</View>)}
-            </>
           )}
         </View>
       )}

@@ -1,42 +1,49 @@
 import client from "./client";
-import type { PaginatedResponse, Product, Store, Category } from "@/types/store";
+import type { PaginatedResponse, Product } from "@/types/store";
+import type {
+  SearchScope,
+  AutocompleteResult,
+  SearchResult,
+  ProductAutocompleteResult,
+} from "@/types/search";
 
-export type SearchScope = 'all' | 'products' | 'stores' | 'categories';
+export type {
+  SearchScope,
+  ProductAutocompleteResult,
+  StoreAutocompleteResult,
+  AutocompleteResult,
+  SearchResult,
+} from "@/types/search";
 
-export interface AutocompleteResponse {
-  products?: Product[];
-  stores?: Store[];
-  categories?: Category[];
-}
-
-export interface SearchResponse {
-  products?: Product[];
-  stores?: Store[];
-  categories?: Category[];
-}
-
-export async function autocomplete(q: string, scope: SearchScope = 'all'): Promise<AutocompleteResponse | any[]> {
+export async function autocomplete(q: string, scope: SearchScope = 'all'): Promise<AutocompleteResult> {
   const { data } = await client.get('/api/v1/search/autocomplete', {
     params: { q, scope },
   });
-  return data;
+  // The backend's payload shape already matches 1:1 per scope — `all` returns
+  // { products, stores, categories }, everything else returns a bare array.
+  // We just attach the `scope` tag so callers can narrow on it instead of `any`.
+  if (scope === 'all') {
+    return { scope: 'all', ...data };
+  }
+  return { scope, items: data } as AutocompleteResult;
 }
 
-export async function search(q: string, scope: SearchScope = 'all', page = 1, limit = 10): Promise<SearchResponse | PaginatedResponse<any>> {
+export async function search(q: string, scope: SearchScope = 'all', page = 1, limit = 10): Promise<SearchResult> {
   const { data } = await client.get('/api/v1/search', {
     params: { q, scope, page, limit },
   });
-  return data;
+  if (scope === 'all') {
+    return { scope: 'all', ...data };
+  }
+  if (scope === 'categories') {
+    // Only scope=categories skips pagination on the backend (plain array).
+    return { scope: 'categories', items: data };
+  }
+  // scope=products / scope=stores: data is already a PaginatedResponse<T>.
+  return { scope, ...data } as SearchResult;
 }
 
 // Keep legacy proxies for backward compatibility in case they are used elsewhere
-export type ProductAutocompleteResult = {
-  id: string;
-  name: string;
-  base_price: string | number;
-  primary_image_url: string | null;
-};
-
 export async function searchProducts(
   q: string,
   page = 1,

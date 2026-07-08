@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { autocomplete, search, SearchScope, AutocompleteResponse, SearchResponse } from '@/api/search';
+import { autocomplete, search } from '@/api/search';
 import { normalizeError, type ApiError } from '@/src/api/errors';
-import type { PaginatedResponse } from '@/types/store';
+import type { SearchScope, AutocompleteResult, SearchResult } from '@/types/search';
 
 export function useSearch(initialScope: SearchScope = 'all') {
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<SearchScope>(initialScope);
-  const [suggestions, setSuggestions] = useState<AutocompleteResponse | any[] | null>(null);
-  
+  const [suggestions, setSuggestions] = useState<AutocompleteResult | null>(null);
+
   // For full search results
-  const [results, setResults] = useState<SearchResponse | PaginatedResponse<any> | null>(null);
+  const [results, setResults] = useState<SearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -38,20 +38,29 @@ export function useSearch(initialScope: SearchScope = 'all') {
     setError(null);
     try {
       const res = await search(q, activeScope, page, 20);
-      if (page === 1) {
+      if (page === 1 || res.scope === 'all') {
+        // scope='all' doesn't paginate deeply — always a fresh replace.
         setResults(res);
+      } else if (res.scope === 'products') {
+        // scope='products' | 'stores' | 'categories': append this page's
+        // items onto whatever we already had for the same scope. Branching
+        // explicitly on res.scope (rather than a generic prev.items merge)
+        // keeps each branch's item type tied to a single member of the
+        // SearchResult union instead of the union of all three.
+        setResults((prev) => ({
+          ...res,
+          items: [...(prev?.scope === 'products' ? prev.items : []), ...res.items],
+        }));
+      } else if (res.scope === 'stores') {
+        setResults((prev) => ({
+          ...res,
+          items: [...(prev?.scope === 'stores' ? prev.items : []), ...res.items],
+        }));
       } else {
-        if (activeScope === 'all') {
-            // scope='all' doesn't paginate deeply
-            setResults(res);
-        } else {
-            setResults((prev: any) => ({
-                ...prev,
-                items: [...(prev?.items || []), ...(res as PaginatedResponse<any>).items],
-                page: (res as PaginatedResponse<any>).page,
-                total: (res as PaginatedResponse<any>).total,
-            }));
-        }
+        setResults((prev) => ({
+          ...res,
+          items: [...(prev?.scope === 'categories' ? prev.items : []), ...res.items],
+        }));
       }
     } catch (err) {
       setError(normalizeError(err));
