@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWindowDimensions } from "react-native";
 import {
   View,
@@ -27,10 +27,17 @@ import {
 } from "@/api/products";
 import { getCategories } from "@/api/categories";
 import type { Product, ProductVariant, Category } from "@/types/store";
+import { normalizeError, type ApiError } from "@/src/api/errors";
+import ErrorBanner from "@/src/components/ErrorBanner";
 import SubHeader from "@/components/ui/SubHeader";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+
+// Red/5xx en mutaciones ya los avisa el toast global del interceptor
+// (client.ts). Mostrar además un Alert/ErrorBanner con el mismo mensaje
+// sería un aviso duplicado, así que estos handlers lo filtran acá.
+const isTransientError = (err: ApiError) => err.status === null || err.status >= 500;
 
 export default function EditProductScreen() {
   const { colors, radii, shadows, spacing, text } = useTheme();
@@ -49,7 +56,8 @@ export default function EditProductScreen() {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<ApiError | null>(null);
+  const [loadError, setLoadError] = useState<ApiError | null>(null);
 
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [varName, setVarName] = useState("");
@@ -70,33 +78,39 @@ export default function EditProductScreen() {
     { type: "product" } | { type: "variant"; variant: ProductVariant }
   >({ type: "product" });
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!id) return;
-    (async () => {
-      setLoading(true);
-      try {
-        const [prod, catRes] = await Promise.all([
-          getProduct(id),
-          getCategories(1, 50),
-        ]);
-        setProduct(prod);
-        setName(prod.name);
-        setDescription(prod.description);
-        setBasePrice(String(prod.base_price));
-        setCategoryId(prod.category_id);
-        setCategories(catRes.items);
-      } catch {
-        Alert.alert("Error", "No se pudo cargar el producto.");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [prod, catRes] = await Promise.all([
+        getProduct(id),
+        getCategories(1, 50),
+      ]);
+      setProduct(prod);
+      setName(prod.name);
+      setDescription(prod.description);
+      setBasePrice(String(prod.base_price));
+      setCategoryId(prod.category_id);
+      setCategories(catRes.items);
+    } catch (err) {
+      setLoadError(normalizeError(err));
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSaveProduct = async () => {
     if (!id || !name.trim() || !basePrice.trim()) return;
     const price = parseFloat(basePrice);
-    if (isNaN(price) || price < 0) { setSaveError("Precio inválido."); return; }
+    if (isNaN(price) || price < 0) {
+      setSaveError({ status: 422, message: "Precio inválido." });
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     setSaveMsg(null);
@@ -109,8 +123,11 @@ export default function EditProductScreen() {
       });
       setProduct((prev) => (prev ? { ...prev, ...updated } : updated));
       setSaveMsg("Producto actualizado");
-    } catch {
-      setSaveError("No se pudo actualizar.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        setSaveError(apiErr);
+      }
     } finally {
       setSaving(false);
     }
@@ -124,8 +141,11 @@ export default function EditProductScreen() {
       await client.delete(`/api/v1/products/${id}`);
       setShowDeleteModal(false);
       router.replace({ pathname: "/store/products" as never, params: { storeId } });
-    } catch {
-      Alert.alert("Error", "No se pudo eliminar el producto.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     }
   };
 
@@ -143,8 +163,11 @@ export default function EditProductScreen() {
         variants: (prev.variants || []).filter((v) => v.id !== variant.id),
       } : prev);
       setShowDeleteModal(false);
-    } catch {
-      Alert.alert("Error", "No se pudo eliminar la variante.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     }
   };
 
@@ -170,8 +193,11 @@ export default function EditProductScreen() {
       setProduct((prev) => prev ? { ...prev, variants: [...(prev.variants || []), variant] } : prev);
       setVarName(""); setVarValue(""); setVarPrice(""); setVarStock("");
       setShowVariantForm(false);
-    } catch {
-      Alert.alert("Error", "No se pudo agregar la variante.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     } finally {
       setVarSaving(false);
     }
@@ -190,8 +216,11 @@ export default function EditProductScreen() {
       } : prev);
       setEditingVariantId(null);
       setEditStock("");
-    } catch {
-      Alert.alert("Error", "No se pudo actualizar el stock.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     } finally {
       setStockSaving(false);
     }
@@ -217,8 +246,11 @@ export default function EditProductScreen() {
       setProduct((prev) => prev ? { ...prev, images: [...(prev.images || []), img] } : prev);
       setImageUrl("");
       setShowImageForm(false);
-    } catch {
-      Alert.alert("Error", "No se pudo agregar la imagen.");
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) {
+        Alert.alert("Error", apiErr.message);
+      }
     } finally {
       setImageSaving(false);
     }
@@ -232,6 +264,24 @@ export default function EditProductScreen() {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Load error state ─────────────────────────────────────────────────────────
+  // Si falló la carga, el producto (y las categorías) no están disponibles, así
+  // que no tiene sentido mostrar el formulario de edición vacío/roto debajo.
+
+  if (loadError || !product) {
+    return (
+      <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SubHeader title="Editar Producto" onBack={() => router.back()} />
+        <ErrorBanner
+          error={loadError ?? { status: 0, message: "No se pudo cargar el producto." }}
+          onRetry={fetchData}
+          variant="centered"
+        />
       </SafeAreaView>
     );
   }
@@ -278,9 +328,7 @@ export default function EditProductScreen() {
             />
           )}
 
-          {saveError && (
-            <Text style={[text.body, { color: colors.errorText }]}>{saveError}</Text>
-          )}
+          <ErrorBanner error={saveError} onDismiss={() => setSaveError(null)} />
           {saveMsg && (
             <View style={styles.successRow}>
               <MaterialIcons name="check-circle" size={ms(16)} color={colors.successText} />

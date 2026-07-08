@@ -4,9 +4,11 @@ import axios, {
   isAxiosError,
 } from "axios";
 import { Platform } from "react-native";
+import Toast from "react-native-toast-message";
 
 import { getTokens, setAccessToken, getInMemoryAccessToken, triggerLogout, triggerTokenRefresh } from "@/src/auth/tokenStorage";
 import { SessionExpiredError } from "@/src/api/errors";
+import { useConnectivityStore } from "@/src/store/connectivityStore";
 
 // Android emulator → 10.0.2.2, iOS simulator → localhost
 // Physical device → set EXPO_PUBLIC_API_URL in .env
@@ -66,9 +68,36 @@ async function refreshAccessToken(): Promise<string> {
 }
 
 client.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    useConnectivityStore.getState().setOnline(true);
+    return response;
+  },
   async (error: AxiosError) => {
     const original = error.config as RetriableConfig | undefined;
+
+    // Compute before branching so all paths below can reference them.
+    const status = error.response?.status;
+    const isNetworkError = !error.response;
+
+    // Track connectivity for the home-screen offline banner.
+    if (isNetworkError) {
+      useConnectivityStore.getState().setOnline(false);
+    }
+
+    // Show toast for 5xx and network errors that are NOT screen data-loads.
+    // Only fire for explicit mutations; GET (and undefined) are handled by ErrorBanner.
+    const is5xx = status != null && status >= 500;
+    const isMutation = original?.method != null &&
+      ["post", "put", "patch", "delete"].includes(original.method.toLowerCase());
+    if ((isNetworkError || is5xx) && isMutation) {
+      Toast.show({
+        type: "error",
+        text1: isNetworkError ? "Error de red" : "Error del servidor",
+        text2: isNetworkError
+          ? "No se pudo conectar al servidor. Revisa tu conexión."
+          : "Algo salió mal en el servidor. Intenta de nuevo más tarde.",
+      });
+    }
 
     if (
       error.response?.status !== 401 ||

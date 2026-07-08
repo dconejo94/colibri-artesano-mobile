@@ -18,6 +18,8 @@ import { getStoreByOwner, createStore } from "@/api/stores";
 import { getStoreProducts } from "@/api/products";
 import { getStoreOrders } from "@/api/orders";
 import type { Store, Product, StoreOrder } from "@/types/store";
+import { normalizeError, type ApiError } from "@/src/api/errors";
+import ErrorBanner from "@/src/components/ErrorBanner";
 import Header from "@/components/ui/Header";
 import HamburgerMenu from "@/components/ui/HamburgerMenu";
 import Input from "@/components/ui/Input";
@@ -33,7 +35,7 @@ export default function MyStoreScreen() {
   const [orders, setOrders] = useState<StoreOrder[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [creating, setCreating] = useState(false);
   const [storeName, setStoreName] = useState("");
   const [storeDesc, setStoreDesc] = useState("");
@@ -54,8 +56,8 @@ export default function MyStoreScreen() {
         setProducts(prodRes.items);
         setOrders(orderRes.items);
       }
-    } catch {
-      setError("No se pudo cargar la tienda. Revisa tu conexión.");
+    } catch (err) {
+      setError(normalizeError(err));
     } finally {
       setLoading(false);
     }
@@ -84,15 +86,15 @@ export default function MyStoreScreen() {
       });
       setStore(created);
       setCreating(false);
-    } catch {
-      setError("No se pudo crear la tienda.");
+    } catch (err) {
+      setError(normalizeError(err));
     } finally {
       setSubmitLoading(false);
     }
   };
 
   // ── No store yet ──────────────────────────────────────────────────────────
-  if (!loading && !store && !error) {
+  if (!loading && !store && (!error || creating)) {
     return (
       <SafeAreaView edges={["top"]} style={[styles.wrapper, { backgroundColor: colors.bgPage }]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -101,10 +103,11 @@ export default function MyStoreScreen() {
           {creating ? (
             <View style={[local.cardForm, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.md }]}>
               <Text style={[text.h2, { color: colors.primaryDeep, marginBottom: spacing[3] }]}>Crear mi tienda</Text>
+              <ErrorBanner error={error} onDismiss={() => setError(null)} />
               <Input label="Nombre" value={storeName} onChangeText={setStoreName} placeholder="Ej: Artesanías Chorotega" />
               <Input label="Descripción" value={storeDesc} onChangeText={setStoreDesc} placeholder="Describe tu tienda..." multiline />
               <View style={local.createActions}>
-                <Button title="Cancelar" variant="secondary" onPress={() => setCreating(false)} />
+                <Button title="Cancelar" variant="secondary" onPress={() => { setCreating(false); setError(null); }} />
                 <Button title="Crear" onPress={handleCreate} disabled={submitLoading || !storeName.trim()} />
               </View>
             </View>
@@ -115,7 +118,7 @@ export default function MyStoreScreen() {
               <Text style={[text.body, { color: colors.textSecondary, textAlign: "center", marginVertical: spacing[3], lineHeight: ms(20) }]}>
                 Crea tu tienda para comenzar a vender tus artesanías.
               </Text>
-              <Button title="Crear tienda" onPress={() => setCreating(true)} />
+              <Button title="Crear tienda" onPress={() => { setCreating(true); setError(null); }} />
             </View>
           )}
         </ScrollView>
@@ -135,11 +138,7 @@ export default function MyStoreScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <View style={local.centered}>
-          <MaterialIcons name="error-outline" size={ms(48)} color={colors.errorText} />
-          <Text style={[text.body, { color: colors.errorText, marginVertical: spacing[3], textAlign: "center" }]}>{error}</Text>
-          <Button title="Reintentar" onPress={loadData} />
-        </View>
+        <ErrorBanner error={error} onRetry={loadData} variant="centered" />
       ) : (
         <ScrollView contentContainerStyle={local.content} showsVerticalScrollIndicator={false}>
 
@@ -147,7 +146,7 @@ export default function MyStoreScreen() {
           <View style={local.section}>
             <Text style={[text.h2, { color: colors.primaryDeep }]}>Panel de Control</Text>
             <View style={local.statsRow}>
-              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}> 
+              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
                 <TouchableOpacity
                   onPress={() => router.push({ pathname: "/store/edit" as never, params: { storeId: store?.id } })}
                   hitSlop={10}
@@ -162,7 +161,7 @@ export default function MyStoreScreen() {
                   <View style={local.storeIconWrap}>
                     <MaterialIcons name="storefront" size={ms(26)} color={colors.primary} />
                   </View>
-                  <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6), textAlign: "center" }]}> 
+                  <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6), textAlign: "center" }]}>
                     Mi tienda
                   </Text>
                   <Text style={[text.productName, { color: colors.textPrimary, marginTop: vs(2), textAlign: "center" }]} numberOfLines={1}>
@@ -174,12 +173,12 @@ export default function MyStoreScreen() {
                 </View>
               </View>
 
-              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}> 
+              <View style={[local.statCard, { backgroundColor: colors.bgCard, borderRadius: radii.lg, borderColor: colors.border, ...shadows.sm }]}>
                 <MaterialIcons name="paid" size={ms(26)} color={colors.primary} />
-                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}> 
+                <Text style={[text.caption, { color: colors.textSecondary, letterSpacing: 0.8, textTransform: "uppercase", marginTop: vs(6) }]}>
                   Ventas Totales
                 </Text>
-                <Text style={[text.h3, { color: colors.textSecondary, marginTop: vs(2), fontStyle: "italic" }]}> 
+                <Text style={[text.h3, { color: colors.textSecondary, marginTop: vs(2), fontStyle: "italic" }]}>
                   Próximamente
                 </Text>
               </View>

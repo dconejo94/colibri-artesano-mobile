@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { View, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, ActivityIndicator, Alert } from 'react-native';
 import { useTheme } from '@/src/theme';
 import ProductDetailScreen from '@/screens/ProductDetailScreen';
 import { useProductDetail } from '@/src/hooks/useProductDetail';
@@ -8,8 +8,9 @@ import { useAddToCart } from '@/src/hooks/useAddtoCart';
 export default function ProductoRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors, text, spacing, fonts } = useTheme();
+  const { colors, fonts } = useTheme();
 
+  const { product, isLoading, error, refetch } = useProductDetail(id);
   const { product, isLoading, isError } = useProductDetail(id);
   const { addToCart } = useAddToCart();
 
@@ -100,12 +101,12 @@ export default function ProductoRoute() {
 
   return (
     <>
+      {/* Header de navegación: usa el nombre del producto si ya cargó,
+          y un título neutro mientras carga o si falló. */}
       <Stack.Screen
         options={{
-          title: product.name,
-          headerStyle: {
-            backgroundColor: colors.bgNavbar,
-          },
+          title: product?.name ?? 'Producto',
+          headerStyle: { backgroundColor: colors.bgNavbar },
           headerTintColor: colors.primary,
           headerTitleStyle: {
             fontFamily: fonts.sanMedium,
@@ -116,11 +117,22 @@ export default function ProductoRoute() {
         }}
       />
 
-      <ProductDetailScreen
-        product={product}
-        onAddToCart={handleAddToCart}
-        onBuyNow={handleBuyNow}
-      />
+      {/* ProductDetailScreen maneja loading/error/contenido internamente
+          (incluida la variante `centered` del ErrorBanner). No dupliques
+          ese manejo acá. */}
+      {isLoading ? (
+        <View style={{ flex: 1, backgroundColor: colors.bgPage, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <ProductDetailScreen
+          product={product ?? null}
+          error={error ?? (!product ? { status: 404, message: 'Producto no encontrado.' } : null)}
+          onRetry={refetch}
+          onAddToCart={(id) => console.log('Carrito:', id)}
+          onBuyNow={(id) => console.log('Comprar:', id)}
+        />
+      )}
     </>
   );
 }

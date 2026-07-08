@@ -44,6 +44,25 @@ bun start --clear
 - Press `i` to open in the iOS Simulator.
 - Scan the QR code with the **Expo Go** app to run it on your physical device.
 
+### 4. GUI Testing
+This project uses [Jest](https://jestjs.io/) with `jest-expo` preset and
+[React Native Testing Library](https://callstack.github.io/react-native-testing-library/)
+for GUI component tests.
+
+#### Run Tests
+
+Runs all of the test cases.
+
+```bash
+bun run test
+```
+
+Watch mode
+
+```bash
+bun run test:watch
+```
+
 ---
 
 ## Architecture & File Structure

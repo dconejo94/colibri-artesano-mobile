@@ -5,6 +5,7 @@ import {
 } from '@/api/products';
 
 import { ProductDetail as UIProductDetail } from '@/screens/ProductDetailScreen';
+import { normalizeError, type ApiError } from '@/src/api/errors';
 
 export function useProductDetail(id: string) {
   const [product, setProduct] =
@@ -13,8 +14,9 @@ export function useProductDetail(id: string) {
   const [isLoading, setIsLoading] =
     useState(true);
 
-  const [isError, setIsError] =
-    useState(false);
+  const [error, setError] =
+    useState<ApiError | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export function useProductDetail(id: string) {
     const fetchProduct = async () => {
       try {
         setIsLoading(true);
-        setIsError(false);
+        setError(null);
 
         const [data, variants] = await Promise.all([
           getProduct(id),
@@ -96,6 +98,8 @@ export function useProductDetail(id: string) {
 
 
         setProduct(mapped);
+      } catch (err) {
+        if (isMounted) setError(normalizeError(err));
 
       } catch (error) {
         console.error(error);
@@ -113,6 +117,10 @@ export function useProductDetail(id: string) {
 
 
     fetchProduct();
+    return () => { isMounted = false; };
+  }, [id, retryCount]);
+
+  const refetch = () => setRetryCount((prev) => prev + 1);
 
     return () => {
       isMounted = false;
@@ -120,6 +128,7 @@ export function useProductDetail(id: string) {
 
   }, [id]);
 
+  return { product, isLoading, error, refetch };
 
   return {
     product,

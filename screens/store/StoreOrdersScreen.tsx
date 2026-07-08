@@ -16,6 +16,8 @@ import { formatPrice, translateStatus, statusColor } from "@/utils/format";
 import { useTheme } from "@/src/theme";
 import { getStoreOrders, updateOrderStatus } from "@/api/orders";
 import type { StoreOrder } from "@/types/store";
+import { normalizeError, type ApiError } from "@/src/api/errors";
+import ErrorBanner from "@/src/components/ErrorBanner";
 import SubHeader from "@/components/ui/SubHeader";
 import Button from "@/components/ui/Button";
 
@@ -41,17 +43,19 @@ export default function StoreOrdersScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
 
   const fetchOrders = useCallback(async (p = 1, append = false) => {
     if (!storeId) return;
     if (p === 1) setLoading(true); else setLoadingMore(true);
+    setError(null);
     try {
       const res = await getStoreOrders(storeId, p, 15);
       setOrders(append ? (prev) => [...prev, ...res.items] : res.items);
       setTotal(res.total);
       setPage(p);
-    } catch {
-      Alert.alert("Error", "No se pudieron cargar los pedidos.");
+    } catch (err) {
+      setError(normalizeError(err));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -69,8 +73,8 @@ export default function StoreOrdersScreen() {
     try {
       const updated = await updateOrderStatus(storeId, order.id, next);
       setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
-    } catch {
-      Alert.alert("Error", "No se pudo actualizar el pedido.");
+    } catch (err) {
+      Alert.alert("Error", normalizeError(err).message);
     } finally {
       setUpdatingId(null);
     }
@@ -91,8 +95,8 @@ export default function StoreOrdersScreen() {
             try {
               const updated = await updateOrderStatus(storeId, order.id, "cancelled");
               setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...updated } : o)));
-            } catch {
-              Alert.alert("Error", "No se pudo cancelar el pedido.");
+            } catch (err) {
+              Alert.alert("Error", normalizeError(err).message);
             } finally {
               setUpdatingId(null);
             }
@@ -199,6 +203,10 @@ export default function StoreOrdersScreen() {
     );
   };
 
+  // Error en la carga inicial: no hay pedidos que mostrar, así que no tiene
+  // sentido dejar el estado vacío debajo (se confundiría con "no hay pedidos").
+  const hasInitialError = !!error && orders.length === 0;
+
   return (
     <SafeAreaView edges={["top"]} style={[local.wrapper, { backgroundColor: colors.bgPage }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -208,6 +216,8 @@ export default function StoreOrdersScreen() {
         <View style={local.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
+      ) : hasInitialError ? (
+        <ErrorBanner error={error} onRetry={() => fetchOrders(1)} variant="centered" />
       ) : orders.length === 0 ? (
         <View style={local.centered}>
           <View style={[local.emptyIcon, { backgroundColor: colors.bgSection, borderRadius: radii.xl }]}>
@@ -221,22 +231,28 @@ export default function StoreOrdersScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id}
-          renderItem={renderOrder}
-          contentContainerStyle={local.list}
-          onEndReached={() => {
-            if (!loadingMore && orders.length < total) fetchOrders(page + 1, true);
-          }}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            loadingMore ? (
-              <ActivityIndicator style={local.footer} color={colors.primary} />
-            ) : null
-          }
-          showsVerticalScrollIndicator={false}
-        />
+        <>
+          {/* Error de paginación: ya hay pedidos en pantalla, no tapamos la lista.
+              Reintenta la página que falló (page + 1, con append) en vez de
+              reemplazar lo ya cargado. */}
+          <ErrorBanner error={error} onRetry={() => fetchOrders(page + 1, true)} onDismiss={() => setError(null)} />
+          <FlatList
+            data={orders}
+            keyExtractor={(item) => item.id}
+            renderItem={renderOrder}
+            contentContainerStyle={local.list}
+            onEndReached={() => {
+              if (!loadingMore && orders.length < total) fetchOrders(page + 1, true);
+            }}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              loadingMore ? (
+                <ActivityIndicator style={local.footer} color={colors.primary} />
+              ) : null
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       )}
     </SafeAreaView>
   );

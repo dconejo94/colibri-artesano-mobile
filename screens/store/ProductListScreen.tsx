@@ -21,6 +21,8 @@ import EmptyState from "@/components/ui/EmptyState";
 import SubHeader from "@/components/ui/SubHeader";
 
 import type { Product } from "@/types/store";
+import { normalizeError, type ApiError } from "@/src/api/errors";
+import ErrorBanner from "@/src/components/ErrorBanner";
 
 import { formatPrice } from "@/utils/format";
 import { ms, s, vs } from "@/utils/scale";
@@ -35,17 +37,20 @@ export default function ProductListScreen() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
 
   const fetchProducts = useCallback(async (p = 1, append = false) => {
     if (!storeId) return;
     if (p === 1) setLoading(true); else setLoadingMore(true);
+    setError(null);
     try {
       const res = await getStoreProducts(storeId, p, 20);
       setProducts((prev) => (append ? [...prev, ...res.items] : res.items));
       setTotal(res.total);
       setPage(p);
-
-    } catch { /* silent */ } finally {
+    } catch (err) {
+      setError(normalizeError(err));
+    } finally {
       setLoading(false);
       setLoadingMore(false);
     }
@@ -126,6 +131,11 @@ export default function ProductListScreen() {
         <View style={local.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
+      ) : error && products.length === 0 ? (
+        // Falló la carga y no hay nada en pantalla: no mostrar el empty state
+        // genérico de "Sin productos aún", porque eso invita a crear un
+        // producto cuando en realidad el problema es que la carga falló.
+        <ErrorBanner error={error} onRetry={() => fetchProducts(1)} variant="centered" />
       ) : products.length === 0 ? (
         <View style={local.centered}>
           <View style={[local.emptyIcon, { backgroundColor: colors.bgSection, borderRadius: radii.xl }]}>
@@ -145,22 +155,30 @@ export default function ProductListScreen() {
           />
         </View>
       ) : (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item.id}
-          renderItem={renderProduct}
-          contentContainerStyle={local.list}
-          onEndReached={() => {
-            if (!loadingMore && products.length < total) fetchProducts(page + 1, true);
-          }}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            loadingMore ? (
-              <ActivityIndicator style={local.footer} color={colors.primary} />
-            ) : null
-          }
-          showsVerticalScrollIndicator={false}
-        />
+        <>
+          {/* Ya hay productos en pantalla: si falla, por ejemplo, la paginación,
+              se avisa arriba sin taparlos. Reintenta la página que falló
+              (page + 1, con append) en vez de reemplazar lo ya cargado. */}
+          {error && (
+            <ErrorBanner error={error} onRetry={() => fetchProducts(page + 1, true)} />
+          )}
+          <FlatList
+            data={products}
+            keyExtractor={(item) => item.id}
+            renderItem={renderProduct}
+            contentContainerStyle={local.list}
+            onEndReached={() => {
+              if (!loadingMore && products.length < total) fetchProducts(page + 1, true);
+            }}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              loadingMore ? (
+                <ActivityIndicator style={local.footer} color={colors.primary} />
+              ) : null
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       )}
     </SafeAreaView>
   );
