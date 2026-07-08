@@ -132,9 +132,9 @@ export default function ProductListScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error && products.length === 0 ? (
-        // Falló la carga y no hay nada en pantalla: no mostrar el empty state
-        // genérico de "Sin productos aún", porque eso invita a crear un
-        // producto cuando en realidad el problema es que la carga falló.
+        // Load failed and nothing is on screen: don't show the generic "no
+        // products yet" empty state, because that invites creating a product
+        // when the real problem is that the load failed.
         <ErrorBanner error={error} onRetry={() => fetchProducts(1)} variant="centered" />
       ) : products.length === 0 ? (
         <View style={local.centered}>
@@ -156,9 +156,9 @@ export default function ProductListScreen() {
         </View>
       ) : (
         <>
-          {/* Ya hay productos en pantalla: si falla, por ejemplo, la paginación,
-              se avisa arriba sin taparlos. Reintenta la página que falló
-              (page + 1, con append) en vez de reemplazar lo ya cargado. */}
+          {/* Products are already on screen: if, say, pagination fails, notify
+              above without hiding them. Retry the failed page (page + 1, with
+              append) instead of replacing what's already loaded. */}
           {error && (
             <ErrorBanner error={error} onRetry={() => fetchProducts(page + 1, true)} />
           )}

@@ -34,8 +34,8 @@ export default function ProductoRoute() {
 
   return (
     <>
-      {/* Header de navegación: usa el nombre del producto si ya cargó,
-          y un título neutro mientras carga o si falló. */}
+      {/* Navigation header: uses the product name once loaded,
+          and a neutral title while loading or on failure. */}
       <Stack.Screen
         options={{
           title: product?.name ?? 'Producto',
@@ -50,9 +50,9 @@ export default function ProductoRoute() {
         }}
       />
 
-      {/* ProductDetailScreen maneja loading/error/contenido internamente
-          (incluida la variante `centered` del ErrorBanner). No dupliques
-          ese manejo acá. */}
+      {/* ProductDetailScreen handles loading/error/content internally
+          (including the ErrorBanner `centered` variant). Don't duplicate
+          that handling here. */}
       {isLoading ? (
         <View style={{ flex: 1, backgroundColor: colors.bgPage, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={colors.primary} />

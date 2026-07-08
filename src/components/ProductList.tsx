@@ -12,12 +12,12 @@ import ProductCard, { type Product } from './ProductCard';
 interface Props {
   products:        Product[];
   onSelectProduct: (id: string) => void;
-  onObtainProduct: (id: string) => void;  // botón "Obtener" en cada card
+  onObtainProduct: (id: string) => void;  // "Obtener" button on each card
   onArtisanPress?: (storeId: string) => void;
   onFavoriteToggle?: (id: string, isFavorite: boolean) => void;
   isLoading?:      boolean;
   title?:          string;
-  titleSuffix?:    string;  // ej. "12 piezas", mostrado a la derecha del título
+  titleSuffix?:    string;  // e.g. "12 piezas", shown to the right of the title
   numColumns?:     number;
   onEndReached?:   () => void;
 }
@@ -31,7 +31,7 @@ export default function ProductList({
   isLoading  = false,
   title,
   titleSuffix,
-  numColumns = 1,   // default 1 para el diseño rico de card
+  numColumns = 1,   // default 1 for the rich card layout
   onEndReached,
 }: Props) {
   const { colors, spacing, text } = useTheme();
@@ -42,7 +42,7 @@ export default function ProductList({
   const cardWidth =
     (screenWidth - HORIZONTAL_PADDING - GAP * (numColumns - 1)) / numColumns;
 
-  // Header con título + underline de acento, y conteo opcional a la derecha
+  // Header with title + accent underline, and optional count on the right
   const ListHeader = title ? (
     <View style={[styles.titleHeaderRow, { marginBottom: spacing[5] }]}>
       <View>
@@ -55,7 +55,7 @@ export default function ProductList({
     </View>
   ) : null;
 
-  // Estado vacío / loading
+  // Empty / loading state
   const ListEmpty = (
     <View style={styles.emptyContainer}>
       {isLoading ? (

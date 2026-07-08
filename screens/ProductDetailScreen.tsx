@@ -15,7 +15,7 @@ import ErrorBanner from '@/src/components/ErrorBanner';
 import { type ApiError } from '@/src/api/errors';
 import type { ProductVariant } from '@/types/store';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 export interface ProductDetail {
   id: string;
   name: string;
@@ -44,9 +44,9 @@ interface Props {
   onArtisanPress?: (storeId: string) => void;
 }
 
-// ─── Pantalla ─────────────────────────────────────────────────────────────────
-// No incluye header de navegación propio — React Navigation lo maneja.
-// Configurá el header en tu Stack.Screen options:
+// ─── Screen ─────────────────────────────────────────────────────────────────
+// Has no navigation header of its own — React Navigation handles it.
+// Configure the header in your Stack.Screen options:
 //   headerStyle:      { backgroundColor: colors.bgNavbar }
 //   headerTintColor:  colors.primary
 //   headerTitleStyle: { fontFamily: 'DMSans_500Medium' }
@@ -83,8 +83,8 @@ export default function ProductDetailScreen({
 
   const needsVariantChoice = (product?.variants.length ?? 0) > 1 && !selectedVariantId;
 
-  // Sin producto (falló la carga, sin red, etc.): no tiene sentido renderizar
-  // la galería/header/action bar vacíos, así que reemplazamos todo el contenido.
+  // No product (load failed, no network, etc.): rendering an empty
+  // gallery/header/action bar makes no sense, so replace the whole content.
   if (!product) {
     return (
       <SafeAreaView
@@ -101,20 +101,20 @@ export default function ProductDetailScreen({
   }
 
   return (
-    // SafeAreaView solo cubre top — la action bar maneja su propio bottom
+    // SafeAreaView only covers the top — the action bar handles its own bottom
     <SafeAreaView
       edges={['top']}
       style={[styles.screen, { backgroundColor: colors.bgPage }]}
     >
-      {/* ScrollView + action bar son hijos directos para que la barra quede sticky */}
+      {/* ScrollView + action bar are direct children so the bar stays sticky */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: spacing[10] }}
       >
-        {/* Galería de imágenes */}
+        {/* Image gallery */}
         <DetailGallery images={product.images} />
 
-        {/* Nombre, artesano, precio, badge */}
+        {/* Name, artisan, price, badge */}
         <DetailHeader
           name={product.name}
           artisan={product.artisan}
@@ -129,17 +129,17 @@ export default function ProductDetailScreen({
           }
         />
 
-        {/* Selector de variante — solo se muestra si hay más de una */}
+        {/* Variant picker — only shown when there's more than one */}
         <DetailVariantPicker
           variants={product.variants}
           selectedId={selectedVariantId}
           onSelect={setSelectedVariantId}
         />
 
-        {/* Separador */}
+        {/* Divider */}
         <View style={[styles.divider, { backgroundColor: colors.border, marginHorizontal: spacing[4] }]} />
 
-        {/* Descripción y ficha técnica */}
+        {/* Description and technical details */}
         <DetailInfo
           description={product.description}
           materials={product.materials}
@@ -147,7 +147,7 @@ export default function ProductDetailScreen({
           leadTime={product.leadTime}
         />
 
-        {/* Bio del artesano — solo si está presente */}
+        {/* Artisan bio — only if present */}
         {product.artisanBio && (
           <DetailArtisanBio
             artisan={product.artisan}
@@ -156,7 +156,7 @@ export default function ProductDetailScreen({
         )}
       </ScrollView>
 
-      {/* Barra de acciones — sticky en el fondo */}
+      {/* Action bar — sticky at the bottom */}
       <DetailActionBar
         productId={product.id}
         status={product.status}
