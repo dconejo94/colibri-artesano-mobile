@@ -222,13 +222,13 @@ export default function StoreOrdersScreen() {
           <View style={local.summaryRow}>
             <View style={local.summaryItem}>
               <Text style={[text.caption, { color: 'rgba(255,255,255,0.8)' }]}>Total Generado</Text>
-              <Text style={[text.h1, { color: 'white', marginTop: spacing[1] }]}>
+              <Text style={[text.h2, { color: 'white', marginTop: spacing[1] }]}>
                 {formatPrice(salesSummary.total_sales)}
               </Text>
             </View>
             <View style={local.summaryItemRight}>
               <Text style={[text.caption, { color: 'rgba(255,255,255,0.8)' }]}>Pedidos Entregados</Text>
-              <Text style={[text.h1, { color: 'white', marginTop: spacing[1] }]}>
+              <Text style={[text.h2, { color: 'white', marginTop: spacing[1] }]}>
                 {salesSummary.total_orders}
               </Text>
             </View>

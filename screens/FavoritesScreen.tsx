@@ -19,7 +19,7 @@ export default function FavoritesScreen() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);

@@ -220,7 +220,7 @@ export default function SearchResultsScreen() {
         ) : scope === 'products' ? (
           renderFlatList(
             (results as any).items || [],
-            ({ item }) => (
+            ({ item }: { item: any }) => (
               <View style={{ width: '48%', marginBottom: vs(16) }}>
                 <ProductCard
                   {...(mapProduct(item) as any)}
@@ -235,7 +235,7 @@ export default function SearchResultsScreen() {
         ) : scope === 'stores' ? (
           renderFlatList(
             (results as any).items || [],
-            ({ item }) => (
+            ({ item }: { item: any }) => (
               <View style={{ marginBottom: vs(12) }}>
                  <StoreCard store={item} onPress={() => router.push(`/tienda/${item.id}` as any)} />
               </View>
@@ -244,7 +244,7 @@ export default function SearchResultsScreen() {
         ) : (
            renderFlatList(
             results as any, // categories is not paginated
-            ({ item }) => (
+            ({ item }: { item: any }) => (
               <View style={{ marginBottom: vs(8) }}>
                  <CategoryChip category={item} onPress={() => { setScope('products'); setQuery(item.name); performSearch(item.name, 'products', 1); }} />
               </View>

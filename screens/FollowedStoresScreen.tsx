@@ -79,7 +79,7 @@ export default function FollowedStoresScreen() {
       <Header onMenuPress={() => setMenuOpen(true)} />
 
       <View style={{ flex: 1 }}>
-        <Text style={[text.h1, { color: colors.primaryDeep, marginHorizontal: s(16), marginTop: vs(8), marginBottom: vs(16) }]}>
+        <Text style={[text.h2, { color: colors.primaryDeep, marginHorizontal: s(16), marginTop: vs(8), marginBottom: vs(16) }]}>
           Emprendedores
         </Text>
 
@@ -98,17 +98,18 @@ export default function FollowedStoresScreen() {
         ) : stores.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialIcons name="people-outline" size={ms(80)} color={colors.primarySoft} />
-            <Text style={[text.h3, { color: colors.primaryDeep, marginTop: vs(16), textAlign: 'center' }]}>
+            <Text style={[text.h2, { color: colors.primaryDeep, marginTop: vs(16), textAlign: 'center' }]}>
               No sigues a ninguna tienda
             </Text>
             <Text style={[text.body, { color: colors.textSecondary, marginTop: vs(8), textAlign: 'center' }]}>
               Explora nuestros productos y apoya a tus artesanos favoritos.
             </Text>
-            <Button
-              title="Explorar productos"
-              onPress={() => router.push('/productos' as any)}
-              style={{ marginTop: vs(24) }}
-            />
+            <View style={{ marginTop: vs(24) }}>
+              <Button
+                title="Explorar productos"
+                onPress={() => router.push('/productos' as any)}
+              />
+            </View>
           </View>
         ) : (
           <FlatList
