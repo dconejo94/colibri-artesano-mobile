@@ -5,9 +5,12 @@ export type Category = {
   description?: string;
 };
 
+// Images belong to variants, not products directly (ProductImageResponseDTO
+// carries variant_id, never product_id) — a product's "cover photo" is
+// resolved from its variants, see utils/resolveProductImage.ts.
 export type ProductImage = {
   id: string;
-  product_id: string;
+  variant_id: string;
   image_url: string;
   is_primary: boolean;
 };
@@ -19,6 +22,7 @@ export type ProductVariant = {
   value: string;
   price_modifier: string | number;
   stock_quantity: number;
+  images?: ProductImage[];
 };
 
 export type Product = {
@@ -29,7 +33,6 @@ export type Product = {
   description: string;
   base_price: string | number;
   is_active: boolean;
-  images?: ProductImage[];
   variants?: ProductVariant[];
   store?: Store;
   category?: Category;

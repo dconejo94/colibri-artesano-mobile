@@ -6,6 +6,7 @@ import {
 
 import { ProductDetail as UIProductDetail } from '@/screens/ProductDetailScreen';
 import { normalizeError, type ApiError } from '@/src/api/errors';
+import { resolveAllProductImages } from '@/utils/resolveProductImage';
 
 export function useProductDetail(id: string) {
   const [product, setProduct] = useState<UIProductDetail | null>(null);
@@ -22,36 +23,34 @@ export function useProductDetail(id: string) {
       try {
         setIsLoading(true);
         setError(null);
-
-        const [data, variants] = await Promise.all([
-          getProduct(id),
-          getProductVariants(id),
-        ]);
+        const data: BackendProduct = await getProduct(id);
 
         if (!isMounted) return;
 
+        const variants = data.variants ?? [];
+
+        // Determine if available based on active flag and variants stock
         const isAvailable =
           data.is_active &&
-          variants.some((variant) => variant.stock_quantity > 0);
+          (variants.length === 0 || variants.some((v) => v.stock_quantity > 0));
 
-        const images = data.images?.length
-          ? [...data.images]
-              .sort((a, b) => Number(b.is_primary) - Number(a.is_primary))
-              .map((image) => image.image_url)
-          : ['https://via.placeholder.com/600'];
+        // Gallery images — resolved from variants[].images[]
+        const images = resolveAllProductImages(data);
 
         const mapped: UIProductDetail = {
           id: data.id,
           name: data.name,
-          artisan: data.store?.name ?? 'Colibrí Artesano',
+          artisan: data.store?.name || 'Colibrí Artesano',
+          artisanStoreId: data.store?.id,
+          artisanBio: data.store?.description || undefined,
           price: Number(data.base_price) || 0,
           currency: 'CRC',
           images,
           status: isAvailable ? 'available' : 'sold_out',
-          category: data.category?.name ?? 'Artesanía',
-          description: data.description ?? 'Sin descripción',
-          variants,
+          category: data.category?.name || 'Artesanía',
+          description: data.description || 'Sin descripción',
           materials: [],
+          variants,
         };
 
         setProduct(mapped);

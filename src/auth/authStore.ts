@@ -22,6 +22,7 @@ type AuthState = {
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   setAccessToken: (accessToken: string) => void;
+  setUser: (user: User) => void;
 };
 
 const anonymous = {
@@ -85,6 +86,10 @@ export const useAuthStore = create<AuthState>((set) => {
 
     // Called by the axios refresh interceptor after a successful token refresh.
     setAccessToken: (accessToken) => set({ accessToken }),
+
+    // Called after PUT /users/me so the rest of the app reflects the edit
+    // immediately without a full re-bootstrap.
+    setUser: (user) => set({ user }),
   };
 });
 
