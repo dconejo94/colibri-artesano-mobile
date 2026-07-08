@@ -87,6 +87,7 @@ export default function RootLayout() {
   return (
     <StripeProvider
       publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+      merchantIdentifier="merchant.com.colibri"
     >
       <ThemeProvider>
         <Stack>
@@ -98,7 +99,7 @@ export default function RootLayout() {
           <Stack.Screen name="eventos"            options={{ title: 'Eventos',    ...headerTheme }} />
           <Stack.Screen name="carrito"            options={{ title: 'Carrito',    ...headerTheme }} />
           <Stack.Screen name="favoritos"          options={{ title: 'Favoritos',  ...headerTheme }} />
-          <Stack.Screen name="checkout/index"     options={{ headerShown: false }}/>
+          <Stack.Screen name="checkout/index"                      options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </StripeProvider>

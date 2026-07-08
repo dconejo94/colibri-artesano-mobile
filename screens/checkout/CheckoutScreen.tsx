@@ -2,8 +2,9 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { CardField, useStripe } from '@stripe/stripe-react-native';
+import { useStripe } from '@stripe/stripe-react-native';
 import NetInfo from '@react-native-community/netinfo';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme, spacing } from '@/src/theme';
 import SubHeader from '@/components/ui/SubHeader';
@@ -13,54 +14,57 @@ import ErrorState from '@/components/ui/ErrorState';
 
 import CheckoutSection from '@/components/checkout/CheckoutSection';
 import CartSummaryCard from '@/components/checkout/CartSummaryCard';
-import DeliveryDetailsCard, {
-  Address,
-} from '@/components/checkout/DeliveryDetailsCard';
-import PaymentMethodCard, {
-  SavedPaymentMethod,
-} from '@/components/checkout/PaymentMethodCard';
+import DeliveryDetailsCard from '@/components/checkout/DeliveryDetailsCard';
+import PaymentMethodCard from '@/components/checkout/PaymentMethodCard';
 import FareBreakdownCard from '@/components/checkout/FareBreakDownCard';
 
+import AddressForm from '@/components/checkout/AddressForm';
+import PaymentForm from '@/components/checkout/PaymentForm';
+
+import { useCheckoutStore } from '@/src/checkout/checkoutStore';
 import { createOrder, createPaymentIntent } from '@/api/payments';
 import { useCart } from '@/src/hooks/useCart';
-
 type Status = 'idle' | 'processing' | 'error';
-
 const PLACEHOLDER_CURRENCY = 'crc';
 
 export default function CheckoutScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-
   const { cart, isLoading, isError, refetch } = useCart();
   const { confirmPayment } = useStripe();
-
+  const {
+    address,
+    paymentMethod,
+    clearCheckout,
+  } = useCheckoutStore();
   const [status, setStatus] = useState<Status>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [address] = useState<Address | null>(null);
-  const [paymentMethod] = useState<SavedPaymentMethod | null>(null);
-
   const subtotal = parseFloat(cart?.total_amount ?? '0');
   const shippingFee = 0;
   const total = subtotal + shippingFee;
-
   const handleCancel = useCallback(() => {
     router.back();
-  }, [router]);
-
-  const handleEditAddress = useCallback(() => {
-    router.push('/select-address');
-  }, [router]);
-
-  const handleEditPaymentMethod = useCallback(() => {
-    router.push('/select-payment-method');
   }, [router]);
 
   const handleCheckout = useCallback(async () => {
     setErrorMessage(null);
 
-    const net = await NetInfo.fetch();
+    if (!address) {
+      setErrorMessage(
+        'Debes agregar una dirección de entrega.'
+      );
+      return;
+    }
 
+    if (!paymentMethod) {
+      setErrorMessage(
+        'Debes agregar un método de pago.'
+      );
+      return;
+    }
+
+    const net = await NetInfo.fetch();
+  
     if (!net.isConnected) {
       setStatus('error');
       setErrorMessage(
@@ -72,55 +76,93 @@ export default function CheckoutScreen() {
     setStatus('processing');
 
     try {
-      const { clientSecret } = await createPaymentIntent();
+      const { clientSecret } =
+        await createPaymentIntent();
 
-      const { error, paymentIntent } = await confirmPayment(clientSecret, {
-        paymentMethodType: 'Card',
-      });
+      const { error, paymentIntent } =
+        await confirmPayment(
+          clientSecret,
+          {
+            paymentMethodType: 'Card',
+          }
+        );
 
-      if (error) {
+      if(error){
         setStatus('error');
-        setErrorMessage(mapStripeError(error.code, error.message));
+        setErrorMessage(
+          mapStripeError(
+            error.code,
+            error.message
+          )
+        );
         return;
       }
 
-      if (paymentIntent?.status !== 'Succeeded') {
+      if(paymentIntent?.status !== 'Succeeded'){
         setStatus('error');
-        setErrorMessage('El pago no pudo completarse. Intenta de nuevo.');
+        setErrorMessage(
+          'El pago no pudo completarse.'
+        );
         return;
       }
 
       const order = await createOrder();
-
+      clearCheckout();
       router.replace({
-        pathname: '/order-confirmation',
-        params: { orderId: order.id },
+        pathname:'/order-confirmation',
+        params:{
+          orderId:order.id,
+        },
       });
-    } catch (err: any) {
+
+    } catch(err:any){
+
       setStatus('error');
+
       setErrorMessage(
-        err?.message ?? 'Ocurrió un error inesperado. Intenta de nuevo.'
+        err?.message ??
+        'Ocurrió un error inesperado.'
       );
+
     }
-  }, [confirmPayment, router]);
 
-  if (isLoading) {
-    return <LoadingState message="Cargando tu carrito…" />;
-  }
+  },[
+    address,
+    paymentMethod,
+    confirmPayment,
+    router,
+    clearCheckout,
+  ]);
 
-  if (isError || !cart) {
+  if(isLoading){
     return (
-      <ErrorState
-        message="No pudimos cargar tu carrito. Intenta de nuevo."
-        onRetry={refetch}
-      />
+      <LoadingState message="Cargando tu carrito…" />
     );
   }
 
+  if(isError || !cart){
+
+    return (
+      <ErrorState
+        message="No pudimos cargar tu carrito."
+        onRetry={refetch}
+      />
+    );
+
+  }
+
   return (
-    <View
-      style={[styles.screen, { backgroundColor: colors.bgPage }]}
+
+    <SafeAreaView
+      edges={['top']}
+      style={[
+        styles.screen,
+        {
+          backgroundColor:colors.bgPage,
+        },
+      ]}
     >
+    
       <SubHeader
         title="Caja"
         onBack={() => router.back()}
@@ -136,54 +178,46 @@ export default function CheckoutScreen() {
 
       <ScrollView
         contentContainerStyle={{
-          padding: spacing[4],
-          gap: spacing[6],
-          paddingBottom: spacing[10],
+          padding:spacing[4],
+          gap:spacing[6],
+          paddingBottom:spacing[10],
         }}
         keyboardShouldPersistTaps="handled"
       >
+      
         <CheckoutSection title="Resumen de la orden">
-          <View style={{ gap: spacing[3] }}>
-            {cart.stores.map((store) => (
-              <CartSummaryCard
-                key={store.id}
-                store={store}
-              />
-            ))}
+          <View style={{gap:spacing[3]}}>
+            {
+              cart.stores.map(store => (
+                <CartSummaryCard
+                  key={store.id}
+                  store={store}
+                />
+              ))
+            }
           </View>
         </CheckoutSection>
 
         <CheckoutSection title="Detalles de entrega">
-          {address ? (
-            <DeliveryDetailsCard
-              address={address}
-              onEdit={handleEditAddress}
-            />
-          ) : (
-            <Button
-              title="Seleccionar dirección"
-              variant="secondary"
-              onPress={handleEditAddress}
-            />
-          )}
+          {
+            address ? (
+              <DeliveryDetailsCard
+                address={address}
+              />):(<AddressForm />)
+          }
         </CheckoutSection>
 
         <CheckoutSection title="Método de pago">
-          {paymentMethod ? (
-            <PaymentMethodCard
-              paymentMethod={paymentMethod}
-              onEdit={handleEditPaymentMethod}
-            />
-          ) : (
-            <Button
-              title="Seleccionar método de pago"
-              variant="secondary"
-              onPress={handleEditPaymentMethod}
-            />
-          )}
+          {
+            paymentMethod ? (
+              <PaymentMethodCard
+                paymentMethod={paymentMethod}
+              />):(<PaymentForm />)
+          }
         </CheckoutSection>
 
         <CheckoutSection title="Desglose de tarifas">
+
           <FareBreakdownCard
             subtotal={subtotal}
             shippingFee={shippingFee}
@@ -191,63 +225,63 @@ export default function CheckoutScreen() {
             total={total}
             currency={PLACEHOLDER_CURRENCY}
           />
+
         </CheckoutSection>
-
-        <CardField
-          postalCodeEnabled
-          placeholders={{ number: '4242 4242 4242 4242' }}
-          style={styles.cardField}
-        />
-
-        {status === 'error' && errorMessage ? (
-          <ErrorState
-            message={errorMessage}
-            onRetry={handleCheckout}
-          />
-        ) : null}
+        {
+          status === 'error' && errorMessage ?
+          (<ErrorState message={errorMessage} onRetry={handleCheckout}/>): null
+        }
       </ScrollView>
 
       <View
         style={[
           styles.footer,
           {
-            borderTopColor: colors.border,
-            backgroundColor: colors.bgPage,
+            borderTopColor:colors.border,
+            backgroundColor:colors.bgPage,
           },
         ]}
       >
         <Button
           title="Finalizar y Comprar"
           onPress={handleCheckout}
-          loading={status === 'processing'}
-          disabled={status === 'processing'}
+          loading={
+            status === 'processing'
+          }
+          disabled={
+            status === 'processing'
+          }
         />
       </View>
-    </View>
+
+    </SafeAreaView>
   );
 }
 
-function mapStripeError(code?: string, message?: string): string {
-  switch (code) {
+function mapStripeError(
+  code?:string,
+  message?:string
+){
+  switch(code){
     case 'Canceled':
       return 'Pago cancelado.';
     case 'Failed':
-      return message ?? 'El pago fue rechazado. Verifica los datos de tu tarjeta.';
+      return message ??
+        'El pago fue rechazado.';
     default:
-      return message ?? 'No se pudo procesar el pago. Intenta de nuevo.';
+      return message ??
+        'No se pudo procesar el pago.';
   }
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  screen:{
+    flex:1,
   },
-  cardField: {
-    width: '100%',
-    height: 50,
-  },
-  footer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    padding: spacing[4],
+  footer:{
+    borderTopWidth:
+      StyleSheet.hairlineWidth,
+
+    padding:spacing[4],
   },
 });
