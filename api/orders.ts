@@ -13,6 +13,13 @@ export async function getStoreOrders(
   return data;
 }
 
+export async function getStoreSalesSummary(storeId: string): Promise<{ total_orders: number; total_sales: number }> {
+  const { data } = await client.get<{ total_orders: number; total_sales: number }>(
+    `/api/v1/stores/${storeId}/sales`
+  );
+  return data;
+}
+
 export async function updateOrderStatus(
   storeId: string,
   storeOrderId: string,
@@ -26,15 +33,10 @@ export async function updateOrderStatus(
 }
 
 
-export async function createOrder(body: {
-  buyer_id: string;
-  items: Array<{
-    product_id: string;
-    variant_id?: string | null;
-    quantity: number;
-  }>;
-}) {
-  const { data } = await client.post("/api/v1/orders/", body);
+// Places an order from the buyer's current cart — the backend derives the
+// items from GET /cart server-side, so this call takes no body.
+export async function checkout() {
+  const { data } = await client.post("/api/v1/orders/");
   return data;
 }
 

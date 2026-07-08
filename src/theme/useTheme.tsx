@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 import { lightColors, darkColors, type AppColors } from './colors';
 import { fonts, fontSizes, textStyles, tracking, weights } from './typography';
 import { spacing, radii, shadows } from './spacing';
+import { usePreferencesStore } from '@/src/store/preferencesStore';
 
 // Full theme object type ───────────────────────────────────────────────────────
 interface Theme {
@@ -26,7 +27,8 @@ const ThemeContext = createContext<Theme | null>(null);
 // Must wrap the entire app, before the NavigationContainer.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const scheme = useColorScheme();
-  const isDark  = scheme === 'dark';
+  const themeOverride = usePreferencesStore((s) => s.themeOverride);
+  const isDark = themeOverride === 'system' ? scheme === 'dark' : themeOverride === 'dark';
 
   const theme = useMemo<Theme>(() => ({
     colors:   isDark ? darkColors : lightColors,

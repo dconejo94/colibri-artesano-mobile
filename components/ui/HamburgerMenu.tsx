@@ -1,5 +1,7 @@
 import { fonts, useTheme } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
+import { useCartStore } from '@/src/store/cartStore';
+import { useNotificationsStore } from '@/src/store/notificationsStore';
 import type { User } from '@/types/user';
 import { s, vs } from '@/utils/scale';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -11,6 +13,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -43,13 +46,19 @@ function toDisplayUser(user: User | null) {
 
 // ─── Items de navegación ─────────────────────────────────────────────────────
 // icon: nombre de MaterialIcons, href: ruta de Expo Router
+// requiresManage: solo se muestra a vendedores/admin (gestión de eventos)
 const NAV_ITEMS = [
-  { label: 'Inicio',     icon: 'home'           as const, href: '/'          },
-  { label: 'Productos',  icon: 'eco'            as const, href: '/productos'  },
-  { label: 'Mi Tienda',  icon: 'storefront'     as const, href: '/store'    },
-  { label: 'Eventos',    icon: 'event'          as const, href: '/eventos'   },
-  { label: 'Carrito',    icon: 'shopping-cart'  as const, href: '/carrito'   },
-  { label: 'Favoritos',  icon: 'favorite'       as const, href: '/favoritos' },
+  { label: 'Inicio',            icon: 'home'           as const, href: '/'               },
+  { label: 'Productos',         icon: 'eco'            as const, href: '/productos'      },
+  { label: 'Mi Tienda',         icon: 'storefront'     as const, href: '/store'           },
+  { label: 'Buscar',            icon: 'search'         as const, href: '/buscar'          },
+  { label: 'Eventos',           icon: 'event'          as const, href: '/eventos'         },
+  { label: 'Gestionar eventos', icon: 'tune'           as const, href: '/eventos/admin', requiresManage: true },
+  { label: 'Notificaciones',    icon: 'notifications'  as const, href: '/notificaciones'  },
+  { label: 'Carrito',           icon: 'shopping-cart'  as const, href: '/carrito'         },
+  { label: 'Favoritos',         icon: 'favorite'       as const, href: '/favoritos'       },
+  { label: 'Emprendedores',     icon: 'people'         as const, href: '/emprendedores'   },
+  { label: 'Mi Perfil',         icon: 'person'         as const, href: '/perfil'          },
 ];
 
 type Props = {
@@ -64,6 +73,10 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
   const displayUser = toDisplayUser(user);
   const router   = useRouter();
   const pathname = usePathname();
+  const cartCount = useCartStore((s) => s.count);
+  const unreadCount = useNotificationsStore((s) => s.unreadCount);
+  const canManageEvents = !!user?.is_admin;
+  const visibleNavItems = NAV_ITEMS.filter((item) => !item.requiresManage || canManageEvents);
 
   const [visible, setVisible] = useState(false);
   const translateX = useSharedValue(-DRAWER_WIDTH);
@@ -128,7 +141,12 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
         ]}
       >
         {/* ── Perfil de usuario ──────────────────────────────────────────── */}
-        <View style={[styles.profile, { paddingHorizontal: spacing[5] }]}>
+        <Pressable
+          style={[styles.profile, { paddingHorizontal: spacing[5] }]}
+          onPress={() => handleNav('/perfil')}
+          accessibilityLabel="Ir a mi perfil"
+          accessibilityRole="button"
+        >
           {/* Avatar circular con iniciales */}
           <View
             style={[
@@ -153,7 +171,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
               {displayUser.role}
             </Text>
           </View>
-        </View>
+        </Pressable>
 
         {/* Separador */}
         <View
@@ -168,9 +186,11 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
         />
 
         {/* ── Links de navegación ───────────────────────────────────────── */}
-        <View style={[styles.nav, { paddingHorizontal: spacing[4] }]}>
-          {NAV_ITEMS.map((item) => {
+        <ScrollView style={styles.nav} contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: vs(16) }}>
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
+            const badgeCount =
+              item.href === '/carrito' ? cartCount : item.href === '/notificaciones' ? unreadCount : 0;
 
             return (
               <Pressable
@@ -207,15 +227,31 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
                         ? fonts.sanMedium
                         : fonts.sanRegular,
                       marginLeft: spacing[3],
+                      flex: 1,
                     },
                   ]}
                 >
                   {item.label}
                 </Text>
+                {badgeCount > 0 && (
+                  <View
+                    style={[
+                      styles.navBadge,
+                      {
+                        backgroundColor: item.href === '/notificaciones' ? colors.errorText : colors.primary,
+                        borderRadius: radii.full,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.navBadgeText, { color: colors.textOnPrimary }]}>
+                      {badgeCount > 9 ? '9+' : badgeCount}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* ── Log out ───────────────────────────────────────────────────── */}
         <View style={{ paddingHorizontal: spacing[4] }}>
@@ -289,5 +325,16 @@ const styles = StyleSheet.create({
   navItem: {
     flexDirection: 'row',
     alignItems:    'center',
+  },
+  navBadge: {
+    minWidth:          20,
+    height:            20,
+    paddingHorizontal: 6,
+    alignItems:        'center',
+    justifyContent:    'center',
+  },
+  navBadgeText: {
+    fontSize:   11,
+    fontWeight: '700',
   },
 });

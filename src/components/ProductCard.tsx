@@ -1,4 +1,5 @@
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { fonts, useTheme } from '@/src/theme';
 import StatusBadge, { type BadgeStatus } from './StatusBadge';
@@ -8,18 +9,21 @@ export interface Product {
   id:               string;
   name:             string;
   artisan:          string;
+  storeId?:         string;   // habilita el link "ver tienda" en el nombre del artesano
   price:            number;
   currency:         string;
   imageUri:         string;
   status:           BadgeStatus;
   category:         string;
   shortDescription?: string;  // subtítulo italic bajo el nombre
+  isFavorite?:      boolean;
 }
 
 interface Props {
   product:  Product;
   onPress:  (id: string) => void;
   onObtain: (id: string) => void;  // botón "Obtener"
+  onArtisanPress?: (storeId: string) => void;
   width?:   number;
 }
 
@@ -31,12 +35,14 @@ function getInitials(name: string): string {
 }
 
 // ─── Componente ──────────────────────────────────────────────────────────────
-export default function ProductCard({ product, onPress, onObtain, width }: Props) {
+export default function ProductCard({ product, onPress, onObtain, onArtisanPress, width }: Props) {
   const { colors, spacing, radii, shadows, text } = useTheme();
+  const [isFav, setIsFav] = useState(!!product.isFavorite);
 
+  const safeCurrency = product.currency || 'CRC';
   const priceFormatted = new Intl.NumberFormat(
-    product.currency === 'CRC' ? 'es-CR' : 'en-US',
-    { style: 'currency', currency: product.currency, maximumFractionDigits: 0 },
+    safeCurrency === 'CRC' ? 'es-CR' : 'en-US',
+    { style: 'currency', currency: safeCurrency, maximumFractionDigits: 0 },
   ).format(product.price);
 
   const initials = getInitials(product.artisan);
@@ -74,12 +80,26 @@ export default function ProductCard({ product, onPress, onObtain, width }: Props
         {/* Corazón — top right */}
         <Pressable
           style={[styles.heartBtn, { backgroundColor: colors.bgCard }]}
-          onPress={() => {}}
+          onPress={async () => {
+            const nextVal = !isFav;
+            setIsFav(nextVal);
+            try {
+              if (nextVal) {
+                const { favoriteProduct } = await import('@/api/products');
+                await favoriteProduct(product.id);
+              } else {
+                const { unfavoriteProduct } = await import('@/api/products');
+                await unfavoriteProduct(product.id);
+              }
+            } catch (e) {
+              setIsFav(!nextVal); // revert on error
+            }
+          }}
           accessibilityLabel="Agregar a favoritos"
           accessibilityRole="button"
           hitSlop={8}
         >
-          <MaterialIcons name="favorite-border" size={18} color={colors.accent} />
+          <MaterialIcons name={isFav ? "favorite" : "favorite-border"} size={18} color={colors.accent} />
         </Pressable>
       </View>
 
@@ -130,7 +150,14 @@ export default function ProductCard({ product, onPress, onObtain, width }: Props
             </Text>
           </View>
 
-          <View style={{ flex: 1 }}>
+          <Pressable
+            style={{ flex: 1 }}
+            disabled={!product.storeId || !onArtisanPress}
+            onPress={() => product.storeId && onArtisanPress?.(product.storeId)}
+            hitSlop={4}
+            accessibilityLabel={`Ver tienda de ${product.artisan}`}
+            accessibilityRole={product.storeId && onArtisanPress ? 'button' : undefined}
+          >
             <Text
               style={[text.label, { color: colors.textPrimary, fontFamily: fonts.sanBold }]}
               numberOfLines={1}
@@ -143,7 +170,7 @@ export default function ProductCard({ product, onPress, onObtain, width }: Props
             >
               Artesano • {product.category}
             </Text>
-          </View>
+          </Pressable>
         </View>
 
         {/* Separador */}

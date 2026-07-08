@@ -8,6 +8,7 @@ import { type BadgeStatus } from '../StatusBadge';
 interface Props {
   productId: string;
   status:    BadgeStatus;
+  disabled?:   boolean;  // ej. falta elegir variante
   onBuyNow:    (id: string) => void;
   onAddToCart: (id: string) => void;
 }
@@ -15,6 +16,7 @@ interface Props {
 export default function DetailActionBar({
   productId,
   status,
+  disabled,
   onBuyNow,
   onAddToCart,
 }: Props) {
@@ -22,6 +24,7 @@ export default function DetailActionBar({
   const insets = useSafeAreaInsets();
 
   const isSoldOut = status === 'sold_out';
+  const isBlocked = isSoldOut || disabled;
 
   return (
     <View
@@ -48,11 +51,11 @@ export default function DetailActionBar({
             borderRadius:    radii.md,
             borderWidth:     1,
             borderColor:     colors.btnSecondaryBorder,
-            opacity:         isSoldOut || pressed ? 0.6 : 1,
+            opacity:         isBlocked || pressed ? 0.6 : 1,
           },
         ]}
         onPress={() => onAddToCart(productId)}
-        disabled={isSoldOut}
+        disabled={isBlocked}
         accessibilityLabel="Agregar al carrito"
         accessibilityRole="button"
       >
@@ -69,16 +72,16 @@ export default function DetailActionBar({
             flex:            1.6,
             backgroundColor: colors.btnPrimaryBg,
             borderRadius:    radii.md,
-            opacity:         isSoldOut || pressed ? 0.6 : 1,
+            opacity:         isBlocked || pressed ? 0.6 : 1,
           },
         ]}
         onPress={() => onBuyNow(productId)}
-        disabled={isSoldOut}
-        accessibilityLabel={isSoldOut ? 'Producto agotado' : 'Comprar ahora'}
+        disabled={isBlocked}
+        accessibilityLabel={isSoldOut ? 'Producto agotado' : disabled ? 'Elige una variante primero' : 'Comprar ahora'}
         accessibilityRole="button"
       >
         <Text style={[text.button, { color: colors.btnPrimaryText }]}>
-          {isSoldOut ? 'Agotado' : 'Comprar ahora'}
+          {isSoldOut ? 'Agotado' : disabled ? 'Elige una opción' : 'Comprar ahora'}
         </Text>
       </Pressable>
     </View>

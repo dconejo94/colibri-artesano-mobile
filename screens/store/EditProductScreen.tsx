@@ -17,6 +17,7 @@ import { s, vs, ms } from "@/utils/scale";
 import { formatPrice } from "@/utils/format";
 import { useTheme, fonts } from "@/src/theme";
 import client from "@/api/client";
+import * as ImagePicker from "expo-image-picker";
 import {
   getProduct,
   updateProduct,
@@ -24,6 +25,8 @@ import {
   updateProductVariant,
   deleteProductVariant,
   addProductImage,
+  getUploadUrl,
+  uploadImageToBlob,
 } from "@/api/products";
 import { getCategories } from "@/api/categories";
 import type { Product, ProductVariant, Category } from "@/types/store";
@@ -71,7 +74,7 @@ export default function EditProductScreen() {
   const [stockSaving, setStockSaving] = useState(false);
 
   const [showImageForm, setShowImageForm] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [imageSaving, setImageSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<
@@ -235,16 +238,59 @@ export default function EditProductScreen() {
 
   // ── Images ──────────────────────────────────────────────────────────────────
 
-  const handleAddImage = async () => {
-    if (!id || !imageUrl.trim()) return;
-    setImageSaving(true);
+  const handlePickAndUploadImage = async () => {
+    if (!id) return;
+    const variants = product?.variants || [];
+    const targetVariantId = selectedVariantId || (variants.length === 1 ? variants[0].id : null);
+    
+    if (!targetVariantId) {
+      Alert.alert("Aviso", "Selecciona una variante primero.");
+      return;
+    }
+
     try {
-      const img = await addProductImage(id, {
-        image_url: imageUrl.trim(),
-        is_primary: (product?.images?.length ?? 0) === 0,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
       });
-      setProduct((prev) => prev ? { ...prev, images: [...(prev.images || []), img] } : prev);
-      setImageUrl("");
+
+      if (result.canceled || !result.assets[0]) return;
+
+      setImageSaving(true);
+      const asset = result.assets[0];
+      const uri = asset.uri;
+      const filename = uri.split("/").pop() || "image.jpg";
+      const contentType = filename.endsWith(".png") ? "image/png" : "image/jpeg";
+
+      // 1. Get SAS URL
+      const { upload_url, blob_url } = await getUploadUrl(id, targetVariantId, filename, contentType);
+      
+      // 2. Upload blob
+      await uploadImageToBlob(upload_url, uri, contentType);
+
+      // 3. Register image in DB
+      const targetVariant = variants.find(v => v.id === targetVariantId);
+      const isPrimary = (targetVariant?.images?.length ?? 0) === 0;
+
+      const img = await addProductImage(id, targetVariantId, {
+        image_url: blob_url,
+        is_primary: isPrimary,
+      });
+
+      // Update state
+      setProduct((prev) => {
+        if (!prev) return prev;
+        const newVariants = (prev.variants || []).map((v) => {
+          if (v.id === targetVariantId) {
+            return { ...v, images: [...(v.images || []), img] };
+          }
+          return v;
+        });
+        return { ...prev, variants: newVariants };
+      });
+
       setShowImageForm(false);
     } catch (err) {
       const apiErr = normalizeError(err);
@@ -360,29 +406,59 @@ export default function EditProductScreen() {
             </TouchableOpacity>
           </View>
 
-          {(product?.images?.length ?? 0) === 0 && !showImageForm && (
+          {((product?.variants ?? []).flatMap(v => v.images || []).length) === 0 && !showImageForm && (
             <Text style={[text.body, local.emptyText, { color: colors.textSecondary }]}>Sin imágenes</Text>
           )}
 
-          {(product?.images ?? []).map((img) => (
-            <View key={img.id} style={[local.imageRow, { backgroundColor: colors.bgSection }]}>
-              <MaterialIcons name="image" size={ms(20)} color={colors.primary} />
-              <Text style={[local.imageUrl, { color: colors.textSecondary }]} numberOfLines={1}>{img.image_url}</Text>
-              {img.is_primary && (
-                <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}>
-                  <Text style={[local.primaryText, { color: colors.textOnPrimary }]}>Principal</Text>
+          {(product?.variants ?? []).map((v) => 
+            (v.images ?? []).map((img) => (
+              <View key={img.id} style={[local.imageRow, { backgroundColor: colors.bgSection }]}>
+                <MaterialIcons name="image" size={ms(20)} color={colors.primary} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[local.imageUrl, { color: colors.textSecondary }]} numberOfLines={1}>{img.image_url}</Text>
+                  <Text style={[text.caption, { color: colors.textMuted, fontSize: ms(10) }]}>Variante: {v.name} - {v.value}</Text>
                 </View>
-              )}
-            </View>
-          ))}
+                {img.is_primary && (
+                  <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}>
+                    <Text style={[local.primaryText, { color: colors.textOnPrimary }]}>Principal</Text>
+                  </View>
+                )}
+              </View>
+            ))
+          )}
 
           {showImageForm && (
             <View style={local.inlineForm}>
-              <Input label="URL de imagen" value={imageUrl} onChangeText={setImageUrl} placeholder="https://..." />
+              {(product?.variants?.length ?? 0) > 1 && (
+                <View style={{ marginBottom: vs(8) }}>
+                  <Text style={[text.label, { color: colors.textPrimary, marginBottom: vs(4) }]}>Selecciona variante:</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: s(8) }}>
+                    {(product?.variants ?? []).map((v) => (
+                      <TouchableOpacity
+                        key={v.id}
+                        style={{
+                          paddingHorizontal: s(12),
+                          paddingVertical: vs(6),
+                          borderRadius: radii.md,
+                          borderWidth: 1,
+                          borderColor: selectedVariantId === v.id ? colors.primary : colors.border,
+                          backgroundColor: selectedVariantId === v.id ? colors.primarySoft : colors.bgSection,
+                        }}
+                        onPress={() => setSelectedVariantId(v.id)}
+                      >
+                        <Text style={[text.caption, { color: selectedVariantId === v.id ? colors.primaryDeep : colors.textPrimary }]}>
+                          {v.name}: {v.value}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+              
               <Button
-                title={imageSaving ? "Agregando..." : "Agregar imagen"}
-                onPress={handleAddImage}
-                disabled={imageSaving || !imageUrl.trim()}
+                title={imageSaving ? "Subiendo..." : "Seleccionar y subir imagen"}
+                onPress={handlePickAndUploadImage}
+                disabled={imageSaving || ((product?.variants?.length ?? 0) > 1 && !selectedVariantId)}
               />
             </View>
           )}

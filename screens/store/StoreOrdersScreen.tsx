@@ -14,7 +14,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { s, vs, ms } from "@/utils/scale";
 import { formatPrice, translateStatus, statusColor } from "@/utils/format";
 import { useTheme } from "@/src/theme";
-import { getStoreOrders, updateOrderStatus } from "@/api/orders";
+import { getStoreOrders, updateOrderStatus, getStoreSalesSummary } from "@/api/orders";
 import type { StoreOrder } from "@/types/store";
 import { normalizeError, type ApiError } from "@/src/api/errors";
 import ErrorBanner from "@/src/components/ErrorBanner";
@@ -44,12 +44,19 @@ export default function StoreOrdersScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
+  const [salesSummary, setSalesSummary] = useState<{total_orders: number, total_sales: number} | null>(null);
 
   const fetchOrders = useCallback(async (p = 1, append = false) => {
     if (!storeId) return;
     if (p === 1) setLoading(true); else setLoadingMore(true);
     setError(null);
     try {
+      if (p === 1) {
+        // Fetch summary only on the first page
+        const summary = await getStoreSalesSummary(storeId);
+        setSalesSummary(summary);
+      }
+      
       const res = await getStoreOrders(storeId, p, 15);
       setOrders(append ? (prev) => [...prev, ...res.items] : res.items);
       setTotal(res.total);
@@ -207,6 +214,31 @@ export default function StoreOrdersScreen() {
   // sentido dejar el estado vacío debajo (se confundiría con "no hay pedidos").
   const hasInitialError = !!error && orders.length === 0;
 
+  const ListHeader = () => (
+    <>
+      {salesSummary && (
+        <View style={[local.summaryCard, { backgroundColor: colors.primaryDeep }]}>
+          <Text style={[text.h3, { color: 'white', marginBottom: spacing[2] }]}>Ventas Completadas</Text>
+          <View style={local.summaryRow}>
+            <View style={local.summaryItem}>
+              <Text style={[text.caption, { color: 'rgba(255,255,255,0.8)' }]}>Total Generado</Text>
+              <Text style={[text.h1, { color: 'white', marginTop: spacing[1] }]}>
+                {formatPrice(salesSummary.total_sales)}
+              </Text>
+            </View>
+            <View style={local.summaryItemRight}>
+              <Text style={[text.caption, { color: 'rgba(255,255,255,0.8)' }]}>Pedidos Entregados</Text>
+              <Text style={[text.h1, { color: 'white', marginTop: spacing[1] }]}>
+                {salesSummary.total_orders}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+      <ErrorBanner error={error} onRetry={() => fetchOrders(page + 1, true)} onDismiss={() => setError(null)} />
+    </>
+  );
+
   return (
     <SafeAreaView edges={["top"]} style={[local.wrapper, { backgroundColor: colors.bgPage }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -220,6 +252,7 @@ export default function StoreOrdersScreen() {
         <ErrorBanner error={error} onRetry={() => fetchOrders(1)} variant="centered" />
       ) : orders.length === 0 ? (
         <View style={local.centered}>
+          {ListHeader()}
           <View style={[local.emptyIcon, { backgroundColor: colors.bgSection, borderRadius: radii.xl }]}>
             <MaterialIcons name="receipt-long" size={ms(48)} color={colors.primarySoft} />
           </View>
@@ -232,15 +265,12 @@ export default function StoreOrdersScreen() {
         </View>
       ) : (
         <>
-          {/* Error de paginación: ya hay pedidos en pantalla, no tapamos la lista.
-              Reintenta la página que falló (page + 1, con append) en vez de
-              reemplazar lo ya cargado. */}
-          <ErrorBanner error={error} onRetry={() => fetchOrders(page + 1, true)} onDismiss={() => setError(null)} />
           <FlatList
             data={orders}
             keyExtractor={(item) => item.id}
             renderItem={renderOrder}
             contentContainerStyle={local.list}
+            ListHeaderComponent={ListHeader}
             onEndReached={() => {
               if (!loadingMore && orders.length < total) fetchOrders(page + 1, true);
             }}
@@ -262,6 +292,22 @@ const local = StyleSheet.create({
   wrapper: { flex: 1 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: s(24), gap: vs(12) },
   list: { padding: s(16), gap: vs(12) },
+  summaryCard: {
+    padding: s(20),
+    borderRadius: 16,
+    marginBottom: vs(12),
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  summaryItem: {
+    flex: 1,
+  },
+  summaryItemRight: {
+    alignItems: 'flex-end',
+  },
   card: { padding: s(16), gap: vs(10), borderWidth: 0.5, overflow: "hidden" },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   orderIdRow: { flexDirection: "row", alignItems: "center", gap: s(6), flex: 1 },

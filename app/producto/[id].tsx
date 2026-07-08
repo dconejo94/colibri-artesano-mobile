@@ -1,14 +1,34 @@
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useTheme } from '@/src/theme';
 import ProductDetailScreen from '@/screens/ProductDetailScreen';
 import { useProductDetail } from '@/src/hooks/useProductDetail';
+import { addToCart } from '@/api/cart';
+import { useCartStore } from '@/src/store/cartStore';
+import { normalizeError } from '@/src/api/errors';
 
 export default function ProductoRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, fonts } = useTheme();
+  const router = useRouter();
 
   const { product, isLoading, error, refetch } = useProductDetail(id);
+
+  const handleAddToCart = async (productId: string, variantId: string | null) => {
+    try {
+      const cart = await addToCart({ product_id: productId, variant_id: variantId, quantity: 1 });
+      useCartStore.getState().setFromCart(cart);
+      Toast.show({ type: 'success', text1: 'Añadido al carrito' });
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'No se pudo añadir al carrito', text2: normalizeError(err).message });
+    }
+  };
+
+  const handleBuyNow = async (productId: string, variantId: string | null) => {
+    await handleAddToCart(productId, variantId);
+    router.push('/carrito' as any);
+  };
 
   return (
     <>
@@ -40,10 +60,11 @@ export default function ProductoRoute() {
           product={product ?? null}
           error={error ?? (!product ? { status: 404, message: 'Producto no encontrado.' } : null)}
           onRetry={refetch}
-          onAddToCart={(id) => console.log('Carrito:', id)}
-          onBuyNow={(id) => console.log('Comprar:', id)}
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
+          onArtisanPress={(storeId) => router.push(`/tienda/${storeId}` as any)}
         />
       )}
     </>
   );
-}
+}

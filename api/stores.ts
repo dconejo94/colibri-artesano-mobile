@@ -1,5 +1,6 @@
 import client from "./client";
 import type { Store } from "@/types/store";
+import type { StoreProfile } from "@/types/vendor";
 
 export async function createStore(body: {
   owner_id: string;
@@ -8,6 +9,21 @@ export async function createStore(body: {
 }): Promise<Store> {
   const { data } = await client.post<Store>("/api/v1/stores/", body);
   return data;
+}
+
+export async function getStoreProfile(storeId: string): Promise<StoreProfile> {
+  const { data } = await client.get<StoreProfile>(
+    `/api/v1/stores/${storeId}/profile`
+  );
+  return data;
+}
+
+export async function followStore(storeId: string): Promise<void> {
+  await client.post(`/api/v1/stores/${storeId}/follow`);
+}
+
+export async function unfollowStore(storeId: string): Promise<void> {
+  await client.delete(`/api/v1/stores/${storeId}/follow`);
 }
 
 export async function getStoreByOwner(ownerId: string): Promise<Store | null> {

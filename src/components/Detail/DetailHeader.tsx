@@ -1,5 +1,5 @@
 // Main product info: name, artisan, price, and status badge.
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/theme';
 import StatusBadge, { type BadgeStatus } from '../StatusBadge';
 
@@ -10,6 +10,7 @@ interface Props {
   currency: string;
   status:   BadgeStatus;
   category: string;
+  onArtisanPress?: () => void;
 }
 
 export default function DetailHeader({
@@ -19,6 +20,7 @@ export default function DetailHeader({
   currency,
   status,
   category,
+  onArtisanPress,
 }: Props) {
   const { colors, spacing, text } = useTheme();
 
@@ -42,10 +44,18 @@ export default function DetailHeader({
         {name}
       </Text>
 
-      {/* Artisan name */}
-      <Text style={[text.label, { color: colors.primaryDeep, marginTop: spacing[1] }]}>
-        {artisan}
-      </Text>
+      {/* Artisan name — tappable when the store id is known */}
+      <Pressable
+        disabled={!onArtisanPress}
+        onPress={onArtisanPress}
+        hitSlop={6}
+        accessibilityLabel={`Ver tienda de ${artisan}`}
+        accessibilityRole={onArtisanPress ? 'button' : undefined}
+      >
+        <Text style={[text.label, { color: colors.primaryDeep, marginTop: spacing[1] }]}>
+          {artisan}
+        </Text>
+      </Pressable>
 
       {/* Price */}
       <Text style={[text.priceDetail, { color: colors.primary, marginTop: spacing[3] }]}>

@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { s, vs } from "@/utils/scale";
 import { useTheme } from "@/src/theme";
-import { createProduct } from "@/api/products";
+import { createProduct, addProductVariant } from "@/api/products";
 import { getCategories } from "@/api/categories";
 import type { Category } from "@/types/store";
 import { normalizeError, type ApiError } from "@/src/api/errors";
@@ -89,13 +89,26 @@ export default function AddProductScreen() {
     setFieldErrors({});
     try {
       const price = parseFloat(basePrice);
-      await createProduct(storeId, {
+      const createdProduct = await createProduct(storeId, {
         category_id: categoryId!,
         name: name.trim(),
         description: description.trim(),
         base_price: price,
       });
-      router.back();
+
+      // Auto-create a default variant so the product is buyable immediately.
+      await addProductVariant(createdProduct.id, {
+        name: "Variante",
+        value: "Única",
+        price_modifier: 0,
+        stock_quantity: 1,
+      });
+
+      // Navigate to EditProductScreen so vendor can add images and adjust variants
+      router.replace({
+        pathname: "/store/products/[id]" as never,
+        params: { id: createdProduct.id, storeId }
+      });
     } catch (err) {
       const apiErr = normalizeError(err);
       const isTransient = apiErr.status === null || apiErr.status >= 500;
