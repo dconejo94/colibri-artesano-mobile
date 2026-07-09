@@ -4,7 +4,7 @@ import { CardForm, type CardFieldInput } from '@stripe/stripe-react-native';
 
 import { useTheme } from '@/src/theme';
 import { useCheckoutStore } from '@/src/checkout/checkoutStore';
-
+import { Pressable } from 'react-native';
 
 export default function PaymentForm() {
 
@@ -15,10 +15,8 @@ export default function PaymentForm() {
   );
 
   const [card, setCard] = useState<CardFieldInput.Details | null>(null);
-
-
+  const [collapsed, setCollapsed] = useState(false);
   const handleFormComplete = (cardDetails: CardFieldInput.Details) => {
-
     setCard(cardDetails);
 
     if (cardDetails.complete) {
@@ -27,8 +25,9 @@ export default function PaymentForm() {
         brand: cardDetails.brand,
         last4: cardDetails.last4,
       });
-    }
 
+      setCollapsed(true);
+    }
   };
 
 
@@ -39,10 +38,11 @@ export default function PaymentForm() {
       <View
         style={[
           styles.cardContainer,
+          collapsed && styles.cardContainerCollapsed,
           {
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
-          }
+          },
         ]}
       >
 
@@ -64,24 +64,42 @@ export default function PaymentForm() {
       </View>
       {
         card?.complete && (
-          <View
+          <Pressable
+            onPress={() => setCollapsed(false)}
             style={[
               styles.preview,
               {
                 backgroundColor: colors.bgCard,
                 borderColor: colors.border,
-              }
+              },
             ]}
           >
-            <Text style={{ color: colors.textPrimary }}>
-              💳 {card.brand ?? 'Tarjeta'}
-            </Text>
+            <View style={styles.previewRow}>
+              <View>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>
+                  💳 {card.brand ?? 'Tarjeta'}
+                </Text>
 
-            <Text style={{ color: colors.textMuted }}>
-              **** **** **** {card.last4 ?? '----'}
-            </Text>
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    marginTop: 2,
+                  }}
+                >
+                  **** **** **** {card.last4}
+                </Text>
+              </View>
 
-          </View>
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontWeight: '600',
+                }}
+              >
+                Editar
+              </Text>
+            </View>
+          </Pressable>
         )
       }
     </View>
@@ -107,12 +125,21 @@ const styles = StyleSheet.create({
   },
 
   preview: {
-    height: 50,
     borderWidth: 1,
     borderRadius: 16,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-    gap: 4,
+    padding: 16,
+  },
+
+  previewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  
+  cardContainerCollapsed: {
+  height: 1,
+  opacity: 0,
+  overflow: 'hidden',
   },
 
 });
