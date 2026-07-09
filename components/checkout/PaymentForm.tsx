@@ -1,6 +1,6 @@
 import { View, StyleSheet, Text } from 'react-native';
 import { useState } from 'react';
-import { CardForm, type CardFieldInput } from '@stripe/stripe-react-native';
+import { CardForm, CardFormView, type CardFieldInput } from '@stripe/stripe-react-native';
 
 import { useTheme } from '@/src/theme';
 import { useCheckoutStore } from '@/src/checkout/checkoutStore';
@@ -14,9 +14,9 @@ export default function PaymentForm() {
     state => state.setPaymentMethod
   );
 
-  const [card, setCard] = useState<CardFieldInput.Details | null>(null);
+  const [card, setCard] = useState<CardFormView.Details | null>(null);
   const [collapsed, setCollapsed] = useState(false);
-  const handleFormComplete = (cardDetails: CardFieldInput.Details) => {
+  const handleFormComplete = (cardDetails: CardFormView.Details) => {
     setCard(cardDetails);
 
     if (cardDetails.complete) {
@@ -47,7 +47,6 @@ export default function PaymentForm() {
       >
 
         <CardForm
-          postalCodeEnabled={false}
           onFormComplete={handleFormComplete}
           cardStyle={{
             backgroundColor: colors.bgCard,

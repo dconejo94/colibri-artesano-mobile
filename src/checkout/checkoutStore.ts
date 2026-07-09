@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 
 export type Address = {
-  fullName: string;
-  street: string;
+  recipient: string;
+  phone: string;
+  addressLine: string;
   city: string;
-  state: string;
-  zipCode: string;
+  province: string;
+  postalCode: string;
 };
 
 export type PaymentMethod = {

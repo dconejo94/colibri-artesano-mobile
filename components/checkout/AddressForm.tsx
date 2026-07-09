@@ -166,24 +166,6 @@ export default function AddressForm({ initialValue, onSaved }: Props) {
 
       </View>
 
-      <TextInput
-        placeholder="Código postal (opcional)"
-        placeholderTextColor={colors.textMuted}
-        value={form.postalCode}
-        keyboardType="number-pad"
-        onChangeText={
-          v=>setForm({...form,postalCode:v})
-        }
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.bgCard,
-            borderColor: colors.border,
-            color: colors.textPrimary,
-          }
-        ]}
-      />
-
       {errorMessage && (
         <Text style={[textStyles.caption, { color: colors.errorText ?? '#B3261E' }]}>
           {errorMessage}

@@ -103,6 +103,7 @@ export default function RootLayout() {
         <Stack.Screen name="perfil" options={{ headerShown: false }} />
           <Stack.Screen name="favoritos" options={{ title: 'Favoritos', ...headerTheme }} />
           <Stack.Screen name="checkout/index" options={{ headerShown: false }} />
+          <Stack.Screen name="checkout/order-confirmation" options={{ headerShown: false }}/>
         </Stack>
         <AppToast />
       </ThemeProvider>

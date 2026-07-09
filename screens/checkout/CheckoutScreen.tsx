@@ -30,7 +30,7 @@ export default function CheckoutScreen() {
   const { colors, text, radii } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { cart, isLoading, isError, refetch } = useCart();
+  const { cart, isLoading, error, refetch } = useCart();
   const { confirmPayment } = useStripe();
   const {
     address,
@@ -40,7 +40,7 @@ export default function CheckoutScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const subtotal = parseFloat(cart?.total_amount ?? '0');
+  const subtotal = typeof cart?.total_amount === 'number' ? cart.total_amount : parseFloat(cart?.total_amount ?? '0');
   const shippingFee = 0;
   const total = subtotal + shippingFee;
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
@@ -105,9 +105,11 @@ export default function CheckoutScreen() {
       const order = await createOrder();
       clearCheckout();
       router.replace({
-        pathname:'/order-confirmation',
-        params:{
-          orderId:order.id,
+        pathname: '/checkout/order-confirmation',
+        params: {
+          orderId: order.id,
+          total: order.total_amount,
+          date: order.created_at,
         },
       });
 
@@ -133,7 +135,7 @@ export default function CheckoutScreen() {
     );
   }
 
-  if(isError || !cart){
+  if(error || !cart){
 
     return (
       <ErrorState
