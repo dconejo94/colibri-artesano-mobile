@@ -13,11 +13,15 @@ import SubHeader from "@/components/ui/SubHeader";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
+// Costa Rica doesn't observe DST, so a fixed -06:00 offset is always correct
+// for combining the plain date/time inputs into the AwareDatetime the
+// backend requires.
 const CR_OFFSET = "-06:00";
 
 function splitDateTime(iso: string): { date: string; time: string } {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return { date: "", time: "" };
+  // Format in the Costa Rica offset regardless of device timezone.
   const shifted = new Date(d.getTime() - 6 * 60 * 60 * 1000);
   const date = shifted.toISOString().slice(0, 10);
   const time = shifted.toISOString().slice(11, 16);
@@ -29,7 +33,9 @@ export default function EventFormScreen() {
   const router = useRouter();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const isNew = eventId === "nuevo";
-  const { coords: deviceCoords, isLoading: locLoading, requestPermission } = useLocation();
+  // autoRequest: false — don't pop the OS location dialog just from opening
+  // this form; only ask when the admin taps "Usar mi ubicación actual".
+  const { coords: deviceCoords, isLoading: locLoading, requestPermission } = useLocation(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -54,8 +60,11 @@ export default function EventFormScreen() {
       setDescription(event.description ?? "");
       setLocation(event.location ?? "");
       setCoverImageUrl(event.cover_image_url ?? "");
-      setLatitude(String(event.latitude));
-      setLongitude(String(event.longitude));
+      // Legacy events may not have coordinates backfilled yet even though
+      // the type claims non-null — fall back to an empty (invalid) field
+      // rather than showing the literal string "null".
+      setLatitude(event.latitude != null ? String(event.latitude) : "");
+      setLongitude(event.longitude != null ? String(event.longitude) : "");
       const { date: d, time: t } = splitDateTime(event.event_date);
       setDate(d);
       setTime(t);
@@ -71,21 +80,17 @@ export default function EventFormScreen() {
   }, [fetchEvent]);
 
   const handleUseCurrentLocation = async () => {
-    if (!deviceCoords) {
-      await requestPermission();
-      return;
-    }
-    setLatitude(String(deviceCoords.latitude));
-    setLongitude(String(deviceCoords.longitude));
-  };
-
-  // Fill in the coords as soon as they become available after requesting permission
-  useEffect(() => {
-    if (deviceCoords && !latitude && !longitude && isNew) {
+    if (deviceCoords) {
       setLatitude(String(deviceCoords.latitude));
       setLongitude(String(deviceCoords.longitude));
+      return;
     }
-  }, [deviceCoords, isNew]);
+    const result = await requestPermission();
+    if (result) {
+      setLatitude(String(result.latitude));
+      setLongitude(String(result.longitude));
+    }
+  };
 
   const isValidLat = /^-?\d{1,2}(\.\d+)?$/.test(latitude.trim()) && Math.abs(Number(latitude)) <= 90;
   const isValidLng = /^-?\d{1,3}(\.\d+)?$/.test(longitude.trim()) && Math.abs(Number(longitude)) <= 180;

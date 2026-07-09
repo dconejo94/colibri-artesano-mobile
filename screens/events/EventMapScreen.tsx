@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect  } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import Animated, {
 import { s, vs, ms } from "@/utils/scale";
 import { useTheme } from "@/src/theme";
 import { useLocation } from "@/src/hooks/useLocation";
-import { useNearbyEvents } from "@/src/hooks/useGetNearbyEvents";
+import { useNearbyEvents } from "@/src/hooks/useNearbyEvents";
 import { formatEventDateLong } from "@/src/components/EventCard";
 import ErrorBanner from "@/src/components/ErrorBanner";
 import type { EventItem } from "@/types/event";
@@ -38,6 +38,11 @@ export default function MapScreen() {
   const router = useRouter();
   const { coords, permissionStatus, isLoading: locLoading, error: locError, requestPermission } = useLocation();
   const { events, isLoading: eventsLoading, error: eventsError, refetch } = useNearbyEvents(coords);
+  // Older/legacy events may not have coordinates backfilled — skip them
+  // rather than handing react-native-maps a non-finite marker coordinate.
+  const mappableEvents = events.filter(
+    (event) => Number.isFinite(event.latitude) && Number.isFinite(event.longitude)
+  );
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
@@ -45,13 +50,21 @@ export default function MapScreen() {
 
   const translateY = useSharedValue(SHEET_HEIGHT);
 
+  // Tracked in a ref (rather than a dependency) so the 8s watchdog is armed
+  // exactly once per loading cycle instead of restarting every time mapReady
+  // flips.
+  const mapReadyRef = useRef(false);
+  useEffect(() => {
+    mapReadyRef.current = mapReady;
+  }, [mapReady]);
+
   useEffect(() => {
     if (locLoading) return;
     const timeout = setTimeout(() => {
-      if (!mapReady) setMapFailed(true);
+      if (!mapReadyRef.current) setMapFailed(true);
     }, 8000);
     return () => clearTimeout(timeout);
-  }, [locLoading, mapReady]);
+  }, [locLoading]);
 
   const openSheet = useCallback((event: EventItem) => {
     setSelectedEvent(event);
@@ -126,7 +139,7 @@ export default function MapScreen() {
               showsUserLocation={!!coords}
               onMapReady={() => setMapReady(true)}
             >
-              {events.map((event) => (
+              {mappableEvents.map((event) => (
                 <Marker
                   key={event.id}
                   coordinate={{ latitude: event.latitude, longitude: event.longitude }}
@@ -151,6 +164,7 @@ export default function MapScreen() {
                 <ErrorBanner
                     error={{ status: null, message: locError }}
                     onRetry={requestPermission}
+                    onDismiss={() => setDismissedNetworkError(true)}
                 />
             </View>
           )}
@@ -179,7 +193,7 @@ export default function MapScreen() {
             </View>
           )}
 
-          {!eventsLoading && !eventsError && coords && events.length === 0 && (
+          {!eventsLoading && !eventsError && coords && mappableEvents.length === 0 && (
             <View style={[local.emptyOverlay, { backgroundColor: colors.bgCard, borderRadius: radii.lg }, shadows.sm]}>
               <Text style={[text.body, { color: colors.textSecondary, textAlign: "center" }]}>
                 No hay eventos cerca
@@ -249,8 +263,6 @@ const local = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: s(32) },
   pin: { width: 32, height: 32, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#fff" },
   topBanner: { position: "absolute", left: s(12), right: s(12) },
-  banner: { flexDirection: "row", alignItems: "center" },
-  bannerClose: { paddingHorizontal: s(10) },
   permissionCard: { position: "absolute", top: vs(16), left: s(20), right: s(20), alignItems: "center", borderWidth: 1 },
   permissionBtn: { marginTop: vs(12), paddingVertical: vs(10), paddingHorizontal: s(20) },
   emptyOverlay: { position: "absolute", top: "45%", left: s(40), right: s(40), paddingVertical: vs(14), alignItems: "center" },
