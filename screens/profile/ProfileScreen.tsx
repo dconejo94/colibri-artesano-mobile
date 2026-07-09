@@ -42,7 +42,7 @@ export default function ProfileScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={local.content}>
-        {/* ── Encabezado ── */}
+        {/* ── Header ── */}
         <View style={local.headerRow}>
           <View style={[local.avatar, { backgroundColor: colors.primary, borderRadius: radii.lg }]}>
             <Text style={[text.h2, { color: colors.textOnPrimary }]}>{getInitials(displayName)}</Text>
@@ -65,7 +65,7 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        {/* ── Preferencias ── */}
+        {/* ── Preferences ── */}
         <Section title="Preferencias" colors={colors} text={text}>
           <Row
             icon="dark-mode"
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
           />
         </Section>
 
-        {/* ── Soporte ── */}
+        {/* ── Support ── */}
         <Section title="Soporte" colors={colors} text={text}>
           <Row
             icon="help-outline"

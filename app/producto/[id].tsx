@@ -34,6 +34,8 @@ export default function ProductoRoute() {
 
   return (
     <>
+      {/* Navigation header: uses the product name once loaded,
+          and a neutral title while loading or on failure. */}
       <Stack.Screen
         options={{
           title: product?.name ?? 'Producto',
@@ -48,6 +50,9 @@ export default function ProductoRoute() {
         }}
       />
 
+      {/* ProductDetailScreen handles loading/error/content internally
+          (including the ErrorBanner `centered` variant). Don't duplicate
+          that handling here. */}
       {isLoading ? (
         <View style={{ flex: 1, backgroundColor: colors.bgPage, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={colors.primary} />

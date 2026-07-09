@@ -107,7 +107,9 @@ export default function SearchResultsScreen() {
   // For infinite scroll — categories aren't paginated, and 'all' only ever
   // shows the first page of each section (see useSearch's performSearch).
   const fetchNextPage = () => {
-    if (!results || results.scope === 'all' || results.scope === 'categories') return;
+    // Guard against overlapping page fetches: rapid onEndReached events would
+    // otherwise request the same next page repeatedly while one is in flight.
+    if (isLoading || !results || results.scope === 'all' || results.scope === 'categories') return;
     if (results.items.length < results.total) {
       performSearch(query, results.scope, results.page + 1);
     }

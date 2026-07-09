@@ -51,7 +51,7 @@ export default function VendorProfileScreen() {
         <ErrorBanner error={error} onRetry={refetch} variant="centered" />
       ) : profile ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={local.content}>
-          {/* ── Encabezado de la tienda ── */}
+          {/* ── Store header ── */}
           <View style={local.headerRow}>
             <View style={[local.avatar, { backgroundColor: colors.primaryDeep, borderRadius: radii.lg }]}>
               <Text style={[text.h2, { color: colors.textOnPrimary }]}>{getInitials(profile.name)}</Text>
@@ -85,7 +85,7 @@ export default function VendorProfileScreen() {
             </View>
           )}
 
-          {/* Mutación de follow fallida: no tapa el contenido ya cargado. */}
+          {/* Failed follow mutation: doesn't cover the already-loaded content. */}
           <View style={{ paddingHorizontal: s(16) }}>
             <ErrorBanner error={error} onDismiss={() => {}} />
           </View>
@@ -101,8 +101,8 @@ export default function VendorProfileScreen() {
                 </Text>
               </View>
             ) : (
-              // .map() en vez de <ProductList> (FlatList) — anidar un FlatList
-              // dentro de este ScrollView rompería el scroll.
+              // .map() instead of <ProductList> (FlatList) — nesting a FlatList
+              // inside this ScrollView would break scrolling.
               <View style={{ paddingHorizontal: s(16), gap: vs(12) }}>
                 {products.map((product) => (
                   <ProductCard

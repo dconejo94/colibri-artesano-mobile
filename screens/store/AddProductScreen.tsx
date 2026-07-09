@@ -127,9 +127,9 @@ export default function AddProductScreen() {
       const apiErr = normalizeError(err);
       const isTransient = apiErr.status === null || apiErr.status >= 500;
 
-      // Red/5xx ya los avisa el toast global del interceptor (client.ts,
-      // solo dispara para mutaciones). Mostrar también el banner acá sería
-      // un aviso duplicado del mismo error.
+      // Network/5xx errors are already reported by the interceptor's global
+      // toast (client.ts, only fires for mutations). Showing the banner here
+      // too would be a duplicate notice of the same error.
       if (!isTransient) {
         setError(apiErr);
         if (apiErr.fieldErrors) {
@@ -151,8 +151,8 @@ export default function AddProductScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : categories.length === 0 ? (
-        // Sin categorías (por error o porque aún no existen): no tiene sentido
-        // dejar llenar un formulario que nunca va a poder enviarse.
+        // No categories (due to error or because none exist yet): no point
+        // letting the user fill out a form that can never be submitted.
         <ErrorBanner
           error={catError ?? { status: 0, message: "No hay categorías disponibles para crear un producto." }}
           onRetry={loadCategories}

@@ -10,7 +10,7 @@ type Props = {
   cartCount?: number;
 };
 
-// Logos en dos variantes — se cambia la fuente según isDark
+// Two logo variants — the source swaps based on isDark
 const LOGO_LIGHT = require('@/assets/images/light_mode_logo.png');
 const LOGO_DARK  = require('@/assets/images/dark_mode_logo.png');
 
@@ -30,7 +30,7 @@ export default function Header({ onMenuPress, onNotificationsPress, onCartPress,
         },
       ]}
     >
-      {/* Ícono de menú hamburguesa */}
+      {/* Hamburger menu icon */}
       <TouchableOpacity
         onPress={onMenuPress}
         accessibilityLabel="Abrir menú de navegación"
@@ -43,7 +43,7 @@ export default function Header({ onMenuPress, onNotificationsPress, onCartPress,
         />
       </TouchableOpacity>
 
-      {/* Logo centrado — cambia según el modo del sistema */}
+      {/* Centered logo — changes with the system theme */}
       <Image
         source={isDark ? LOGO_DARK : LOGO_LIGHT}
         style={styles.logo}
@@ -51,7 +51,7 @@ export default function Header({ onMenuPress, onNotificationsPress, onCartPress,
         accessibilityLabel="Logo de El Colibrí Artesano"
       />
 
-      {/* Notificaciones + carrito (opcional, retrocompatible) o espaciador */}
+      {/* Notifications + cart (optional, backwards-compatible) or spacer */}
       {hasRightIcons ? (
         <View style={styles.rightIcons}>
           {onNotificationsPress && (

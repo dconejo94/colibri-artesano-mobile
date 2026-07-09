@@ -48,7 +48,12 @@ export default function FavoritesScreen() {
           isFavorite: true
         };
       });
-      setProducts(append ? (prev) => [...prev, ...items] : items);
+      setProducts(append
+        ? (prev) => {
+            const seen = new Set(prev.map((p) => p.id));
+            return [...prev, ...items.filter((p: { id: string }) => !seen.has(p.id))];
+          }
+        : items);
       setTotal(res.total);
       setPage(p);
     } catch (err) {
@@ -86,7 +91,7 @@ export default function FavoritesScreen() {
 
       <View style={{ flex: 1 }}>
         {error && products.length > 0 && (
-          <ErrorBanner error={error} onRetry={() => fetchProducts(page + 1, true)} />
+          <ErrorBanner error={error} onRetry={() => fetchProducts(1)} />
         )}
 
         {isLoading && products.length === 0 ? (

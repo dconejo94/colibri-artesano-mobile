@@ -18,6 +18,7 @@ import { getStoreByOwner, createStore, getStoreProfile } from "@/api/stores";
 import { getStoreProducts } from "@/api/products";
 import { getStoreOrders, getStoreSalesSummary } from "@/api/orders";
 import type { Store, Product, StoreOrder } from "@/types/store";
+import type { StoreProfile } from "@/types/vendor";
 import { normalizeError, type ApiError } from "@/src/api/errors";
 import ErrorBanner from "@/src/components/ErrorBanner";
 import Header from "@/components/ui/Header";
@@ -34,7 +35,7 @@ export default function MyStoreScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [salesSummary, setSalesSummary] = useState<{total_sales: number, total_orders: number} | null>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<StoreProfile | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
@@ -148,7 +149,7 @@ export default function MyStoreScreen() {
       ) : (
         <ScrollView contentContainerStyle={local.content} showsVerticalScrollIndicator={false}>
 
-          {/* ── Panel de Control ── */}
+          {/* ── Control panel ── */}
           <View style={local.section}>
             <Text style={[text.h2, { color: colors.primaryDeep }]}>Panel de Control</Text>
             <View style={local.statsRow}>
@@ -196,14 +197,14 @@ export default function MyStoreScreen() {
                     Seguidores
                   </Text>
                   <Text style={[text.h3, { color: colors.primaryDeep, marginTop: vs(2) }]}>
-                    {profile ? profile.followers_count : 0}
+                    {profile ? profile.follower_count : 0}
                   </Text>
                 </View>
               </View>
             </View>
           </View>
 
-          {/* ── Mis Productos ── */}
+          {/* ── My products ── */}
           <View style={local.section}>
             <View style={local.sectionHeaderRow}>
               <Text style={[text.h2, { color: colors.primaryDeep }]}>Mis Productos</Text>
@@ -251,7 +252,7 @@ export default function MyStoreScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* ── Pedidos Recientes ── */}
+          {/* ── Recent orders ── */}
           <View style={local.section}>
             <Text style={[text.h2, { color: colors.primaryDeep }]}>Pedidos Recientes</Text>
 

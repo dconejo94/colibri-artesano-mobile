@@ -21,7 +21,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// ─── Ancho del panel ─────────────────────────────────────────────────────────
+// ─── Drawer width ─────────────────────────────────────────────────────────
 const DRAWER_WIDTH = s(280);
 const ANIM_DURATION = 280;
 
@@ -44,9 +44,9 @@ function toDisplayUser(user: User | null) {
   return { initials, name, role: ROLE_LABELS[user.role] };
 }
 
-// ─── Items de navegación ─────────────────────────────────────────────────────
-// icon: nombre de MaterialIcons, href: ruta de Expo Router
-// requiresManage: solo se muestra a vendedores/admin (gestión de eventos)
+// ─── Navigation items ─────────────────────────────────────────────────────
+// icon: MaterialIcons name, href: Expo Router route
+// requiresManage: only shown to vendors/admin (event management)
 const NAV_ITEMS = [
   { label: 'Inicio',            icon: 'home'           as const, href: '/'               },
   { label: 'Productos',         icon: 'eco'            as const, href: '/productos'      },
@@ -81,7 +81,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
   const [visible, setVisible] = useState(false);
   const translateX = useSharedValue(-DRAWER_WIDTH);
 
-  // Maneja animación de entrada / salida
+  // Handles the enter / exit animation
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
@@ -97,10 +97,10 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
     transform: [{ translateX: translateX.value }],
   }));
 
-  // Navega a la ruta y cierra el drawer
+  // Navigates to the route and closes the drawer
   const handleNav = (href: string) => {
     onClose();
-    // Pequeño delay para dejar que la animación de cierre empiece
+    // Small delay to let the closing animation start
     setTimeout(() => router.push(href as any), 80);
   };
 
@@ -119,14 +119,14 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* Backdrop con tinte verde oscuro de la marca */}
+      {/* Backdrop with the brand's dark green tint */}
       <Pressable
         style={[styles.backdrop, { backgroundColor: 'rgba(44,56,48,0.45)' }]}
         onPress={onClose}
         accessibilityLabel="Cerrar menú"
       />
 
-      {/* Panel deslizable */}
+      {/* Sliding panel */}
       <Animated.View
         style={[
           styles.drawer,
@@ -140,14 +140,14 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           animatedStyle,
         ]}
       >
-        {/* ── Perfil de usuario ──────────────────────────────────────────── */}
+        {/* ── User profile ──────────────────────────────────────────── */}
         <Pressable
           style={[styles.profile, { paddingHorizontal: spacing[5] }]}
           onPress={() => handleNav('/perfil')}
           accessibilityLabel="Ir a mi perfil"
           accessibilityRole="button"
         >
-          {/* Avatar circular con iniciales */}
+          {/* Circular avatar with initials */}
           <View
             style={[
               styles.avatar,
@@ -162,7 +162,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
             </Text>
           </View>
 
-          {/* Nombre y subtítulo */}
+          {/* Name and subtitle */}
           <View style={{ flex: 1 }}>
             <Text style={[text.productName, { color: colors.textPrimary }]}>
               {displayUser.name}
@@ -173,7 +173,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           </View>
         </Pressable>
 
-        {/* Separador */}
+        {/* Divider */}
         <View
           style={[
             styles.divider,
@@ -185,7 +185,7 @@ export default function HamburgerMenu({ isOpen, onClose }: Props) {
           ]}
         />
 
-        {/* ── Links de navegación ───────────────────────────────────────── */}
+        {/* ── Navigation links ───────────────────────────────────────── */}
         <ScrollView style={styles.nav} contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: vs(16) }}>
           {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
