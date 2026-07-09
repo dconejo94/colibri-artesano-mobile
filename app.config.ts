@@ -64,6 +64,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-location",
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "Permite a $(PRODUCT_NAME) elegir imágenes de tus productos desde la galería.",
+        cameraPermission:
+          "Permite a $(PRODUCT_NAME) tomar fotos de tus productos.",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

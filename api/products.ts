@@ -166,6 +166,41 @@ export async function deleteProductImage(
   );
 }
 
+/** Mark an image as the primary (cover) image for its variant. */
+export async function setPrimaryImage(
+  productId: string,
+  variantId: string,
+  imageId: string
+): Promise<void> {
+  await client.patch(
+    `/api/v1/products/${productId}/variants/${variantId}/images/${imageId}/primary`
+  );
+}
+
+/**
+ * Request a SAS URL and PUT the bytes to blob storage, returning the public
+ * blob_url to register. The SAS is short-lived, so if the PUT fails (e.g. the
+ * token expired between issue and upload) this requests a fresh URL and retries
+ * the upload once.
+ */
+export async function uploadImageWithRetry(
+  productId: string,
+  variantId: string,
+  fileUri: string,
+  filename: string,
+  contentType: string
+): Promise<string> {
+  const first = await getUploadUrl(productId, variantId, filename, contentType);
+  try {
+    await uploadImageToBlob(first.upload_url, fileUri, contentType);
+    return first.blob_url;
+  } catch {
+    const retry = await getUploadUrl(productId, variantId, filename, contentType);
+    await uploadImageToBlob(retry.upload_url, fileUri, contentType);
+    return retry.blob_url;
+  }
+}
+
 
 // ── Variants ────────────────────────────────────────────────────────────────
 
