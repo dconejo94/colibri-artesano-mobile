@@ -12,6 +12,19 @@ export async function getEvents(
   return data;
 }
 
+export async function getNearbyEvents(
+  lat: number,
+  lng: number,
+  radiusKm = 25,
+  page = 1,
+  limit = 20
+): Promise<PaginatedResponse<EventItem>> {
+  const { data } = await client.get<PaginatedResponse<EventItem>>("/api/v1/events/nearby", {
+    params: { lat, lng, radius_km: radiusKm, page, limit },
+  });
+  return data;
+}
+
 export async function getEvent(eventId: string): Promise<EventItem> {
   const { data } = await client.get<EventItem>(`/api/v1/events/${eventId}`);
   return data;
@@ -23,6 +36,8 @@ export type EventPayload = {
   location?: string | null;
   event_date: string;
   cover_image_url?: string | null;
+  latitude: number;
+  longitude: number;
 };
 
 export async function createEvent(body: EventPayload): Promise<EventItem> {

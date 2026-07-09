@@ -48,8 +48,9 @@ function toDisplayUser(user: User | null) {
 // icon: MaterialIcons name, href: Expo Router route
 // requiresManage: only shown to vendors/admin (event management)
 const NAV_ITEMS = [
-  { label: 'Inicio',            icon: 'home'           as const, href: '/'               },
-  { label: 'Productos',         icon: 'eco'            as const, href: '/productos'      },
+  { label: 'Inicio',            icon: 'home'           as const, href: '/'                },
+  { label: 'Productos',         icon: 'eco'            as const, href: '/productos'       },
+  { label: 'Mapa',              icon: 'map'            as const, href: '/eventos/map'            },
   { label: 'Mi Tienda',         icon: 'storefront'     as const, href: '/store'           },
   { label: 'Buscar',            icon: 'search'         as const, href: '/buscar'          },
   { label: 'Eventos',           icon: 'event'          as const, href: '/eventos'         },
