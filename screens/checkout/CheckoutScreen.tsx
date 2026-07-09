@@ -102,16 +102,34 @@ export default function CheckoutScreen() {
         return;
       }
 
-      const order = await createOrder();
-      clearCheckout();
-      router.replace({
-        pathname: '/checkout/order-confirmation',
-        params: {
-          orderId: order.id,
-          total: order.total_amount,
-          date: order.created_at,
-        },
-      });
+      // The payment already succeeded at this point — a failure here must
+      // not be reported as a generic payment error, since the card has
+      // already been charged and the user needs to know that.
+      try {
+        const order = await createOrder({
+          shipping_address: {
+            recipient: address.recipient,
+            phone: address.phone,
+            address_line: address.addressLine,
+            city: address.city,
+            province: address.province,
+            postal_code: address.postalCode,
+          },
+        });
+        clearCheckout();
+        router.replace({
+          pathname: '/checkout/order-confirmation',
+          params: {
+            orderId: order.id,
+            total: order.total_amount,
+            date: order.created_at,
+          },
+        });
+      } catch (orderErr: any) {
+        showError(
+          `Tu pago fue procesado (ref. ${paymentIntent.id}), pero no pudimos registrar el pedido. Contacta a soporte con esta referencia.`
+        );
+      }
 
     } catch(err:any){
 
@@ -187,6 +205,7 @@ export default function CheckoutScreen() {
                 <CartSummaryCard
                   key={store.id}
                   store={store}
+                  currency={PLACEHOLDER_CURRENCY}
                 />
               ))
             }

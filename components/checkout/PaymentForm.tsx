@@ -1,10 +1,9 @@
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Pressable } from 'react-native';
 import { useState } from 'react';
-import { CardForm, CardFormView, type CardFieldInput } from '@stripe/stripe-react-native';
+import { CardForm, CardFormView } from '@stripe/stripe-react-native';
 
 import { useTheme } from '@/src/theme';
 import { useCheckoutStore } from '@/src/checkout/checkoutStore';
-import { Pressable } from 'react-native';
 
 export default function PaymentForm() {
 
@@ -12,6 +11,9 @@ export default function PaymentForm() {
 
   const setPaymentMethod = useCheckoutStore(
     state => state.setPaymentMethod
+  );
+  const clearPaymentMethod = useCheckoutStore(
+    state => state.clearPaymentMethod
   );
 
   const [card, setCard] = useState<CardFormView.Details | null>(null);
@@ -27,7 +29,16 @@ export default function PaymentForm() {
       });
 
       setCollapsed(true);
+    } else {
+      // The card was complete before but is now being edited into an
+      // incomplete state — don't let checkout proceed on the stale method.
+      clearPaymentMethod();
     }
+  };
+
+  const handleEdit = () => {
+    setCollapsed(false);
+    clearPaymentMethod();
   };
 
 
@@ -64,7 +75,7 @@ export default function PaymentForm() {
       {
         card?.complete && (
           <Pressable
-            onPress={() => setCollapsed(false)}
+            onPress={handleEdit}
             style={[
               styles.preview,
               {

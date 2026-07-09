@@ -86,7 +86,7 @@ export default function RootLayout() {
   return (
     <StripeProvider
       publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
-      merchantIdentifier="merchant.com.colibri"
+      merchantIdentifier="merchant.com.colibri.artesano"
     >
       <ThemeProvider>
         <Stack>

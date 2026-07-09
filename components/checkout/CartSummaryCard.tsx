@@ -1,12 +1,14 @@
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { useTheme, spacing } from '@/src/theme';
 import type { CartStoreGroup } from '@/types/cart';
+import { formatCurrency } from '@/utils/currency';
 
 type Props = {
   store: CartStoreGroup;
+  currency: string;
 };
 
-export default function CartSummaryCard({ store }: Props) {
+export default function CartSummaryCard({ store, currency }: Props) {
   const { colors, text } = useTheme();
 
   return (
@@ -60,7 +62,7 @@ export default function CartSummaryCard({ store }: Props) {
                 { color: colors.primary },
               ]}
             >
-              CRC {Number(item.unit_price).toLocaleString()}
+              {formatCurrency(Number(item.unit_price), currency)}
             </Text>
           </View>
 

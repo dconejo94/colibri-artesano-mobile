@@ -60,7 +60,7 @@ export default function ProductoRoute() {
       ) : (
         <ProductDetailScreen
           product={product ?? null}
-          error={error}
+          error={error ?? (!product ? { status: 404, message: 'Producto no encontrado.' } : null)}
           onRetry={refetch}
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}

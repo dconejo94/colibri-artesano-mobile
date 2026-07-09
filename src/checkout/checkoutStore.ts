@@ -21,6 +21,7 @@ interface CheckoutState {
 
   setAddress: (address: Address) => void;
   setPaymentMethod: (payment: PaymentMethod) => void;
+  clearPaymentMethod: () => void;
 
   clearCheckout: () => void;
 }
@@ -34,6 +35,9 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
 
   setPaymentMethod: (payment) =>
     set({ paymentMethod: payment }),
+
+  clearPaymentMethod: () =>
+    set({ paymentMethod: null }),
 
   clearCheckout: () =>
     set({
