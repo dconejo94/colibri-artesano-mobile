@@ -10,7 +10,6 @@ import { normalizeError } from '@/src/api/errors';
 
 export default function ProductoRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const { colors, fonts } = useTheme();
   const router = useRouter();
 

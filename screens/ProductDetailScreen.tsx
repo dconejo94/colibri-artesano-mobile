@@ -14,7 +14,6 @@ import { type BadgeStatus } from '@/src/components/StatusBadge';
 import ErrorBanner from '@/src/components/ErrorBanner';
 import { type ApiError } from '@/src/api/errors';
 import type { ProductVariant } from '@/types/store';
-import type { ProductVariant } from '@/types/store';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 export interface ProductDetail {
@@ -32,7 +31,7 @@ export interface ProductDetail {
   materials?: string[];
   dimensions?: string;
   leadTime?: string;
-  variants?: ProductVariant[];
+  variants: ProductVariant[];
 }
 
 interface Props {
@@ -46,6 +45,11 @@ interface Props {
 }
 
 // ─── Pantalla ─────────────────────────────────────────────────────────────────
+// No incluye header de navegación propio — React Navigation lo maneja.
+// Configurá el header en tu Stack.Screen options:
+//   headerStyle:      { backgroundColor: colors.bgNavbar }
+//   headerTintColor:  colors.primary
+//   headerTitleStyle: { fontFamily: 'DMSans_500Medium' }
 export default function ProductDetailScreen({
   product,
   error,
@@ -96,13 +100,21 @@ export default function ProductDetailScreen({
     );
   }
 
-  const defaultVariantId = product.variants?.[0]?.id;
-
   return (
-    <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.bgPage }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing[10] }}>
+    // SafeAreaView solo cubre top — la action bar maneja su propio bottom
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.screen, { backgroundColor: colors.bgPage }]}
+    >
+      {/* ScrollView + action bar son hijos directos para que la barra quede sticky */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: spacing[10] }}
+      >
+        {/* Galería de imágenes */}
         <DetailGallery images={product.images} />
 
+        {/* Nombre, artesano, precio, badge */}
         <DetailHeader
           name={product.name}
           artisan={product.artisan}
@@ -110,11 +122,24 @@ export default function ProductDetailScreen({
           currency={product.currency}
           status={product.status}
           category={product.category}
+          onArtisanPress={
+            product.artisanStoreId && onArtisanPress
+              ? () => onArtisanPress(product.artisanStoreId!)
+              : undefined
+          }
+        />
+
+        {/* Selector de variante — solo se muestra si hay más de una */}
+        <DetailVariantPicker
+          variants={product.variants}
+          selectedId={selectedVariantId}
+          onSelect={setSelectedVariantId}
         />
 
         {/* Separador */}
         <View style={[styles.divider, { backgroundColor: colors.border, marginHorizontal: spacing[4] }]} />
 
+        {/* Descripción y ficha técnica */}
         <DetailInfo
           description={product.description}
           materials={product.materials}
@@ -122,11 +147,16 @@ export default function ProductDetailScreen({
           leadTime={product.leadTime}
         />
 
+        {/* Bio del artesano — solo si está presente */}
         {product.artisanBio && (
-          <DetailArtisanBio artisan={product.artisan} artisanBio={product.artisanBio} />
+          <DetailArtisanBio
+            artisan={product.artisan}
+            artisanBio={product.artisanBio}
+          />
         )}
       </ScrollView>
 
+      {/* Barra de acciones — sticky en el fondo */}
       <DetailActionBar
         productId={product.id}
         status={product.status}
@@ -139,6 +169,11 @@ export default function ProductDetailScreen({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  divider: { height: 0.5, marginVertical: 16 },
+  screen: {
+    flex: 1,
+  },
+  divider: {
+    height: 0.5,
+    marginVertical: 16,
+  },
 });

@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
-import {
-  getProduct,
-  getProductVariants,
-} from '@/api/products';
-
+import { getProduct } from '@/api/products';
 import { ProductDetail as UIProductDetail } from '@/screens/ProductDetailScreen';
+import { Product as BackendProduct } from '@/types/store';
 import { normalizeError, type ApiError } from '@/src/api/errors';
 import { resolveAllProductImages } from '@/utils/resolveProductImage';
 
@@ -16,7 +13,6 @@ export function useProductDetail(id: string) {
 
   useEffect(() => {
     if (!id) return;
-
     let isMounted = true;
 
     const fetchProduct = async () => {
@@ -62,10 +58,7 @@ export function useProductDetail(id: string) {
     };
 
     fetchProduct();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [id, retryCount]);
 
   const refetch = () => setRetryCount((prev) => prev + 1);
