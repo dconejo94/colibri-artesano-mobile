@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Stack } from "expo-router";
@@ -15,14 +14,12 @@ import Button from "@/components/ui/Button";
 export default function CartScreen() {
   const { colors, radii, text } = useTheme();
   const router = useRouter();
-  const { cart, isLoading, isMutating, error, refetch, increment, decrement, remove, checkout } = useCart();
-  const [checkoutDone, setCheckoutDone] = useState(false);
+  const { cart, isLoading, isMutating, error, refetch, increment, decrement, remove } = useCart();
 
   const isEmpty = !cart || cart.stores.every((store) => store.items.length === 0);
 
-  const handleCheckout = async () => {
-    const ok = await checkout();
-    if (ok) setCheckoutDone(true);
+  const handleGoToCheckout = () => {
+    router.push("/checkout" as any);
   };
 
   return (
@@ -36,19 +33,6 @@ export default function CartScreen() {
         </View>
       ) : error && !cart ? (
         <ErrorBanner error={error} onRetry={refetch} variant="centered" />
-      ) : checkoutDone ? (
-        <View style={local.centered}>
-          <View style={[local.successIcon, { backgroundColor: colors.successBg, borderRadius: radii.full }]}>
-            <MaterialIcons name="check-circle" size={ms(48)} color={colors.successText} />
-          </View>
-          <Text style={[text.h2, { color: colors.primaryDeep, marginTop: vs(16), textAlign: "center" }]}>
-            ¡Pedido realizado!
-          </Text>
-          <Text style={[text.body, { color: colors.textSecondary, textAlign: "center", marginTop: vs(6) }]}>
-            Tu pedido fue confirmado y está en preparación.
-          </Text>
-          <Button title="Volver al inicio" onPress={() => router.replace("/")} />
-        </View>
       ) : isEmpty ? (
         <View style={local.centered}>
           <View style={[local.emptyIcon, { backgroundColor: colors.bgSection, borderRadius: radii.full }]}>
@@ -99,8 +83,8 @@ export default function CartScreen() {
               <Text style={[text.h3, { color: colors.primary, fontWeight: "bold", fontSize: ms(20) }]}>{formatPrice(cart!.total_amount)}</Text>
             </View>
             <Button
-              title={isMutating ? "Procesando..." : "Confirmar pedido"}
-              onPress={handleCheckout}
+              title="Continuar a la compra"
+              onPress={handleGoToCheckout}
               disabled={isMutating}
             />
           </View>
@@ -117,7 +101,6 @@ const styles = StyleSheet.create({
 const local = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: s(32), gap: vs(4) },
   emptyIcon: { width: ms(80), height: ms(80), alignItems: "center", justifyContent: "center" },
-  successIcon: { width: ms(80), height: ms(80), alignItems: "center", justifyContent: "center" },
   content: { padding: s(16), gap: vs(20) },
   storeGroup: { gap: vs(10) },
   storeHeader: { flexDirection: "row", alignItems: "center", gap: s(8) },

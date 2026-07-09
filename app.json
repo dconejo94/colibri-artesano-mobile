@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "@stripe/stripe-react-native",
+        {
+        "merchantIdentifier": "merchant.com.colibri.artesano"
+        }  
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

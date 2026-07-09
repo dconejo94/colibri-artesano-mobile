@@ -22,6 +22,15 @@ export async function getProducts(
   return data;
 }
 
+export async function getProductVariants(
+  productId: string
+): Promise<ProductVariant[]> {
+  const { data } = await client.get<ProductVariant[]>(
+    `/api/v1/products/${productId}/variants`
+  );
+  return data;
+}
+
 export async function getStoreProducts(
   storeId: string,
   page = 1,
