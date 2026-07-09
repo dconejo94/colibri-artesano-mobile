@@ -36,6 +36,8 @@ export type EventPayload = {
   location?: string | null;
   event_date: string;
   cover_image_url?: string | null;
+  latitude: number;
+  longitude: number;
 };
 
 export async function createEvent(body: EventPayload): Promise<EventItem> {
