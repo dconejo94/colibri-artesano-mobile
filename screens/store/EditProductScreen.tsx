@@ -18,6 +18,7 @@ import { formatPrice } from "@/utils/format";
 import { useTheme, fonts } from "@/src/theme";
 import client from "@/api/client";
 import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import {
   getProduct,
   updateProduct,
@@ -25,12 +26,14 @@ import {
   updateProductVariant,
   deleteProductVariant,
   addProductImage,
-  getUploadUrl,
-  uploadImageToBlob,
+  uploadImageWithRetry,
+  setPrimaryImage,
+  deleteProductImage,
 } from "@/api/products";
 import { getCategories } from "@/api/categories";
 import type { Product, ProductVariant, Category } from "@/types/store";
 import { normalizeError, type ApiError } from "@/src/api/errors";
+import { resolveImageContentType, MAX_IMAGE_DIMENSION } from "@/utils/imageUpload";
 import ErrorBanner from "@/src/components/ErrorBanner";
 import SubHeader from "@/components/ui/SubHeader";
 import CategoryPicker from "@/components/ui/CategoryPicker";
@@ -41,6 +44,23 @@ import Button from "@/components/ui/Button";
 // global toast (client.ts). Also showing an Alert/ErrorBanner with the same
 // message would be a duplicate notice, so these handlers filter it out here.
 const isTransientError = (err: ApiError) => err.status === null || err.status >= 500;
+
+// Map an upload failure to a friendly Spanish message. The blob PUT uses fetch
+// (not axios), so none of this is covered by the global toast interceptor.
+function uploadErrorMessage(err: unknown): string {
+  const apiErr = normalizeError(err);
+  switch (apiErr.status) {
+    case 503:
+      return "La carga de imágenes no está disponible en este servidor.";
+    case 400:
+      return "Formato de imagen no soportado. Usa JPG o PNG.";
+    case 403:
+    case 404:
+      return "No tienes permiso o el producto ya no existe.";
+    default:
+      return apiErr.message || "No se pudo subir la imagen.";
+  }
+}
 
 export default function EditProductScreen() {
   const { colors, radii, shadows, spacing, text } = useTheme();
@@ -241,69 +261,166 @@ export default function EditProductScreen() {
 
   // ── Images ──────────────────────────────────────────────────────────────────
 
-  const handlePickAndUploadImage = async () => {
+  const pickImageSource = () => {
+    Alert.alert("Agregar imagen", "¿De dónde quieres tomar la imagen?", [
+      { text: "Cámara", onPress: () => handlePickAndUploadImage("camera") },
+      { text: "Galería", onPress: () => handlePickAndUploadImage("library") },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  };
+
+  const handlePickAndUploadImage = async (source: "camera" | "library") => {
     if (!id) return;
     const variants = product?.variants || [];
-    const targetVariantId = selectedVariantId || (variants.length === 1 ? variants[0].id : null);
-    
+    const targetVariantId =
+      selectedVariantId || (variants.length === 1 ? variants[0].id : null);
+
     if (!targetVariantId) {
       Alert.alert("Aviso", "Selecciona una variante primero.");
       return;
     }
 
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const pickerOptions: ImagePicker.ImagePickerOptions = {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
-      });
+      };
+
+      let result: ImagePicker.ImagePickerResult;
+      if (source === "camera") {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert("Permiso requerido", "Habilita el acceso a la cámara para tomar fotos.");
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync(pickerOptions);
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
+      }
 
       if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+
+      // Reject unsupported formats (HEIC, WebP, ...) before doing any work.
+      const contentType = resolveImageContentType(asset);
+      if (!contentType) {
+        Alert.alert("Formato no soportado", "Solo se permiten imágenes JPG o PNG.");
+        return;
+      }
 
       setImageSaving(true);
-      const asset = result.assets[0];
-      const uri = asset.uri;
-      const filename = uri.split("/").pop() || "image.jpg";
-      const contentType = filename.endsWith(".png") ? "image/png" : "image/jpeg";
 
-      // 1. Get SAS URL
-      const { upload_url, blob_url } = await getUploadUrl(id, targetVariantId, filename, contentType);
-      
-      // 2. Upload blob
-      await uploadImageToBlob(upload_url, uri, contentType);
+      // Resize down to a sane max dimension and recompress to limit upload size.
+      const format = contentType === "image/png" ? SaveFormat.PNG : SaveFormat.JPEG;
+      const longestSide = Math.max(asset.width ?? 0, asset.height ?? 0);
+      const resizeActions =
+        longestSide > MAX_IMAGE_DIMENSION
+          ? [
+              (asset.width ?? 0) >= (asset.height ?? 0)
+                ? { resize: { width: MAX_IMAGE_DIMENSION } }
+                : { resize: { height: MAX_IMAGE_DIMENSION } },
+            ]
+          : [];
+      const processed = await manipulateAsync(asset.uri, resizeActions, {
+        compress: 0.8,
+        format,
+      });
 
-      // 3. Register image in DB
-      const targetVariant = variants.find(v => v.id === targetVariantId);
+      const ext = contentType === "image/png" ? "png" : "jpg";
+      const filename = `${targetVariantId}.${ext}`;
+
+      // Upload straight to blob storage (retries once with a fresh SAS if it expired).
+      const blobUrl = await uploadImageWithRetry(
+        id,
+        targetVariantId,
+        processed.uri,
+        filename,
+        contentType
+      );
+
+      const targetVariant = variants.find((v) => v.id === targetVariantId);
       const isPrimary = (targetVariant?.images?.length ?? 0) === 0;
 
       const img = await addProductImage(id, targetVariantId, {
-        image_url: blob_url,
+        image_url: blobUrl,
         is_primary: isPrimary,
       });
 
-      // Update state
       setProduct((prev) => {
         if (!prev) return prev;
-        const newVariants = (prev.variants || []).map((v) => {
-          if (v.id === targetVariantId) {
-            return { ...v, images: [...(v.images || []), img] };
-          }
-          return v;
-        });
+        const newVariants = (prev.variants || []).map((v) =>
+          v.id === targetVariantId ? { ...v, images: [...(v.images || []), img] } : v
+        );
         return { ...prev, variants: newVariants };
       });
 
       setShowImageForm(false);
     } catch (err) {
-      const apiErr = normalizeError(err);
-      // The blob upload uses fetch (not axios), so its failures never reach the
-      // axios toast interceptor — always surface an alert here so the user is
-      // not left with a stopped spinner and no feedback.
-      Alert.alert("Error", apiErr.message || "No se pudo subir la imagen.");
+      Alert.alert("Error", uploadErrorMessage(err));
     } finally {
       setImageSaving(false);
     }
+  };
+
+  const handleSetPrimaryImage = async (variantId: string, imageId: string) => {
+    if (!id) return;
+    try {
+      await setPrimaryImage(id, variantId, imageId);
+      setProduct((prev) =>
+        prev
+          ? {
+              ...prev,
+              variants: (prev.variants || []).map((v) =>
+                v.id !== variantId
+                  ? v
+                  : {
+                      ...v,
+                      images: (v.images || []).map((im) => ({
+                        ...im,
+                        is_primary: im.id === imageId,
+                      })),
+                    }
+              ),
+            }
+          : prev
+      );
+    } catch (err) {
+      const apiErr = normalizeError(err);
+      if (!isTransientError(apiErr)) Alert.alert("Error", apiErr.message);
+    }
+  };
+
+  const handleDeleteImage = (variantId: string, imageId: string) => {
+    Alert.alert("Eliminar imagen", "¿Seguro que quieres eliminar esta imagen?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          if (!id) return;
+          try {
+            await deleteProductImage(id, variantId, imageId);
+            setProduct((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    variants: (prev.variants || []).map((v) =>
+                      v.id !== variantId
+                        ? v
+                        : { ...v, images: (v.images || []).filter((im) => im.id !== imageId) }
+                    ),
+                  }
+                : prev
+            );
+          } catch (err) {
+            const apiErr = normalizeError(err);
+            if (!isTransientError(apiErr)) Alert.alert("Error", apiErr.message);
+          }
+        },
+      },
+    ]);
   };
 
   // ── Loading state ────────────────────────────────────────────────────────────
@@ -422,11 +539,27 @@ export default function EditProductScreen() {
                   <Text style={[local.imageUrl, { color: colors.textSecondary }]} numberOfLines={1}>{img.image_url}</Text>
                   <Text style={[text.caption, { color: colors.textMuted, fontSize: ms(10) }]}>Variante: {v.name} - {v.value}</Text>
                 </View>
-                {img.is_primary && (
+                {img.is_primary ? (
                   <View style={[local.primaryBadge, { backgroundColor: colors.primary }]}>
                     <Text style={[local.primaryText, { color: colors.textOnPrimary }]}>Principal</Text>
                   </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => handleSetPrimaryImage(v.id, img.id)}
+                    hitSlop={8}
+                    accessibilityLabel="Hacer principal"
+                  >
+                    <MaterialIcons name="star-outline" size={ms(22)} color={colors.primary} />
+                  </TouchableOpacity>
                 )}
+                <TouchableOpacity
+                  onPress={() => handleDeleteImage(v.id, img.id)}
+                  hitSlop={8}
+                  accessibilityLabel="Eliminar imagen"
+                  style={{ marginLeft: s(8) }}
+                >
+                  <MaterialIcons name="delete-outline" size={ms(22)} color={colors.errorText} />
+                </TouchableOpacity>
               </View>
             ))
           )}
@@ -461,7 +594,7 @@ export default function EditProductScreen() {
               
               <Button
                 title={imageSaving ? "Subiendo..." : "Seleccionar y subir imagen"}
-                onPress={handlePickAndUploadImage}
+                onPress={pickImageSource}
                 disabled={imageSaving || ((product?.variants?.length ?? 0) > 1 && !selectedVariantId)}
               />
             </View>
