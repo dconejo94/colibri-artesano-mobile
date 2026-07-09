@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect  } from "react";
 import {
   View,
   Text,
@@ -39,10 +39,19 @@ export default function MapScreen() {
   const { coords, permissionStatus, isLoading: locLoading, error: locError, requestPermission } = useLocation();
   const { events, isLoading: eventsLoading, error: eventsError, refetch } = useNearbyEvents(coords);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
   const [dismissedNetworkError, setDismissedNetworkError] = useState(false);
 
   const translateY = useSharedValue(SHEET_HEIGHT);
+
+  useEffect(() => {
+    if (locLoading) return;
+    const timeout = setTimeout(() => {
+      if (!mapReady) setMapFailed(true);
+    }, 8000);
+    return () => clearTimeout(timeout);
+  }, [locLoading, mapReady]);
 
   const openSheet = useCallback((event: EventItem) => {
     setSelectedEvent(event);
@@ -115,7 +124,7 @@ export default function MapScreen() {
                   : FALLBACK_REGION
               }
               showsUserLocation={!!coords}
-              onError={() => setMapFailed(true)}
+              onMapReady={() => setMapReady(true)}
             >
               {events.map((event) => (
                 <Marker
