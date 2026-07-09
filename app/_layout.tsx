@@ -16,9 +16,10 @@ import { ThemeProvider, fonts } from '@/src/theme';
 import { useAuthStore } from '@/src/auth/authStore';
 import AppToast from '@/src/components/AppToast';
 
+import { StripeProvider } from "@stripe/stripe-react-native";
+
 SplashScreen.preventAutoHideAsync();
 
-// Static color tokens for Stack screen options (cannot use hooks here)
 const C = {
   primary: '#4A7C59',
   primaryDeep: '#3A5E47',
@@ -71,7 +72,6 @@ export default function RootLayout() {
     bootstrap();
   }, [bootstrap]);
 
-  // Hide the splash once; later status changes must not re-trigger hideAsync.
   useEffect(() => {
     if (fontsLoaded && status !== 'loading' && !splashHidden.current) {
       splashHidden.current = true;
@@ -84,22 +84,29 @@ export default function RootLayout() {
   if (!fontsLoaded || status === 'loading') return null;
 
   return (
-    <ThemeProvider>
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="productos" options={{ headerShown: false }} />
-        <Stack.Screen name="producto/[id]" options={{ ...headerTheme }} />
-        <Stack.Screen name="store" options={{ headerShown: false }} />
-        <Stack.Screen name="tienda/[storeId]" options={{ headerShown: false }} />
+    <StripeProvider
+      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+      merchantIdentifier="merchant.com.colibri.artesano"
+    >
+      <ThemeProvider>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="productos" options={{ headerShown: false }} />
+          <Stack.Screen name="producto/[id]" options={{ ...headerTheme }} />
+          <Stack.Screen name="store" options={{ headerShown: false }} />
+          <Stack.Screen name="tienda/[storeId]" options={{ headerShown: false }} />
         <Stack.Screen name="eventos" options={{ headerShown: false }} />
-        <Stack.Screen name="carrito" options={{ headerShown: false }} />
+          <Stack.Screen name="carrito" options={{ headerShown: false }} />
         <Stack.Screen name="notificaciones" options={{ headerShown: false }} />
         <Stack.Screen name="buscar" options={{ headerShown: false }} />
         <Stack.Screen name="perfil" options={{ headerShown: false }} />
-        <Stack.Screen name="favoritos" options={{ title: 'Favoritos', ...headerTheme }} />
-      </Stack>
-      <AppToast />
-    </ThemeProvider>
+          <Stack.Screen name="favoritos" options={{ title: 'Favoritos', ...headerTheme }} />
+          <Stack.Screen name="checkout/index" options={{ headerShown: false }} />
+          <Stack.Screen name="checkout/order-confirmation" options={{ headerShown: false }}/>
+        </Stack>
+        <AppToast />
+      </ThemeProvider>
+    </StripeProvider>
   );
 }

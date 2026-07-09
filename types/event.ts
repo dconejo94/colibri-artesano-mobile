@@ -15,6 +15,8 @@ export type EventItem = {
   title: string;
   description: string | null;
   location: string | null;
+  latitude: number;
+  longitude: number;
   event_date: string; // ISO datetime, always carries a timezone offset
   cover_image_url: string | null;
   created_by: string;
